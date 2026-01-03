@@ -6,6 +6,7 @@ WebSearchFlow - Main Implementation
 import asyncio
 import time
 from typing import List, Dict, Any, Optional
+import httpx
 from collections import defaultdict
 import re
 from urllib.parse import urlparse
@@ -32,6 +33,7 @@ class WebSearchFlow:
     def __init__(self):
         self.config = WebSearchConfig()
         self.cache = {}  # 简单内存缓存
+        self._engine_health = {}
 
     async def execute(self, input_params: WebSearchInput) -> WebSearchOutput:
         """
@@ -146,7 +148,7 @@ class WebSearchFlow:
         """
         # 如果用户指定了引擎，直接使用
         if params.search_engines:
-            return params.search_engines
+            return self._filter_engines_by_availability(params.search_engines)
 
         # 使用预设模式
         mode_config = self.config.SEARCH_MODES.get(params.mode, {})
@@ -164,7 +166,56 @@ class WebSearchFlow:
         if not engines:
             engines = ["exa_auto", "brave"]
 
-        return engines
+        return self._filter_engines_by_availability(engines)
+
+    @staticmethod
+    def _base_engine_name(engine: str) -> str:
+        if engine.startswith("exa"):
+            return "exa"
+        return engine
+
+    def _is_engine_available(self, engine: str) -> bool:
+        base = self._base_engine_name(engine)
+        configs = self.config.get_api_configs()
+        config = configs.get(base)
+        if not config or not config.enabled:
+            return False
+
+        if base == "brave":
+            cached = self._engine_health.get("brave")
+            if cached is not None:
+                return cached
+            self._engine_health["brave"] = self._check_brave_reachable(config)
+            return self._engine_health["brave"]
+
+        return True
+
+    def _check_brave_reachable(self, config) -> bool:
+        try:
+            resp = httpx.get(
+                config.endpoint,
+                params={"q": "ping", "count": 1},
+                headers={"X-Subscription-Token": config.auth_key},
+                timeout=5,
+            )
+            return resp.status_code == 200
+        except Exception:
+            return False
+
+    def _filter_engines_by_availability(self, engines: List[str]) -> List[str]:
+        filtered = [e for e in engines if self._is_engine_available(e)]
+
+        if "brave" in engines and "brave" not in filtered:
+            if self._is_engine_available("you") and "you" not in filtered:
+                filtered.append("you")
+
+        if not filtered:
+            for candidate in ["exa_auto", "exa_deep", "you", "perplexity"]:
+                if self._is_engine_available(candidate):
+                    filtered.append(candidate)
+                    break
+
+        return filtered
 
     async def _parallel_search(
         self,

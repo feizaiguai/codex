@@ -4,7 +4,8 @@
 鏃犻渶澶嶆潅瀵煎叆,鐩存帴鎵ц
 """
 
-import os`r`nimport asyncio
+import os
+import asyncio
 import aiohttp
 import time
 import argparse
@@ -39,15 +40,30 @@ API_CONFIGS = {
         "endpoint": "https://ydc-index.io/v1/search",
         "key": os.getenv("YOU_API_KEY", ""),
         "header": "X-API-Key"
-    }
+    },
 }
 
+async def _brave_available() -> bool:
+    config = API_CONFIGS["brave"]
+    if not config.get("key"):
+        return False
+    url = f"{config['endpoint']}?q=ping&count=1"
+    headers = {config['header']: config['key']}
+    timeout = aiohttp.ClientTimeout(total=3, connect=2)
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers, timeout=timeout) as resp:
+                return resp.status == 200
+    except Exception:
+        return False
 
 # ============ 鎼滅储瀹㈡埛绔?============
 
 async def search_brave(query: str, max_results: int = 10) -> List[SearchResult]:
     """Brave鎼滅储锛堝甫鍚屾闄嶇骇锛?""
     config = API_CONFIGS["brave"]
+    if not config.get("key"):
+        return []
     url = f"{config['endpoint']}?q={quote_plus(query)}&count={max_results}"
     headers = {config['header']: config['key']}
 
@@ -166,25 +182,33 @@ async def web_search(query: str, mode: str = "auto", max_results: int = 10) -> D
     start_time = time.time()
 
     # 鏍规嵁妯″紡閫夋嫨鎼滅储寮曟搸
-    if mode == "fast":
-        tasks = [search_brave(query, max_results)]
-    else:  # auto 鎴?deep
-        tasks = [
-            search_brave(query, max_results),
-            search_you(query, max_results)
-        ]
+    brave_ok = await _brave_available()
+    tasks = []
+    task_engines = []
 
-    # 骞惰鎵ц鎼滅储
+    if mode == "fast":
+        if brave_ok:
+            tasks.append(search_brave(query, max_results))
+            task_engines.append("Brave")
+        else:
+            tasks.append(search_you(query, max_results))
+            task_engines.append("You.com")
+    else:  # auto / deep
+        if brave_ok:
+            tasks.append(search_brave(query, max_results))
+            task_engines.append("Brave")
+        tasks.append(search_you(query, max_results))
+        task_engines.append("You.com")
+
     results_lists = await asyncio.gather(*tasks, return_exceptions=True)
 
     # 鍚堝苟缁撴灉
     all_results = []
     engines_used = []
 
-    for i, results in enumerate(results_lists):
+    for engine_name, results in zip(task_engines, results_lists):
         if isinstance(results, list):
             all_results.extend(results)
-            engine_name = ["Brave", "You.com"][i] if i < 2 else f"Engine{i}"
             if results:
                 engines_used.append(engine_name)
 
