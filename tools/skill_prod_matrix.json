@@ -1,727 +1,520 @@
-﻿[
-    {
-        "name":  "01-spec-explorer-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\01-spec-explorer-G 2\u003enul \u0026 python handler.py explore --doc test_architecture.md --no-interactive --output ..\\reports\\skills-prod-real\\01-spec-explorer-G\\design.md \u0026 type ..\\reports\\skills-prod-real\\01-spec-explorer-G\\design.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\01-spec-explorer-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "02-architecture-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\02-architecture-G 2\u003enul \u0026 python handler.py design -i ..\\01-spec-explorer-G\\DESIGN_DRAFT.md -o ..\\reports\\skills-prod-real\\02-architecture-G\\ARCHITECTURE.md \u0026 type ..\\reports\\skills-prod-real\\02-architecture-G\\ARCHITECTURE.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\02-architecture-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "03-code-generator-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\03-code-generator-G 2\u003enul \u0026 python handler.py --scaffold codex-svc --lang python --framework fastapi --output ..\\reports\\skills-prod-real\\03-code-generator-G \u0026 dir ..\\reports\\skills-prod-real\\03-code-generator-G\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\03-code-generator-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  50,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "04-test-automation-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\04-test-automation-G 2\u003enul \u0026 python handler.py --file ..\\05-code-review-G\\handler.py --framework pytest --output ..\\reports\\skills-prod-real\\04-test-automation-G \u0026 dir ..\\reports\\skills-prod-real\\04-test-automation-G\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\04-test-automation-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  50,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "05-code-review-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\05-code-review-G 2\u003enul \u0026 python handler.py --file handler.py --output ..\\reports\\skills-prod-real\\05-code-review-G\\review.md \u0026 type ..\\reports\\skills-prod-real\\05-code-review-G\\review.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\05-code-review-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "06-documentation-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\06-documentation-G 2\u003enul \u0026 python handler.py --readme --source ..\\01-spec-explorer-G\\README.md --output ..\\reports\\skills-prod-real\\06-documentation-G\\README.generated.md \u0026 type ..\\reports\\skills-prod-real\\06-documentation-G\\README.generated.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\06-documentation-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "07-security-audit-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\07-security-audit-G 2\u003enul \u0026 python handler.py --file ..\\05-code-review-G\\handler.py --deps ..\\reports\\skills-prod-real\\_inputs\\deps.txt --output ..\\reports\\skills-prod-real\\07-security-audit-G\\security.md \u0026 type ..\\reports\\skills-prod-real\\07-security-audit-G\\security.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\07-security-audit-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "08-performance-optimizer-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\08-performance-optimizer-G 2\u003enul \u0026 python handler.py --file ..\\05-code-review-G\\handler.py --output ..\\reports\\skills-prod-real\\08-performance-optimizer-G\\report.md \u0026 type ..\\reports\\skills-prod-real\\08-performance-optimizer-G\\report.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\08-performance-optimizer-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  120,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "09-accessibility-checker-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\09-accessibility-checker-G 2\u003enul \u0026 python handler.py --file ..\\reports\\skills-prod-real\\_inputs\\accessibility.html --output ..\\reports\\skills-prod-real\\09-accessibility-checker-G\\accessibility.md \u0026 type ..\\reports\\skills-prod-real\\09-accessibility-checker-G\\accessibility.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\09-accessibility-checker-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  80,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "10-quality-gate-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\10-quality-gate-G 2\u003enul \u0026 python handler.py --file ..\\05-code-review-G\\handler.py --output ..\\reports\\skills-prod-real\\10-quality-gate-G\\quality.md \u0026 type ..\\reports\\skills-prod-real\\10-quality-gate-G\\quality.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\10-quality-gate-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  80,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "11-debugger-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\11-debugger-G 2\u003enul \u0026 python handler.py --error NameError:logging_not_defined --code ..\\09-accessibility-checker-G\\handler.py --output ..\\reports\\skills-prod-real\\11-debugger-G\\debug.md \u0026 type ..\\reports\\skills-prod-real\\11-debugger-G\\debug.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\11-debugger-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "12-log-analyzer-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\12-log-analyzer-G 2\u003enul \u0026 python handler.py ..\\reports\\skills-prod-real\\_inputs\\app.log --json\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\12-log-analyzer-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "13-system-monitor-G",
-        "command":  "python handler.py --json",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\13-system-monitor-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "14-weibo-trending-G",
-        "command":  "python handler.py --limit 5 --no-analysis",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\14-weibo-trending-G",
-        "requires_env":  [
-                             "TIANAPI_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "15-web-search-G",
-        "command":  "python cli.py \"kubernetes security best practices\" --mode auto --max-results 5 --output json --language en",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\15-web-search-G",
-        "requires_env":  [
-                             "EXA_API_KEY",
-                             "BRAVE_API_KEY",
-                             "PERPLEXITY_API_KEY",
-                             "JINA_API_KEY",
-                             "YOU_API_KEY",
-                             "TAVILY_API_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "16-api-integrator-G",
-        "command":  "python handler.py test-basic",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\16-api-integrator-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "17-document-processor-G",
-        "command":  "python handler.py process ..\\41-docx-G\\LICENSE.txt",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\17-document-processor-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  40,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "18-youtube-analyzer-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\18-youtube-analyzer-G 2\u003enul \u0026 python handler.py analyze-video https://www.youtube.com/watch?v=dQw4w9WgXcQ --json --output ..\\reports\\skills-prod-real\\18-youtube-analyzer-G\\video.json \u0026 type ..\\reports\\skills-prod-real\\18-youtube-analyzer-G\\video.json\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\18-youtube-analyzer-G",
-        "requires_env":  [
-                             "YOUTUBE_API_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "19-ui-component-generator-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\19-ui-component-generator-G 2\u003enul \u0026 python handler.py --name ProductCard --framework react --props title,price --output ..\\reports\\skills-prod-real\\19-ui-component-generator-G \u0026 dir ..\\reports\\skills-prod-real\\19-ui-component-generator-G\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\19-ui-component-generator-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  1,
-        "min_output_chars":  40,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "20-theme-designer-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\20-theme-designer-G 2\u003enul \u0026 python handler.py --name CodexTheme --primary #2563eb --secondary #10b981 --accent #f97316 --format css --output ..\\reports\\skills-prod-real\\20-theme-designer-G\\theme.css \u0026 type ..\\reports\\skills-prod-real\\20-theme-designer-G\\theme.css\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\20-theme-designer-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  60,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "21-baidu-trending-G",
-        "command":  "python handler.py --limit 5 --no-analysis",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\21-baidu-trending-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "22-deployment-orchestrator-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\22-deployment-orchestrator-G 2\u003enul \u0026 python handler.py --name codex-app --image nginx:latest --replicas 2 --port 80 --output ..\\reports\\skills-prod-real\\22-deployment-orchestrator-G\\deploy.yaml \u0026 type ..\\reports\\skills-prod-real\\22-deployment-orchestrator-G\\deploy.yaml\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\22-deployment-orchestrator-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  80,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "23-infrastructure-coder-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\23-infrastructure-coder-G 2\u003enul \u0026 python handler.py --tool terraform --provider aws --name web --instance-type t2.micro --ami ami-123456 --output ..\\reports\\skills-prod-real\\23-infrastructure-coder-G\\main.tf \u0026 type ..\\reports\\skills-prod-real\\23-infrastructure-coder-G\\main.tf\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\23-infrastructure-coder-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "24-cicd-pipeline-builder-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\24-cicd-pipeline-builder-G 2\u003enul \u0026 python handler.py --platform github --output ..\\reports\\skills-prod-real\\24-cicd-pipeline-builder-G\\ci.yml \u0026 type ..\\reports\\skills-prod-real\\24-cicd-pipeline-builder-G\\ci.yml\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\24-cicd-pipeline-builder-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  80,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "25-ai-code-optimizer-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\25-ai-code-optimizer-G 2\u003enul \u0026 python handler.py --file ..\\05-code-review-G\\handler.py --json --output ..\\reports\\skills-prod-real\\25-ai-code-optimizer-G\\report.json \u0026 type ..\\reports\\skills-prod-real\\25-ai-code-optimizer-G\\report.json\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\25-ai-code-optimizer-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "26-prompt-engineer-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\26-prompt-engineer-G 2\u003enul \u0026 python handler.py --optimize Improve_README_clarity --type general --json \u003e ..\\reports\\skills-prod-real\\26-prompt-engineer-G\\prompt.json \u0026 type ..\\reports\\skills-prod-real\\26-prompt-engineer-G\\prompt.json\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\26-prompt-engineer-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "27-explainability-analyzer-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\27-explainability-analyzer-G 2\u003enul \u0026 python handler.py --data ..\\reports\\skills-prod-real\\_inputs\\explain.csv --target size --json --output ..\\reports\\skills-prod-real\\27-explainability-analyzer-G\\report.json \u0026 type ..\\reports\\skills-prod-real\\27-explainability-analyzer-G\\report.json\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\27-explainability-analyzer-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  80,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "28-douyin-trending-G",
-        "command":  "python handler.py --limit 5 --no-analysis",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\28-douyin-trending-G",
-        "requires_env":  [
-                             "TIANAPI_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "29-knowledge-manager-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\29-knowledge-manager-G 2\u003enul \u0026 python handler.py --add Spec_Explorer_Intro --type tutorial --content README_from_01-spec-explorer-G \u0026 python handler.py --summary --output ..\\reports\\skills-prod-real\\29-knowledge-manager-G\\summary.md \u0026 type ..\\reports\\skills-prod-real\\29-knowledge-manager-G\\summary.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\29-knowledge-manager-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  80,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "30-wechat-trending-G",
-        "command":  "python handler.py --limit 5 --no-analysis",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\30-wechat-trending-G",
-        "requires_env":  [
-                             "TIANAPI_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "31-risk-assessor-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\31-risk-assessor-G 2\u003enul \u0026 python handler.py --project CodexSkills --metrics ..\\reports\\skills-prod-real\\_inputs\\risk_metrics.json --deps ..\\reports\\skills-prod-real\\_inputs\\deps.txt --json --output ..\\reports\\skills-prod-real\\31-risk-assessor-G\\risk.json \u0026 type ..\\reports\\skills-prod-real\\31-risk-assessor-G\\risk.json\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\31-risk-assessor-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "32-codex-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\32-codex-G 2\u003enul \u0026 python handler.py analyze ..\\01-spec-explorer-G\\README.md --format json \u003e ..\\reports\\skills-prod-real\\32-codex-G\\analysis.json \u0026 type ..\\reports\\skills-prod-real\\32-codex-G\\analysis.json\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\32-codex-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  60,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "33-gemini-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\33-gemini-G 2\u003enul \u0026 python handler.py analyze ..\\01-spec-explorer-G\\README.md --format json \u003e ..\\reports\\skills-prod-real\\33-gemini-G\\analysis.json \u0026 type ..\\reports\\skills-prod-real\\33-gemini-G\\analysis.json\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\33-gemini-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  60,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "34-memory-manager-G",
-        "command":  "python handler.py stats",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\34-memory-manager-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  1,
-        "min_output_chars":  40,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "35-specflow-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\35-specflow-G 2\u003enul \u0026 python handler.py --doc ..\\01-spec-explorer-G\\test_architecture.md --depth standard --output ..\\reports\\skills-prod-real\\35-specflow-G\\specs \u0026 dir ..\\reports\\skills-prod-real\\35-specflow-G\\specs\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\35-specflow-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "36-deep-research-G",
-        "command":  "cmd /c \"set DEEP_RESEARCH_FAST=1 \u0026 mkdir ..\\reports\\skills-prod-real\\36-deep-research-G 2\u003enul \u0026 python handler.py --query Kubernetes --max-tokens 4000 -o ..\\reports\\skills-prod-real\\36-deep-research-G\\report.md \u0026 type ..\\reports\\skills-prod-real\\36-deep-research-G\\report.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\36-deep-research-G",
-        "requires_env":  [
-                             "EXA_API_KEY",
-                             "BRAVE_API_KEY",
-                             "PERPLEXITY_API_KEY",
-                             "JINA_API_KEY",
-                             "YOU_API_KEY",
-                             "TAVILY_API_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "37-chrome-automation-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\37-chrome-automation-G 2\u003enul \u0026 python handler.py screenshot --url https://example.com --output ..\\reports\\skills-prod-real\\37-chrome-automation-G\\example.png --headless \u0026 dir ..\\reports\\skills-prod-real\\37-chrome-automation-G\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\37-chrome-automation-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  1,
-        "min_output_chars":  40,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "38-brainstorming-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\38-brainstorming-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "39-writing-plans-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\39-writing-plans-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "40-executing-plans-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\40-executing-plans-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "41-docx-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\41-docx-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "42-pdf-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\42-pdf-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "43-pptx-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\43-pptx-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "44-xlsx-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\44-xlsx-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "45-senior-architect-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\45-senior-architect-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "46-skill-creator-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\46-skill-creator-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "47-writing-skills-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\47-writing-skills-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "48-skill-list-maintainer-G",
-        "command":  "python -c \"from pathlib import Path; t=Path(\u0027SKILL.md\u0027).read_text(encoding=\u0027utf-8\u0027, errors=\u0027replace\u0027); lines=t.splitlines(); print(\u0027lines\u0027, len(lines)); print(\u0027chars\u0027, len(t)); print(\u0027head\u0027, lines[0] if lines else \u0027\u0027)\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\48-skill-list-maintainer-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  3,
-        "min_output_chars":  20,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "49-ai-news-G",
-        "command":  "python handler.py --limit 5 --no-analysis",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\49-ai-news-G",
-        "requires_env":  [
-                             "TIANAPI_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "50-china-social-media-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\50-china-social-media-G 2\u003enul \u0026 python handler.py --limit 3 --output ..\\reports\\skills-prod-real\\50-china-social-media-G\\report.md \u0026 type ..\\reports\\skills-prod-real\\50-china-social-media-G\\report.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\50-china-social-media-G",
-        "requires_env":  [
-                             "TIANAPI_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "51-hackernews-G",
-        "command":  "python handler.py --limit 5 --no-analysis",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\51-hackernews-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "52-reddit-trending-G",
-        "command":  "python handler.py --limit 5 --no-analysis",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\52-reddit-trending-G",
-        "requires_env":  [
-
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "53-newsapi-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\53-newsapi-G 2\u003enul \u0026 python handler.py --mode headlines --category technology --limit 5 --output ..\\reports\\skills-prod-real\\53-newsapi-G\\report.md \u0026 type ..\\reports\\skills-prod-real\\53-newsapi-G\\report.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\53-newsapi-G",
-        "requires_env":  [
-                             "NEWSAPI_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "55-international-media-G",
-        "command":  "cmd /c \"mkdir ..\\reports\\skills-prod-real\\55-international-media-G 2\u003enul \u0026 python handler.py --limit 3 --output ..\\reports\\skills-prod-real\\55-international-media-G\\report.md \u0026 type ..\\reports\\skills-prod-real\\55-international-media-G\\report.md\"",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\55-international-media-G",
-        "requires_env":  [
-                             "NEWSAPI_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    },
-    {
-        "name":  "56-networkhot-trending-G",
-        "command":  "python handler.py --limit 5 --no-analysis",
-        "cwd":  "C:\\Users\\bigbao\\.codex\\skills\\56-networkhot-trending-G",
-        "requires_env":  [
-                             "TIANAPI_KEY"
-                         ],
-        "min_output_lines":  5,
-        "min_output_chars":  200,
-        "must_contain":  [
-
-                         ]
-    }
+[
+  {
+    "name": "01-spec-explorer-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\01-spec-explorer-G 2>nul & python handler.py explore --doc test_architecture.md --no-interactive --output ..\\reports\\skills-prod-real\\01-spec-explorer-G\\design.md & type ..\\reports\\skills-prod-real\\01-spec-explorer-G\\design.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\01-spec-explorer-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "02-architecture-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\02-architecture-G 2>nul & python handler.py design -i ..\\01-spec-explorer-G\\DESIGN_DRAFT.md -o ..\\reports\\skills-prod-real\\02-architecture-G\\ARCHITECTURE.md & type ..\\reports\\skills-prod-real\\02-architecture-G\\ARCHITECTURE.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\02-architecture-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "03-code-generator-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\03-code-generator-G 2>nul & python handler.py --scaffold codex-svc --lang python --framework fastapi --output ..\\reports\\skills-prod-real\\03-code-generator-G & dir ..\\reports\\skills-prod-real\\03-code-generator-G\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\03-code-generator-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 50,
+    "must_contain": []
+  },
+  {
+    "name": "04-test-automation-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\04-test-automation-G 2>nul & python handler.py --file ..\\05-code-review-G\\handler.py --framework pytest --output ..\\reports\\skills-prod-real\\04-test-automation-G & dir ..\\reports\\skills-prod-real\\04-test-automation-G\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\04-test-automation-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 50,
+    "must_contain": []
+  },
+  {
+    "name": "05-code-review-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\05-code-review-G 2>nul & python handler.py --file handler.py --output ..\\reports\\skills-prod-real\\05-code-review-G\\review.md & type ..\\reports\\skills-prod-real\\05-code-review-G\\review.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\05-code-review-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "06-documentation-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\06-documentation-G 2>nul & python handler.py --readme --source ..\\01-spec-explorer-G\\README.md --output ..\\reports\\skills-prod-real\\06-documentation-G\\README.generated.md & type ..\\reports\\skills-prod-real\\06-documentation-G\\README.generated.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\06-documentation-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "07-security-audit-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\07-security-audit-G 2>nul & python handler.py --file ..\\05-code-review-G\\handler.py --deps ..\\reports\\skills-prod-real\\_inputs\\deps.txt --output ..\\reports\\skills-prod-real\\07-security-audit-G\\security.md & type ..\\reports\\skills-prod-real\\07-security-audit-G\\security.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\07-security-audit-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "08-performance-optimizer-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\08-performance-optimizer-G 2>nul & python handler.py --file ..\\05-code-review-G\\handler.py --output ..\\reports\\skills-prod-real\\08-performance-optimizer-G\\report.md & type ..\\reports\\skills-prod-real\\08-performance-optimizer-G\\report.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\08-performance-optimizer-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 120,
+    "must_contain": []
+  },
+  {
+    "name": "09-accessibility-checker-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\09-accessibility-checker-G 2>nul & python handler.py --file ..\\reports\\skills-prod-real\\_inputs\\accessibility.html --output ..\\reports\\skills-prod-real\\09-accessibility-checker-G\\accessibility.md & type ..\\reports\\skills-prod-real\\09-accessibility-checker-G\\accessibility.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\09-accessibility-checker-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 80,
+    "must_contain": []
+  },
+  {
+    "name": "10-quality-gate-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\10-quality-gate-G 2>nul & python handler.py --file ..\\05-code-review-G\\handler.py --output ..\\reports\\skills-prod-real\\10-quality-gate-G\\quality.md & type ..\\reports\\skills-prod-real\\10-quality-gate-G\\quality.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\10-quality-gate-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 80,
+    "must_contain": []
+  },
+  {
+    "name": "11-debugger-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\11-debugger-G 2>nul & python handler.py --error NameError:logging_not_defined --code ..\\09-accessibility-checker-G\\handler.py --output ..\\reports\\skills-prod-real\\11-debugger-G\\debug.md & type ..\\reports\\skills-prod-real\\11-debugger-G\\debug.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\11-debugger-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "12-log-analyzer-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\12-log-analyzer-G 2>nul & python handler.py ..\\reports\\skills-prod-real\\_inputs\\app.log --json\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\12-log-analyzer-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "13-system-monitor-G",
+    "command": "python handler.py --json",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\13-system-monitor-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "14-weibo-trending-G",
+    "command": "python handler.py --limit 5 --no-analysis",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\14-weibo-trending-G",
+    "requires_env": [
+      "TIANAPI_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "15-web-search-G",
+    "command": "python cli.py \"kubernetes security best practices\" --mode auto --max-results 5 --output json --language en",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\15-web-search-G",
+    "requires_env": [
+      "EXA_API_KEY",
+      "BRAVE_API_KEY",
+      "PERPLEXITY_API_KEY",
+      "JINA_API_KEY",
+      "YOU_API_KEY",
+      "TAVILY_API_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "16-api-integrator-G",
+    "command": "python handler.py test-basic",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\16-api-integrator-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "17-document-processor-G",
+    "command": "python handler.py process ..\\41-docx-G\\LICENSE.txt",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\17-document-processor-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 40,
+    "must_contain": []
+  },
+  {
+    "name": "18-youtube-analyzer-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\18-youtube-analyzer-G 2>nul & python handler.py analyze-video https://www.youtube.com/watch?v=dQw4w9WgXcQ --json --output ..\\reports\\skills-prod-real\\18-youtube-analyzer-G\\video.json & type ..\\reports\\skills-prod-real\\18-youtube-analyzer-G\\video.json\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\18-youtube-analyzer-G",
+    "requires_env": [
+      "YOUTUBE_API_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "19-ui-component-generator-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\19-ui-component-generator-G 2>nul & python handler.py --name ProductCard --framework react --props title,price --output ..\\reports\\skills-prod-real\\19-ui-component-generator-G & dir ..\\reports\\skills-prod-real\\19-ui-component-generator-G\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\19-ui-component-generator-G",
+    "requires_env": [],
+    "min_output_lines": 1,
+    "min_output_chars": 40,
+    "must_contain": []
+  },
+  {
+    "name": "20-theme-designer-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\20-theme-designer-G 2>nul & python handler.py --name CodexTheme --primary #2563eb --secondary #10b981 --accent #f97316 --format css --output ..\\reports\\skills-prod-real\\20-theme-designer-G\\theme.css & type ..\\reports\\skills-prod-real\\20-theme-designer-G\\theme.css\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\20-theme-designer-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 60,
+    "must_contain": []
+  },
+  {
+    "name": "21-baidu-trending-G",
+    "command": "python handler.py --limit 5 --no-analysis",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\21-baidu-trending-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "22-deployment-orchestrator-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\22-deployment-orchestrator-G 2>nul & python handler.py --name codex-app --image nginx:latest --replicas 2 --port 80 --output ..\\reports\\skills-prod-real\\22-deployment-orchestrator-G\\deploy.yaml & type ..\\reports\\skills-prod-real\\22-deployment-orchestrator-G\\deploy.yaml\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\22-deployment-orchestrator-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 80,
+    "must_contain": []
+  },
+  {
+    "name": "23-infrastructure-coder-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\23-infrastructure-coder-G 2>nul & python handler.py --tool terraform --provider aws --name web --instance-type t2.micro --ami ami-123456 --output ..\\reports\\skills-prod-real\\23-infrastructure-coder-G\\main.tf & type ..\\reports\\skills-prod-real\\23-infrastructure-coder-G\\main.tf\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\23-infrastructure-coder-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "24-cicd-pipeline-builder-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\24-cicd-pipeline-builder-G 2>nul & python handler.py --platform github --output ..\\reports\\skills-prod-real\\24-cicd-pipeline-builder-G\\ci.yml & type ..\\reports\\skills-prod-real\\24-cicd-pipeline-builder-G\\ci.yml\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\24-cicd-pipeline-builder-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 80,
+    "must_contain": []
+  },
+  {
+    "name": "25-ai-code-optimizer-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\25-ai-code-optimizer-G 2>nul & python handler.py --file ..\\05-code-review-G\\handler.py --json --output ..\\reports\\skills-prod-real\\25-ai-code-optimizer-G\\report.json & type ..\\reports\\skills-prod-real\\25-ai-code-optimizer-G\\report.json\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\25-ai-code-optimizer-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "26-prompt-engineer-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\26-prompt-engineer-G 2>nul & python handler.py --optimize Improve_README_clarity --type general --json > ..\\reports\\skills-prod-real\\26-prompt-engineer-G\\prompt.json & type ..\\reports\\skills-prod-real\\26-prompt-engineer-G\\prompt.json\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\26-prompt-engineer-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "27-explainability-analyzer-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\27-explainability-analyzer-G 2>nul & python handler.py --data ..\\reports\\skills-prod-real\\_inputs\\explain.csv --target size --json --output ..\\reports\\skills-prod-real\\27-explainability-analyzer-G\\report.json & type ..\\reports\\skills-prod-real\\27-explainability-analyzer-G\\report.json\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\27-explainability-analyzer-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 80,
+    "must_contain": []
+  },
+  {
+    "name": "28-douyin-trending-G",
+    "command": "python handler.py --limit 5 --no-analysis",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\28-douyin-trending-G",
+    "requires_env": [
+      "TIANAPI_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "29-knowledge-manager-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\29-knowledge-manager-G 2>nul & python handler.py --add Spec_Explorer_Intro --type tutorial --content README_from_01-spec-explorer-G & python handler.py --summary --output ..\\reports\\skills-prod-real\\29-knowledge-manager-G\\summary.md & type ..\\reports\\skills-prod-real\\29-knowledge-manager-G\\summary.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\29-knowledge-manager-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 80,
+    "must_contain": []
+  },
+  {
+    "name": "30-wechat-trending-G",
+    "command": "python handler.py --limit 5 --no-analysis",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\30-wechat-trending-G",
+    "requires_env": [
+      "TIANAPI_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "31-risk-assessor-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\31-risk-assessor-G 2>nul & python handler.py --project CodexSkills --metrics ..\\reports\\skills-prod-real\\_inputs\\risk_metrics.json --deps ..\\reports\\skills-prod-real\\_inputs\\deps.txt --json --output ..\\reports\\skills-prod-real\\31-risk-assessor-G\\risk.json & type ..\\reports\\skills-prod-real\\31-risk-assessor-G\\risk.json\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\31-risk-assessor-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "33-gemini-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\33-gemini-G 2>nul & python handler.py analyze ..\\01-spec-explorer-G\\README.md --format json > ..\\reports\\skills-prod-real\\33-gemini-G\\analysis.json & type ..\\reports\\skills-prod-real\\33-gemini-G\\analysis.json\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\33-gemini-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 60,
+    "must_contain": []
+  },
+  {
+    "name": "34-memory-manager-G",
+    "command": "python handler.py stats",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\34-memory-manager-G",
+    "requires_env": [],
+    "min_output_lines": 1,
+    "min_output_chars": 40,
+    "must_contain": []
+  },
+  {
+    "name": "35-specflow-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\35-specflow-G 2>nul & python handler.py --doc ..\\01-spec-explorer-G\\test_architecture.md --depth standard --output ..\\reports\\skills-prod-real\\35-specflow-G\\specs & dir ..\\reports\\skills-prod-real\\35-specflow-G\\specs\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\35-specflow-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "36-deep-research-G",
+    "command": "cmd /c \"set DEEP_RESEARCH_FAST=1 & mkdir ..\\reports\\skills-prod-real\\36-deep-research-G 2>nul & python handler.py --query Kubernetes --max-tokens 4000 -o ..\\reports\\skills-prod-real\\36-deep-research-G\\report.md & type ..\\reports\\skills-prod-real\\36-deep-research-G\\report.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\36-deep-research-G",
+    "requires_env": [
+      "EXA_API_KEY",
+      "BRAVE_API_KEY",
+      "PERPLEXITY_API_KEY",
+      "JINA_API_KEY",
+      "YOU_API_KEY",
+      "TAVILY_API_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "37-chrome-automation-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\37-chrome-automation-G 2>nul & python handler.py screenshot --url https://example.com --output ..\\reports\\skills-prod-real\\37-chrome-automation-G\\example.png --headless & dir ..\\reports\\skills-prod-real\\37-chrome-automation-G\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\37-chrome-automation-G",
+    "requires_env": [],
+    "min_output_lines": 1,
+    "min_output_chars": 40,
+    "must_contain": []
+  },
+  {
+    "name": "38-brainstorming-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\38-brainstorming-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "39-writing-plans-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\39-writing-plans-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "40-executing-plans-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\40-executing-plans-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "41-docx-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\41-docx-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "42-pdf-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\42-pdf-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "43-pptx-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\43-pptx-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "44-xlsx-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\44-xlsx-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "45-senior-architect-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\45-senior-architect-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "46-skill-creator-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\46-skill-creator-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "47-writing-skills-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\47-writing-skills-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "48-skill-list-maintainer-G",
+    "command": "python -c \"from pathlib import Path; t=Path('SKILL.md').read_text(encoding='utf-8', errors='replace'); lines=t.splitlines(); print('lines', len(lines)); print('chars', len(t)); print('head', lines[0] if lines else '')\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\48-skill-list-maintainer-G",
+    "requires_env": [],
+    "min_output_lines": 3,
+    "min_output_chars": 20,
+    "must_contain": []
+  },
+  {
+    "name": "49-ai-news-G",
+    "command": "python handler.py --limit 5 --no-analysis",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\49-ai-news-G",
+    "requires_env": [
+      "TIANAPI_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "50-china-social-media-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\50-china-social-media-G 2>nul & python handler.py --limit 3 --output ..\\reports\\skills-prod-real\\50-china-social-media-G\\report.md & type ..\\reports\\skills-prod-real\\50-china-social-media-G\\report.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\50-china-social-media-G",
+    "requires_env": [
+      "TIANAPI_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "51-hackernews-G",
+    "command": "python handler.py --limit 5 --no-analysis",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\51-hackernews-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "52-reddit-trending-G",
+    "command": "python handler.py --limit 5 --no-analysis",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\52-reddit-trending-G",
+    "requires_env": [],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "53-newsapi-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\53-newsapi-G 2>nul & python handler.py --mode headlines --category technology --limit 5 --output ..\\reports\\skills-prod-real\\53-newsapi-G\\report.md & type ..\\reports\\skills-prod-real\\53-newsapi-G\\report.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\53-newsapi-G",
+    "requires_env": [
+      "NEWSAPI_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "55-international-media-G",
+    "command": "cmd /c \"mkdir ..\\reports\\skills-prod-real\\55-international-media-G 2>nul & python handler.py --limit 3 --output ..\\reports\\skills-prod-real\\55-international-media-G\\report.md & type ..\\reports\\skills-prod-real\\55-international-media-G\\report.md\"",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\55-international-media-G",
+    "requires_env": [
+      "NEWSAPI_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  },
+  {
+    "name": "56-networkhot-trending-G",
+    "command": "python handler.py --limit 5 --no-analysis",
+    "cwd": "C:\\Users\\bigbao\\.codex\\skills\\56-networkhot-trending-G",
+    "requires_env": [
+      "TIANAPI_KEY"
+    ],
+    "min_output_lines": 5,
+    "min_output_chars": 200,
+    "must_contain": []
+  }
 ]
