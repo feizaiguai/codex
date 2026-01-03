@@ -1,0 +1,28 @@
+"""08-performance-optimizer 命令行接口"""
+import argparse
+import sys
+from engine import PerformanceOptimizer
+
+def main():
+    parser = argparse.ArgumentParser(description='08-performance-optimizer: 性能优化专家')
+    parser.add_argument('--file', required=True, help='要分析的文件')
+    parser.add_argument('--output', '-o', default='performance_report.md', help='输出报告')
+    args = parser.parse_args()
+
+    try:
+        optimizer = PerformanceOptimizer()
+        issues = optimizer.analyze_file(args.file)
+        report = optimizer.generate_report(issues)
+
+        print(report)
+
+        with open(args.output, 'w', encoding='utf-8') as f:
+            f.write(report)
+        print(f"\n报告已保存到: {args.output}")
+
+    except Exception as e:
+        print(f"错误: {e}")
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()

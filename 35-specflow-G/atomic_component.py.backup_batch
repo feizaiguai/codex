@@ -1,0 +1,520 @@
+"""
+SpecFlow V2.0 - 原子级组件模型
+基于原子级.txt规范的完整实现
+版本: 2.0.0
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional, Tuple, Union, Callable
+from enum import Enum
+
+
+import logging
+
+# ============ 枚举类型 ============
+
+class ComponentCategory(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    组件分类
+    UI_COMPONENT = "UI Component"
+    API_ENDPOINT = "API Endpoint"
+    SERVICE = "Service"
+    DATA_MODEL = "Data Model"
+    BUSINESS_LOGIC = "Business Logic"
+    INTEGRATION = "Integration"
+
+
+class Priority(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    优先级
+    CRITICAL = "Critical"
+    HIGH = "High"
+    MEDIUM = "Medium"
+    LOW = "Low"
+
+
+class Severity(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    严重程度
+    CRITICAL = "Critical"
+    HIGH = "High"
+    MEDIUM = "Medium"
+    LOW = "Low"
+
+
+# ============ 基础组件 ============
+
+@dataclass
+class AtomicProperty:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    原子级属性(不可再分)
+    name: str                           # 属性名:email
+    type: str                           # 类型:string / number / boolean / object
+    required: bool                      # 是否必填
+    description: str                    # 描述
+    validation: List[str] = field(default_factory=list)  # 验证规则
+    default: Optional[Any] = None       # 默认值
+    example: Optional[Any] = None       # 示例值
+
+
+@dataclass
+class UISpec:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    UI 规格(原子级)
+    layout: str                         # 布局描述
+    styles: List[str]                   # 样式列表
+    states: List[str]                   # 状态列表:loading, error, success
+    dimensions: Optional[str] = None    # 尺寸:48x48px
+    colors: Optional[Dict[str, str]] = field(default_factory=dict)  # 颜色
+
+
+@dataclass
+class APIContract:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    API 契约(SDD 规格驱动)
+    method: str                         # GET / POST / PUT / DELETE / PATCH
+    endpoint: str                       # /api/users/{id}
+    request_body: Optional[Dict[str, Any]] = None  # 请求体 schema
+    query_params: Optional[Dict[str, Any]] = None  # 查询参数
+    response_schema: Optional[Dict[str, Any]] = None  # 响应 schema
+    error_codes: List[Dict[str, str]] = field(default_factory=list)  # 错误码
+    headers: Optional[Dict[str, str]] = None  # 请求头
+
+
+@dataclass
+class DataModel:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    数据模型(DDD 实体)
+    entity_name: str                    # 实体名称
+    fields: List[AtomicProperty]        # 字段列表
+    relationships: List[str] = field(default_factory=list)  # 关系
+    constraints: List[str] = field(default_factory=list)  # 约束
+    indexes: List[str] = field(default_factory=list)  # 索引
+
+
+@dataclass
+class Interaction:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    交互(事件驱动)
+    event: str                          # 事件名:click, submit, change
+    trigger: str                        # 触发条件
+    result: str                         # 结果描述
+    parameters: Optional[Dict[str, Any]] = None  # 参数
+
+
+@dataclass
+class EdgeCase:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    边界情况
+    scenario: str                       # 场景描述
+    handling: str                       # 处理方式
+    expected_behavior: str              # 预期行为
+
+
+@dataclass
+class ErrorHandling:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    错误处理策略
+    error_type: str                     # 错误类型
+    detection: str                      # 检测方式
+    recovery: str                       # 恢复策略
+    user_message: str                   # 用户消息
+    log_level: str = "ERROR"            # 日志级别
+
+
+@dataclass
+class BDDScenario:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    BDD 场景(行为驱动)
+    name: str                           # 场景名称
+    given: List[str]                    # 前置条件
+    when: List[str]                     # 触发动作
+    then: List[str]                     # 预期结果
+    tags: List[str] = field(default_factory=list)  # 标签
+
+
+@dataclass
+class TestCase:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    测试用例(TDD 测试驱动)
+    name: str                           # 测试名称
+    type: str                           # unit / integration / e2e
+    arrange: str                        # 准备阶段
+    act: str                            # 执行阶段
+    assert_: str                        # 断言阶段
+    expected_result: str                # 预期结果
+
+
+# ============ 原子级组件(核心) ============
+
+@dataclass
+class AtomicComponent:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    原子级组件(完全基于原子级.txt规范)
+
+    每个组件都是一个可直接实施的最小单元:
+    - 自文档化命名
+    - 完整的属性定义
+    - 明确的交互和行为
+    - 清晰的依赖和约束
+    - 完整的边界情况处理
+    - 可测试的验收标准
+    """
+
+    # 1. 基础信息(自文档化)
+    id: str                             # 唯一标识:USER-AUTH-001
+    name: str                           # 自文档化名称:UserLoginForm
+    category: ComponentCategory         # 分类
+
+    # 2. 目标与用途(一句话清晰描述)
+    purpose: str                        # "允许用户通过邮箱和密码登录系统"
+    context: Dict[str, Any]             # {"domain": "用户管理", "tech": ["React", "JWT"]}
+
+    # 3. 原子级属性定义
+    props: List[AtomicProperty]         # 属性列表(每个都是原子级)
+
+    # 4. 可选的详细规格
+    ui_spec: Optional[UISpec] = None    # UI 规格(仅 UI 组件)
+    api_contract: Optional[APIContract] = None  # API 契约(仅 API)
+    data_model: Optional[DataModel] = None  # 数据模型(仅数据组件)
+
+    # 5. 交互与行为(事件驱动)
+    interactions: List[Interaction] = field(default_factory=list)
+    business_rules: List[str] = field(default_factory=list)
+
+    # 6. 依赖与约束
+    dependencies: List[str] = field(default_factory=list)
+    constraints: List[str] = field(default_factory=list)
+
+    # 7. 边界与错误处理
+    edge_cases: List[EdgeCase] = field(default_factory=list)
+    error_handling: List[ErrorHandling] = field(default_factory=list)
+
+    # 8. 验收标准(可测试)
+    acceptance_criteria: List[str] = field(default_factory=list)
+    bdd_scenarios: List[BDDScenario] = field(default_factory=list)
+    test_cases: List[TestCase] = field(default_factory=list)
+
+    # 9. 元数据
+    priority: Priority = Priority.MEDIUM
+    estimated_hours: float = 0.0        # PERT 估算
+    assigned_phase: str = "MVP"         # MVP / Phase 1 / Phase 2
+    tags: List[str] = field(default_factory=list)
+
+    def to_markdown(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown 格式
+        md = f"### 组件:{self.name}\n\n"
+        md += f"**ID**: {self.id}\n"
+        md += f"**分类**: {self.category.value}\n"
+        md += f"**优先级**: {self.priority.value}\n"
+        md += f"**目的**: {self.purpose}\n\n"
+
+        # 上下文
+        md += "#### 上下文\n"
+        for key, value in self.context.items():
+            md += f"- **{key}**: {value}\n"
+        md += "\n"
+
+        # 属性
+        if self.props:
+            md += "#### 属性(原子级)\n"
+            md += "| 属性名 | 类型 | 必填 | 验证规则 | 描述 |\n"
+            md += "|--------|------|------|---------|------|\n"
+            for prop in self.props:
+                required = "" if prop.required else ""
+                validation = ", ".join(prop.validation) if prop.validation else "-"
+                md += f"| {prop.name} | {prop.type} | {required} | {validation} | {prop.description} |\n"
+            md += "\n"
+
+        # UI 规格
+        if self.ui_spec:
+            md += "#### UI 规格\n"
+            md += f"- **布局**: {self.ui_spec.layout}\n"
+            md += f"- **样式**: {', '.join(self.ui_spec.styles)}\n"
+            md += f"- **状态**: {', '.join(self.ui_spec.states)}\n"
+            if self.ui_spec.dimensions:
+                md += f"- **尺寸**: {self.ui_spec.dimensions}\n"
+            md += "\n"
+
+        # API 契约
+        if self.api_contract:
+            md += "#### API 契约\n"
+            md += f"- **方法**: {self.api_contract.method}\n"
+            md += f"- **端点**: {self.api_contract.endpoint}\n"
+            md += "\n"
+
+        # 交互
+        if self.interactions:
+            md += "#### 交互\n"
+            md += "| 事件 | 结果 |\n"
+            md += "|------|------|\n"
+            for interaction in self.interactions:
+                md += f"| {interaction.event} | {interaction.result} |\n"
+            md += "\n"
+
+        # 依赖
+        if self.dependencies:
+            md += "#### 依赖\n"
+            for dep in self.dependencies:
+                md += f"- {dep}\n"
+            md += "\n"
+
+        # 约束
+        if self.constraints:
+            md += "#### 约束\n"
+            for constraint in self.constraints:
+                md += f"- {constraint}\n"
+            md += "\n"
+
+        # 边界情况
+        if self.edge_cases:
+            md += "#### 边界情况\n"
+            md += "| 场景 | 处理方式 |\n"
+            md += "|------|----------|\n"
+            for edge in self.edge_cases:
+                md += f"| {edge.scenario} | {edge.handling} |\n"
+            md += "\n"
+
+        # 验收标准
+        if self.acceptance_criteria:
+            md += "#### 验收标准(ATDD)\n"
+            for i, ac in enumerate(self.acceptance_criteria, 1):
+                md += f"-  **AC {i}**: {ac}\n"
+            md += "\n"
+
+        # BDD 场景
+        if self.bdd_scenarios:
+            md += "#### BDD 场景\n"
+            for scenario in self.bdd_scenarios:
+                md += f"**{scenario.name}**\n```gherkin\n"
+                md += "Given " + "\nAnd ".join(scenario.given) + "\n"
+                md += "When " + "\nAnd ".join(scenario.when) + "\n"
+                md += "Then " + "\nAnd ".join(scenario.then) + "\n"
+                md += "```\n\n"
+
+        # 估算
+        md += f"#### 估算\n"
+        md += f"- **工作量**: {self.estimated_hours} 小时\n"
+        md += f"- **阶段**: {self.assigned_phase}\n"
+        md += "\n"
+
+        return md
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为字典
+        return {
+            "id": self.id,
+            "name": self.name,
+            "category": self.category.value,
+            "purpose": self.purpose,
+            "context": self.context,
+            "props": [
+                {
+                    "name": p.name,
+                    "type": p.type,
+                    "required": p.required,
+                    "description": p.description,
+                    "validation": p.validation,
+                    "default": p.default
+                }
+                for p in self.props
+            ],
+            "dependencies": self.dependencies,
+            "constraints": self.constraints,
+            "acceptance_criteria": self.acceptance_criteria,
+            "priority": self.priority.value,
+            "estimated_hours": self.estimated_hours,
+            "assigned_phase": self.assigned_phase
+        }
+
+
+# ============ 用户故事(ATDD) ============
+
+@dataclass
+class UserStory:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    用户故事(ATDD 验收测试驱动)
+    id: str                             # US-001
+    title: str                          # 用户登录
+    as_a: str                           # 作为...
+    i_want: str                         # 我想要...
+    so_that: str                        # 以便...
+    acceptance_criteria: List[str]      # 验收标准
+    components: List[AtomicComponent]   # 关联的原子组件
+    priority: Priority = Priority.MEDIUM
+    story_points: int = 0               # 故事点
+
+    def to_markdown(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"## 用户故事:{self.title}\n\n"
+        md += f"**ID**: {self.id}\n"
+        md += f"**优先级**: {self.priority.value}\n"
+        md += f"**故事点**: {self.story_points}\n\n"
+        md += f"**作为** {self.as_a}\n"
+        md += f"**我想要** {self.i_want}\n"
+        md += f"**以便** {self.so_that}\n\n"
+
+        md += "### 验收标准\n"
+        for i, ac in enumerate(self.acceptance_criteria, 1):
+            md += f"-  **AC {i}**: {ac}\n"
+        md += "\n"
+
+        if self.components:
+            md += "### 关联组件\n"
+            for component in self.components:
+                md += f"- {component.name} ({component.id})\n"
+            md += "\n"
+
+        return md
+
+
+# ============ 特性(FDD) ============
+
+@dataclass
+class Feature:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    特性(FDD 特性驱动)
+    id: str                             # F-1.1
+    name: str                           # 用户登录
+    description: str                    # 描述
+    value: str                          # Critical / High / Medium / Low
+    complexity: str                     # Low / Medium / High / Very High
+    user_stories: List[UserStory]       # 用户故事
+    components: List[AtomicComponent]   # 原子组件
+    dependencies: List[str] = field(default_factory=list)
+    estimated_hours: float = 0.0        # PERT 估算
+
+    def to_markdown(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"## 特性:{self.name}\n\n"
+        md += f"**ID**: {self.id}\n"
+        md += f"**价值**: {self.value}\n"
+        md += f"**复杂度**: {self.complexity}\n"
+        md += f"**估算**: {self.estimated_hours} 小时\n\n"
+        md += f"**描述**: {self.description}\n\n"
+
+        if self.dependencies:
+            md += "### 依赖\n"
+            for dep in self.dependencies:
+                md += f"- {dep}\n"
+            md += "\n"
+
+        return md
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

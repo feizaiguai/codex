@@ -1,0 +1,702 @@
+"""
+规格文档质量分析器(V3.0)
+
+基于规则引擎分析规格文档质量,计算质量指标和生成改进建议.
+"""
+
+from typing import List, Dict, Tuple, Optional, Any, Union, Callable
+import logging
+
+from core.models import (
+    SpecificationDocument,
+    QualityReport,
+    QualityMetrics,
+    QualityGrade,
+    ValidationIssue,
+    RequirementItem,
+    UserStory,
+    DomainCategory,
+    ComplexityLevel,
+    Priority,
+    Severity
+)
+
+
+class SpecificationAnalyzer:
+    """
+    规格文档质量分析器
+
+    职责:
+    1. 分析规格文档的完整性
+    2. 检查一致性问题
+    3. 评估需求的原子性
+    4. 评估可测试性
+    5. 生成质量报告和改进建议
+
+    Attributes:
+        暂无属性
+    """
+
+    def __init__(self):
+        """
+        初始化分析器
+        """
+        pass
+
+    def analyze(self, spec: SpecificationDocument) -> QualityReport:
+        """
+        分析规格文档质量
+
+        Args:
+            spec: 待分析的规格文档
+
+        Returns:
+            QualityReport: 包含质量指标,验证问题和改进建议的质量报告
+        """
+        # 1. 计算质量指标
+        metrics = self._calculate_quality_metrics(spec)
+
+        # 2. 收集验证问题
+        validation_issues = self._collect_validation_issues(spec)
+
+        # 3. 生成改进建议
+        recommendations = self._generate_recommendations(spec, metrics, validation_issues)
+
+        # 4. 估算工时
+        estimated_hours = self._estimate_hours(spec)
+
+        # 5. 创建质量报告
+        quality_report = QualityReport(
+            domain=spec.domain if hasattr(spec, 'domain') else DomainCategory.OTHER,
+            complexity=spec.complexity if hasattr(spec, 'complexity') else ComplexityLevel.MEDIUM,
+            estimated_hours=estimated_hours,
+            metrics=metrics,
+            validation_issues=validation_issues,
+            recommendations=recommendations
+        )
+
+        return quality_report
+
+    def _calculate_quality_metrics(self, spec: SpecificationDocument) -> QualityMetrics:
+        """
+        计算质量指标
+
+        评分规则:
+        - 完整性:检查必要文档,需求,用户故事,验收标准是否齐全
+        - 一致性:检查术语,优先级,依赖关系是否一致
+        - 原子性:评估需求是否足够细化和独立
+        - 可测试性:评估验收标准和测试用例的质量
+
+        Args:
+            spec: 规格文档
+
+        Returns:
+            QualityMetrics: 质量指标
+        """
+        # 1. 计算完整性 (0-100)
+        completeness = self._calculate_completeness(spec)
+
+        # 2. 计算一致性 (0-100)
+        consistency = self._calculate_consistency(spec)
+
+        # 3. 计算原子性 (0-100)
+        atomicity = self._calculate_atomicity(spec)
+
+        # 4. 计算可测试性 (0-100)
+        testability = self._calculate_testability(spec)
+
+        # 5. 创建质量指标
+        metrics = QualityMetrics(
+            completeness_score=round(completeness, 2),
+            consistency_score=round(consistency, 2),
+            atomicity_score=round(atomicity, 2),
+            testability_score=round(testability, 2),
+            overall_grade=QualityGrade.C  # 临时值,稍后计算
+        )
+
+        # 6. 计算总体等级
+        metrics.overall_grade = metrics.calculate_overall_grade()
+
+        return metrics
+
+    def _calculate_completeness(self, spec: SpecificationDocument) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        计算完整性得分
+
+        检查项(每项10分,总100分):
+        1. 有项目名称和版本
+        2. 有需求列表(至少3个)
+        3. 有用户故事(至少5个)
+        4. 用户故事有验收标准
+        5. 有领域模型文档
+        6. 有架构设计文档
+        7. 有实施计划文档
+        8. 有测试策略文档
+        9. 有风险评估文档
+        10. 有质量报告文档
+        """
+        score = 0.0
+
+        # 1. 项目基本信息 (10分)
+        if spec.project_name and spec.project_name != "未命名项目":
+            score += 10
+
+        # 2. 需求列表 (10分)
+        if len(spec.requirements) >= 3:
+            score += 10
+        elif len(spec.requirements) >= 1:
+            score += 5
+
+        # 3. 用户故事 (10分)
+        if len(spec.user_stories) >= 5:
+            score += 10
+        elif len(spec.user_stories) >= 3:
+            score += 7
+        elif len(spec.user_stories) >= 1:
+            score += 4
+
+        # 4. 验收标准 (10分)
+        if spec.user_stories:
+            stories_with_ac = sum(1 for story in spec.user_stories if story.acceptance_criteria)
+            ac_ratio = stories_with_ac / len(spec.user_stories)
+            score += ac_ratio * 10
+
+        # 5-10. 文档完整性 (每个10分,共60分)
+        from core.models import DocumentType
+        required_docs = [
+            DocumentType.DOMAIN_MODEL,
+            DocumentType.ARCHITECTURE,
+            DocumentType.IMPLEMENTATION,
+            DocumentType.TEST_STRATEGY,
+            DocumentType.RISK_ASSESSMENT,
+            DocumentType.QUALITY_REPORT
+        ]
+
+        for doc_type in required_docs:
+            if doc_type in spec.documents and spec.documents[doc_type].content:
+                score += 10
+
+        return min(score, 100.0)
+
+    def _calculate_consistency(self, spec: SpecificationDocument) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        计算一致性得分
+
+        检查项:
+        1. 优先级分布合理(20分)
+        2. 需求ID唯一且格式统一(20分)
+        3. 用户故事ID唯一且格式统一(20分)
+        4. 术语使用一致(20分)
+        5. 依赖关系有效(20分)
+        """
+        score = 0.0
+
+        # 1. 优先级分布合理 (20分)
+        if spec.user_stories:
+            priorities = [story.priority for story in spec.user_stories]
+            # 检查是否有各种优先级(避免全是CRITICAL或全是LOW)
+            unique_priorities = set(priorities)
+            if len(unique_priorities) >= 2:
+                score += 20
+            elif len(unique_priorities) == 1:
+                score += 10
+
+        # 2. 需求ID唯一性 (20分)
+        if spec.requirements:
+            req_ids = [req.id for req in spec.requirements]
+            if len(req_ids) == len(set(req_ids)):
+                score += 20
+            else:
+                # 部分重复
+                unique_ratio = len(set(req_ids)) / len(req_ids)
+                score += unique_ratio * 20
+
+        # 3. 用户故事ID唯一性 (20分)
+        if spec.user_stories:
+            story_ids = [story.id for story in spec.user_stories]
+            if len(story_ids) == len(set(story_ids)):
+                score += 20
+            else:
+                unique_ratio = len(set(story_ids)) / len(story_ids)
+                score += unique_ratio * 20
+
+        # 4. 术语一致性 (20分)
+        # 简单检查:如果项目名称在描述中出现,说明术语较一致
+        if spec.requirements:
+            project_terms = spec.project_name.lower().split()
+            consistent_count = 0
+            for req in spec.requirements:
+                desc_lower = req.description.lower()
+                if any(term in desc_lower for term in project_terms):
+                    consistent_count += 1
+            if len(spec.requirements) > 0:
+                consistency_ratio = consistent_count / len(spec.requirements)
+                score += consistency_ratio * 20
+
+        # 5. 依赖关系有效性 (20分)
+        # 简单检查:依赖的ID是否存在
+        all_req_ids = {req.id for req in spec.requirements} if spec.requirements else set()
+        invalid_deps = 0
+        total_deps = 0
+
+        if spec.requirements:
+            for req in spec.requirements:
+                req_deps = getattr(req, 'dependencies', [])
+                if req_deps:
+                    for dep_id in req_deps:
+                        total_deps += 1
+                        if dep_id not in all_req_ids:
+                            invalid_deps += 1
+
+        if total_deps > 0:
+            valid_ratio = (total_deps - invalid_deps) / total_deps
+            score += valid_ratio * 20
+        else:
+            # 没有依赖关系,给予满分
+            score += 20
+
+        return min(score, 100.0)
+
+    def _calculate_atomicity(self, spec: SpecificationDocument) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        计算原子性得分
+
+        检查项:
+        1. 需求描述长度适中(20分)
+        2. 用户故事描述简洁(30分)
+        3. 验收标准明确且可量化(30分)
+        4. 没有复合需求(20分)
+        """
+        score = 0.0
+
+        # 1. 需求描述长度适中 (20分)
+        # 理想长度:50-200字符
+        if spec.requirements:
+            good_length_count = 0
+            for req in spec.requirements:
+                desc_len = len(req.description)
+                if 50 <= desc_len <= 200:
+                    good_length_count += 1
+                elif 30 <= desc_len <= 300:
+                    good_length_count += 0.5
+
+            length_ratio = good_length_count / len(spec.requirements)
+            score += length_ratio * 20
+
+        # 2. 用户故事描述简洁 (30分)
+        if spec.user_stories:
+            concise_count = 0
+            for story in spec.user_stories:
+                # 检查 i_want 和 so_that 是否简洁(不超过100字符)
+                if len(story.i_want) <= 100 and len(story.so_that) <= 100:
+                    concise_count += 1
+
+            concise_ratio = concise_count / len(spec.user_stories)
+            score += concise_ratio * 30
+
+        # 3. 验收标准明确 (30分)
+        if spec.user_stories:
+            clear_ac_count = 0
+            for story in spec.user_stories:
+                if story.acceptance_criteria:
+                    # 检查验收标准数量(2-5个较合理)
+                    ac_count = len(story.acceptance_criteria)
+                    if 2 <= ac_count <= 5:
+                        clear_ac_count += 1
+                    elif ac_count >= 1:
+                        clear_ac_count += 0.5
+
+            ac_ratio = clear_ac_count / len(spec.user_stories)
+            score += ac_ratio * 30
+
+        # 4. 没有复合需求 (20分)
+        # 检查描述中是否有"和","以及","同时"等复合词
+        if spec.requirements:
+            atomic_count = 0
+            compound_keywords = ['和', '以及', '同时', '并且', '以及', '还要', '另外']
+
+            for req in spec.requirements:
+                has_compound = any(kw in req.description for kw in compound_keywords)
+                if not has_compound:
+                    atomic_count += 1
+
+            atomic_ratio = atomic_count / len(spec.requirements)
+            score += atomic_ratio * 20
+
+        return min(score, 100.0)
+
+    def _calculate_testability(self, spec: SpecificationDocument) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        计算可测试性得分
+
+        检查项:
+        1. 验收标准可量化(30分)
+        2. 有明确的输入输出(25分)
+        3. 有测试策略文档(25分)
+        4. 有测试用例(20分)
+        """
+        score = 0.0
+
+        # 1. 验收标准可量化 (30分)
+        # 检查验收标准中是否有可量化的词汇
+        quantifiable_keywords = [
+            '必须', '应该', '能够', '可以', '成功', '失败',
+            '显示', '返回', '包含', '等于', '大于', '小于',
+            '<=', '>=', '<', '>', '=', '秒', '次', '个', '%'
+        ]
+
+        if spec.user_stories:
+            quantifiable_count = 0
+            for story in spec.user_stories:
+                if story.acceptance_criteria:
+                    has_quantifiable = any(
+                        any(kw in ac for kw in quantifiable_keywords)
+                        for ac in story.acceptance_criteria
+                    )
+                    if has_quantifiable:
+                        quantifiable_count += 1
+
+            if len(spec.user_stories) > 0:
+                quant_ratio = quantifiable_count / len(spec.user_stories)
+                score += quant_ratio * 30
+
+        # 2. 有明确的输入输出 (25分)
+        # 检查验收标准中是否提到输入,输出,Given,When,Then
+        io_keywords = ['输入', '输出', 'Given', 'When', 'Then', '前提', '操作', '结果']
+
+        if spec.user_stories:
+            io_count = 0
+            for story in spec.user_stories:
+                if story.acceptance_criteria:
+                    has_io = any(
+                        any(kw in ac for kw in io_keywords)
+                        for ac in story.acceptance_criteria
+                    )
+                    if has_io:
+                        io_count += 1
+
+            if len(spec.user_stories) > 0:
+                io_ratio = io_count / len(spec.user_stories)
+                score += io_ratio * 25
+
+        # 3. 有测试策略文档 (25分)
+        from core.models import DocumentType
+        if DocumentType.TEST_STRATEGY in spec.documents:
+            test_doc = spec.documents[DocumentType.TEST_STRATEGY]
+            if test_doc.content and len(test_doc.content) > 500:
+                score += 25
+            elif test_doc.content:
+                score += 15
+
+        # 4. 有测试用例 (20分)
+        if spec.test_cases:
+            if len(spec.test_cases) >= len(spec.user_stories):
+                score += 20
+            elif len(spec.test_cases) >= len(spec.user_stories) * 0.5:
+                score += 15
+            elif len(spec.test_cases) >= 1:
+                score += 10
+
+        return min(score, 100.0)
+
+    def _collect_validation_issues(self, spec: SpecificationDocument) -> List[ValidationIssue]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        收集验证问题
+
+        检查:
+        1. 缺失的必要信息
+        2. 格式问题
+        3. 逻辑问题
+        """
+        issues = []
+
+        # 1. 检查项目基本信息
+        if not spec.project_name or spec.project_name == "未命名项目":
+            issues.append(ValidationIssue(
+                rule_id="R001",
+                severity=Severity.HIGH,
+                description="项目名称缺失或使用默认值",
+                location="项目信息",
+                suggestion="请提供明确的项目名称"
+            ))
+
+        # 2. 检查需求数量
+        if not spec.requirements or len(spec.requirements) < 3:
+            issues.append(ValidationIssue(
+                rule_id="R002",
+                severity=Severity.MEDIUM,
+                description=f"需求数量偏少(当前{len(spec.requirements)}个)",
+                location="需求列表",
+                suggestion="建议至少定义3个功能需求"
+            ))
+
+        # 3. 检查用户故事数量
+        if not spec.user_stories or len(spec.user_stories) < 5:
+            issues.append(ValidationIssue(
+                rule_id="R003",
+                severity=Severity.MEDIUM,
+                description=f"用户故事数量偏少(当前{len(spec.user_stories)}个)",
+                location="用户故事",
+                suggestion="建议至少定义5个用户故事"
+            ))
+
+        # 4. 检查验收标准
+        if spec.user_stories:
+            stories_without_ac = [
+                story.id for story in spec.user_stories
+                if not story.acceptance_criteria
+            ]
+            if stories_without_ac:
+                issues.append(ValidationIssue(
+                    rule_id="R004",
+                    severity=Severity.MEDIUM,
+                    description=f"{len(stories_without_ac)}个用户故事缺少验收标准",
+                    location=f"用户故事验收标准",
+                    suggestion=f"建议为以下故事添加验收标准: {', '.join(stories_without_ac[:3])}"
+                ))
+
+        # 5. 检查需求ID格式
+        if spec.requirements:
+            invalid_req_ids = [
+                req.id for req in spec.requirements
+                if not (req.id.startswith('REQ-') or req.id.startswith('FR-') or req.id.startswith('NFR-'))
+            ]
+            if invalid_req_ids:
+                issues.append(ValidationIssue(
+                    rule_id="R005",
+                    severity=Severity.LOW,
+                    description=f"{len(invalid_req_ids)}个需求ID格式不标准",
+                    location="需求ID格式",
+                    suggestion="建议使用 REQ-xxx,FR-xxx 或 NFR-xxx 格式"
+                ))
+
+        # 6. 检查用户故事ID格式
+        if spec.user_stories:
+            invalid_story_ids = [
+                story.id for story in spec.user_stories
+                if not story.id.startswith('US-')
+            ]
+            if invalid_story_ids:
+                issues.append(ValidationIssue(
+                    rule_id="R006",
+                    severity=Severity.LOW,
+                    description=f"{len(invalid_story_ids)}个用户故事ID格式不标准",
+                    location="用户故事ID格式",
+                    suggestion="建议使用 US-xxx 格式"
+                ))
+
+        # 7. 检查依赖关系有效性
+        if spec.requirements:
+            all_req_ids = {req.id for req in spec.requirements}
+            for req in spec.requirements:
+                req_deps = getattr(req, 'dependencies', [])
+                if req_deps:
+                    invalid_deps = [
+                        dep_id for dep_id in req_deps
+                        if dep_id not in all_req_ids
+                    ]
+                    if invalid_deps:
+                        issues.append(ValidationIssue(
+                            rule_id="R007",
+                            severity=Severity.HIGH,
+                            description=f"依赖的需求ID不存在: {', '.join(invalid_deps)}",
+                            location=f"需求 {req.id}",
+                            suggestion="请检查依赖关系或添加缺失的需求"
+                        ))
+
+        return issues
+
+    def _generate_recommendations(
+        """待添加文档字符串"""
+        self,
+        spec: SpecificationDocument,
+        metrics: QualityMetrics,
+        issues: List[ValidationIssue]
+    ) -> List[str]:
+        """
+        生成改进建议
+
+        基于质量指标和验证问题生成针对性建议
+        """
+        recommendations = []
+
+        # 1. 基于完整性得分
+        if metrics.completeness_score < 60:
+            recommendations.append(
+                "📋 **完整性较低**:建议补充缺失的文档和需求信息,确保项目信息,需求,用户故事等核心内容齐全."
+            )
+        elif metrics.completeness_score < 80:
+            recommendations.append(
+                "📋 **完整性中等**:大部分内容已齐全,建议补充验收标准和测试用例以提升质量."
+            )
+
+        # 2. 基于一致性得分
+        if metrics.consistency_score < 60:
+            recommendations.append(
+                "🔄 **一致性较低**:建议检查需求ID,用户故事ID的唯一性和格式统一性,确保依赖关系有效."
+            )
+        elif metrics.consistency_score < 80:
+            recommendations.append(
+                "🔄 **一致性中等**:大部分内容一致,建议统一术语使用和优先级分布."
+            )
+
+        # 3. 基于原子性得分
+        if metrics.atomicity_score < 60:
+            recommendations.append(
+                "⚛️ **原子性较低**:建议将复合需求拆分为独立的小需求,确保每个需求和用户故事职责单一."
+            )
+        elif metrics.atomicity_score < 80:
+            recommendations.append(
+                "⚛️ **原子性中等**:大部分需求已足够细化,建议优化验收标准使其更加明确."
+            )
+
+        # 4. 基于可测试性得分
+        if metrics.testability_score < 60:
+            recommendations.append(
+                "🧪 **可测试性较低**:建议为每个用户故事添加明确的,可量化的验收标准,补充测试用例和测试策略."
+            )
+        elif metrics.testability_score < 80:
+            recommendations.append(
+                "🧪 **可测试性中等**:大部分内容可测试,建议增强验收标准的可量化性(如响应时间,错误率等)."
+            )
+
+        # 5. 基于验证问题
+        high_count = sum(1 for issue in issues if issue.severity == Severity.HIGH or issue.severity == Severity.CRITICAL)
+        medium_count = sum(1 for issue in issues if issue.severity == Severity.MEDIUM)
+
+        if high_count > 0:
+            recommendations.append(
+                f" **发现{high_count}个严重问题**:请优先修复高优先级问题(如无效的依赖关系,缺失的必要信息)."
+            )
+
+        if medium_count > 3:
+            recommendations.append(
+                f" **发现{medium_count}个警告**:建议逐步解决中等优先级问题以提升文档质量."
+            )
+
+        # 6. 基于总分给出总体建议
+        avg_score = (metrics.completeness_score + metrics.consistency_score +
+                    metrics.atomicity_score + metrics.testability_score) / 4
+
+        if avg_score >= 90:
+            recommendations.append(
+                "🌟 **质量优秀**:文档质量非常高,可以直接进入开发阶段.建议定期回顾和更新文档."
+            )
+        elif avg_score >= 75:
+            recommendations.append(
+                " **质量良好**:文档质量较好,可以开始开发.建议在开发过程中持续完善文档."
+            )
+        elif avg_score >= 60:
+            recommendations.append(
+                " **质量中等**:文档基本可用,但建议先解决主要问题后再开始开发,避免后期返工."
+            )
+        else:
+            recommendations.append(
+                " **质量偏低**:建议先完善文档,补充缺失内容,解决关键问题后再开始开发."
+            )
+
+        # 7. 特定领域建议
+        if hasattr(spec, 'domain'):
+            domain_tips = {
+                DomainCategory.FINTECH: "💰 金融领域项目,建议特别关注安全性,合规性和数据一致性需求.",
+                DomainCategory.HEALTHCARE: "🏥 医疗领域项目,建议关注患者隐私,数据安全和医疗标准合规性.",
+                DomainCategory.E_COMMERCE: "🛒 电商领域项目,建议关注支付安全,库存管理和用户体验优化.",
+                DomainCategory.ENTERPRISE: "🏢 企业应用项目,建议关注系统集成,权限管理和可扩展性."
+            }
+
+            if spec.domain in domain_tips:
+                recommendations.append(domain_tips[spec.domain])
+
+        return recommendations
+
+    def _estimate_hours(self, spec: SpecificationDocument) -> int:
+        """
+        估算开发工时
+
+        估算规则:
+        - 基础工时:50小时
+        - 每个需求:+5小时
+        - 每个用户故事:+8小时
+        - 复杂度调整:Simple 0.8x, Medium 1.0x, Complex 1.3x, Very Complex 1.6x
+        - 文档完整度调整:根据文档数量调整
+
+        Args:
+            spec: 规格文档
+
+        Returns:
+            int: 估算工时
+        """
+        base_hours = 50
+
+        # 需求和用户故事
+        req_hours = len(spec.requirements) * 5 if spec.requirements else 0
+        story_hours = len(spec.user_stories) * 8 if spec.user_stories else 0
+
+        total_hours = base_hours + req_hours + story_hours
+
+        # 复杂度调整
+        if hasattr(spec, 'complexity'):
+            complexity_multiplier = {
+                ComplexityLevel.SIMPLE: 0.8,
+                ComplexityLevel.MEDIUM: 1.0,
+                ComplexityLevel.COMPLEX: 1.3,
+                ComplexityLevel.VERY_COMPLEX: 1.6
+            }
+            multiplier = complexity_multiplier.get(spec.complexity, 1.0)
+            total_hours = int(total_hours * multiplier)
+
+        # 文档完整度调整(文档越完整,开发越快)
+        doc_count = len(spec.documents)
+        if doc_count >= 7:
+            total_hours = int(total_hours * 0.9)  # 文档齐全,减少10%工时
+        elif doc_count <= 3:
+            total_hours = int(total_hours * 1.2)  # 文档不全,增加20%工时
+
+        return max(total_hours, 20)  # 最少20小时
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

@@ -1,0 +1,851 @@
+"""
+SpecFlow V2.0 - 任务分析系统
+解析用户任务描述,提取需求,估算复杂度,识别组件
+版本: 2.0.0
+"""
+
+from typing import List, Dict, Any, Tuple, Optional, Union, Callable
+from dataclasses import dataclass, field
+import re
+
+import logging
+
+from atomic_component import (
+    AtomicComponent, UserStory, Feature, AtomicProperty,
+    Priority, Severity, ComponentCategory,
+    Interaction, EdgeCase, ErrorHandling, BDDScenario
+)
+from models_v2 import (
+    SpecificationV2, DepthLevel, Risk,
+    BoundedContext, Aggregate, TechStack
+)
+from config_v2 import SpecFlowConfigV2
+
+
+# ============ 分析结果 ============
+
+@dataclass
+class TaskAnalysisResult:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    任务分析结果
+    # 基础信息
+    project_name: str                   # 项目名称
+    project_description: str            # 项目描述
+
+    # 复杂度评估
+    estimated_hours: float              # 估算工时
+    complexity_level: str               # Low / Medium / High / Very High
+    recommended_depth: DepthLevel       # 推荐的深度级别
+
+    # 提取的需求
+    functional_requirements: List[str]  # 功能需求
+    non_functional_requirements: List[str]  # 非功能需求
+
+    # 领域分析
+    identified_domains: List[str]       # 识别的领域
+    key_entities: List[str]             # 关键实体
+    business_rules: List[str]           # 业务规则
+
+    # 技术分析
+    suggested_tech_stack: List[str]     # 建议的技术栈
+    integration_points: List[str]       # 集成点
+
+    # 约束和风险
+    constraints: List[str]              # 约束条件
+    identified_risks: List[str]         # 识别的风险
+
+    # 元数据
+    confidence: float = 0.8             # 分析置信度(0-1)
+
+
+# ============ 复杂度估算器 ============
+
+class ComplexityEstimator:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    复杂度估算器
+    基于 PERT 三点估算和特征分析
+    """
+
+    # 复杂度权重
+    WEIGHTS = {
+        "features": 20,              # 功能数量
+        "integrations": 15,          # 集成数量
+        "users": 10,                 # 用户规模
+        "data_volume": 10,           # 数据量
+        "concurrent_users": 10,      # 并发用户
+        "tech_complexity": 15,       # 技术复杂度
+        "team_size": 10,            # 团队规模
+        "timeline": 10              # 时间线
+    }
+
+    @staticmethod
+    def estimate_complexity(task_desc: str, metadata: Dict[str, Any]) -> Tuple[float, str, DepthLevel]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        估算任务复杂度
+        返回: (估算工时, 复杂度级别, 推荐深度)
+        """
+        # 1. 基础工时估算(基于关键词)
+        base_hours = ComplexityEstimator._estimate_base_hours(task_desc)
+
+        # 2. 根据元数据调整
+        multiplier = ComplexityEstimator._calculate_multiplier(metadata)
+
+        # 3. PERT 估算
+        optimistic = base_hours * 0.7
+        most_likely = base_hours * multiplier
+        pessimistic = base_hours * multiplier * 1.5
+
+        estimated_hours = (optimistic + 4 * most_likely + pessimistic) / 6
+
+        # 4. 确定复杂度级别
+        complexity_level = ComplexityEstimator._determine_complexity_level(estimated_hours)
+
+        # 5. 推荐深度级别
+        recommended_depth = ComplexityEstimator._recommend_depth(estimated_hours)
+
+        return estimated_hours, complexity_level, recommended_depth
+
+    @staticmethod
+    def _estimate_base_hours(task_desc: str) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        基于关键词估算基础工时
+        hours = 40  # 默认基础工时
+
+        # 关键词 -> 工时增量
+        keywords = {
+            # 应用类型
+            "平台": 200, "系统": 150, "应用": 80, "工具": 40,
+            "platform": 200, "system": 150, "app": 80, "tool": 40,
+
+            # 架构复杂度
+            "微服务": 150, "分布式": 120, "多租户": 100,
+            "microservice": 150, "distributed": 120, "multi-tenant": 100,
+
+            # 功能复杂度
+            "AI": 80, "机器学习": 100, "推荐": 60, "搜索": 40,
+            "实时": 50, "real-time": 50,
+
+            # 集成
+            "集成": 30, "API": 20, "integration": 30,
+
+            # 数据
+            "大数据": 80, "分析": 40, "报表": 30,
+            "big data": 80, "analytics": 40, "reporting": 30
+        }
+
+        text_lower = task_desc.lower()
+        for keyword, increment in keywords.items():
+            if keyword.lower() in text_lower:
+                hours += increment
+
+        return hours
+
+    @staticmethod
+    def _calculate_multiplier(metadata: Dict[str, Any]) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        根据元数据计算调整系数
+        multiplier = 1.0
+
+        # 预算影响(预算低 -> 时间紧 -> 需要更快)
+        budget = metadata.get("budget", 0)
+        if budget > 0:
+            if budget < 200000:  # < 20万
+                multiplier *= 0.9
+            elif budget > 1000000:  # > 100万
+                multiplier *= 1.3
+
+        # 时间线影响
+        timeline_months = metadata.get("timeline_months", 0)
+        if timeline_months > 0:
+            if timeline_months < 3:
+                multiplier *= 0.8  # 短期项目,范围较小
+            elif timeline_months > 12:
+                multiplier *= 1.4  # 长期项目,范围较大
+
+        # 团队规模影响
+        team_size = metadata.get("team_size", 0)
+        if team_size > 0:
+            if team_size < 3:
+                multiplier *= 0.9
+            elif team_size > 10:
+                multiplier *= 1.3
+
+        # 用户规模影响
+        users = metadata.get("expected_users", 0)
+        if users > 10000:
+            multiplier *= 1.2
+        elif users > 100000:
+            multiplier *= 1.4
+
+        return multiplier
+
+    @staticmethod
+    def _determine_complexity_level(hours: float) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        确定复杂度级别
+        if hours < 100:
+            return "Low"
+        elif hours < 500:
+            return "Medium"
+        elif hours < 1500:
+            return "High"
+        else:
+            return "Very High"
+
+    @staticmethod
+    def _recommend_depth(hours: float) -> DepthLevel:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        推荐深度级别
+        if hours < 200:
+            return DepthLevel.SIMPLE
+        elif hours < 1000:
+            return DepthLevel.STANDARD
+        else:
+            return DepthLevel.COMPREHENSIVE
+
+
+# ============ 需求提取器 ============
+
+class RequirementExtractor:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    需求提取器
+    从任务描述中提取功能需求和非功能需求
+    """
+
+    # 非功能需求关键词
+    NFR_KEYWORDS = {
+        "performance": ["性能", "响应时间", "吞吐量", "performance", "response time", "throughput"],
+        "scalability": ["可扩展", "扩展性", "scalable", "scalability"],
+        "security": ["安全", "加密", "认证", "授权", "security", "encryption", "auth"],
+        "reliability": ["可靠", "稳定", "高可用", "reliable", "stable", "high availability"],
+        "usability": ["易用", "用户友好", "usable", "user-friendly"],
+        "maintainability": ["可维护", "maintainable"],
+        "compliance": ["合规", "GDPR", "HIPAA", "compliance"]
+    }
+
+    @staticmethod
+    def extract_requirements(task_desc: str) -> Tuple[List[str], List[str]]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        提取需求
+        返回: (功能需求列表, 非功能需求列表)
+        """
+        # 1. 提取功能需求
+        functional_reqs = RequirementExtractor._extract_functional_requirements(task_desc)
+
+        # 2. 提取非功能需求
+        non_functional_reqs = RequirementExtractor._extract_non_functional_requirements(task_desc)
+
+        return functional_reqs, non_functional_reqs
+
+    @staticmethod
+    def _extract_functional_requirements(task_desc: str) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        提取功能需求
+        functional_reqs = []
+
+        # 常见功能关键词
+        feature_keywords = [
+            "登录", "注册", "搜索", "推荐", "支付", "订单", "库存",
+            "用户管理", "权限", "报表", "分析", "导出", "导入",
+            "login", "register", "search", "recommend", "payment", "order",
+            "inventory", "user management", "permission", "report", "analytics"
+        ]
+
+        text_lower = task_desc.lower()
+        for keyword in feature_keywords:
+            if keyword.lower() in text_lower:
+                functional_reqs.append(f"系统应支持{keyword}功能")
+
+        # 如果没有找到,添加通用需求
+        if not functional_reqs:
+            functional_reqs.append("系统应提供核心业务功能")
+
+        return functional_reqs[:10]  # 最多返回10个
+
+    @staticmethod
+    def _extract_non_functional_requirements(task_desc: str) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        提取非功能需求
+        non_functional_reqs = []
+
+        text_lower = task_desc.lower()
+
+        for category, keywords in RequirementExtractor.NFR_KEYWORDS.items():
+            for keyword in keywords:
+                if keyword.lower() in text_lower:
+                    nfr = RequirementExtractor._generate_nfr(category)
+                    if nfr not in non_functional_reqs:
+                        non_functional_reqs.append(nfr)
+                    break
+
+        # 默认非功能需求
+        if not non_functional_reqs:
+            non_functional_reqs = [
+                "系统应具有良好的性能(响应时间 < 2s)",
+                "系统应保证数据安全性",
+                "系统应具有可扩展性"
+            ]
+
+        return non_functional_reqs
+
+    @staticmethod
+    def _generate_nfr(category: str) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成非功能需求描述
+        nfr_templates = {
+            "performance": "系统应保证良好的性能(平均响应时间 < 200ms)",
+            "scalability": "系统应具有可扩展性,支持水平扩展",
+            "security": "系统应实施安全措施(加密,认证,授权)",
+            "reliability": "系统应具有高可用性(99.9% uptime)",
+            "usability": "系统应提供良好的用户体验",
+            "maintainability": "系统应易于维护和更新",
+            "compliance": "系统应符合相关法规要求"
+        }
+        return nfr_templates.get(category, "系统应满足质量要求")
+
+
+# ============ 领域分析器 ============
+
+class DomainAnalyzer:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    领域分析器(DDD)
+    识别领域,实体,边界上下文
+    """
+
+    # 常见领域
+    COMMON_DOMAINS = [
+        "用户管理", "订单管理", "库存管理", "支付", "物流",
+        "分析", "报表", "通知", "认证", "权限"
+    ]
+
+    @staticmethod
+    def analyze_domain(task_desc: str) -> Tuple[List[str], List[str], List[str]]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        分析领域
+        返回: (领域列表, 实体列表, 业务规则列表)
+        """
+        # 1. 识别领域
+        domains = DomainAnalyzer._identify_domains(task_desc)
+
+        # 2. 识别实体
+        entities = DomainAnalyzer._identify_entities(task_desc)
+
+        # 3. 识别业务规则
+        business_rules = DomainAnalyzer._identify_business_rules(task_desc)
+
+        return domains, entities, business_rules
+
+    @staticmethod
+    def _identify_domains(task_desc: str) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        识别领域
+        identified = []
+
+        text_lower = task_desc.lower()
+        for domain in DomainAnalyzer.COMMON_DOMAINS:
+            if domain.lower() in text_lower:
+                identified.append(domain)
+
+        # 如果没有识别到,返回通用领域
+        if not identified:
+            identified = ["核心业务", "用户管理"]
+
+        return identified[:5]  # 最多5个领域
+
+    @staticmethod
+    def _identify_entities(task_desc: str) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        识别实体
+        # 常见实体名词
+        entity_keywords = [
+            "用户", "订单", "产品", "库存", "支付", "发票",
+            "客户", "供应商", "商品", "分类", "评论",
+            "User", "Order", "Product", "Inventory", "Payment",
+            "Customer", "Supplier", "Item", "Category"
+        ]
+
+        identified = []
+        text_lower = task_desc.lower()
+
+        for keyword in entity_keywords:
+            if keyword.lower() in text_lower:
+                identified.append(keyword.capitalize())
+
+        if not identified:
+            identified = ["User", "Item"]
+
+        return list(set(identified))[:8]  # 去重,最多8个
+
+    @staticmethod
+    def _identify_business_rules(task_desc: str) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        识别业务规则
+        rules = []
+
+        # 从描述中提取规则关键词
+        if "验证" in task_desc or "validate" in task_desc.lower():
+            rules.append("所有输入必须经过验证")
+
+        if "权限" in task_desc or "permission" in task_desc.lower():
+            rules.append("用户操作必须经过权限检查")
+
+        if "审批" in task_desc or "approval" in task_desc.lower():
+            rules.append("关键操作需要审批流程")
+
+        # 默认规则
+        if not rules:
+            rules = [
+                "业务操作必须符合业务逻辑约束",
+                "数据修改必须记录审计日志"
+            ]
+
+        return rules
+
+# ============ 技术栈分析器 ============
+
+class TechStackAnalyzer:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    技术栈分析器
+    根据需求推荐技术栈
+    """
+
+    @staticmethod
+    def suggest_tech_stack(task_desc: str, requirements: List[str]) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        推荐技术栈
+        suggestions = []
+
+        text_lower = task_desc.lower()
+
+        # Frontend
+        if "web" in text_lower or "前端" in text_lower:
+            suggestions.append("Frontend: React / Vue.js")
+
+        # Backend
+        if "api" in text_lower or "后端" in text_lower:
+            suggestions.append("Backend: Node.js / Python (FastAPI)")
+
+        # Database
+        if "数据库" in text_lower or "database" in text_lower:
+            suggestions.append("Database: PostgreSQL / MongoDB")
+
+        # Real-time
+        if "实时" in text_lower or "real-time" in text_lower:
+            suggestions.append("Real-time: WebSocket / Redis Pub/Sub")
+
+        # AI/ML
+        if "AI" in task_desc or "机器学习" in task_desc or "推荐" in task_desc:
+            suggestions.append("AI/ML: TensorFlow / PyTorch / Scikit-learn")
+
+        # 默认技术栈
+        if not suggestions:
+            suggestions = [
+                "Frontend: React",
+                "Backend: Node.js / Express",
+                "Database: PostgreSQL",
+                "Caching: Redis",
+                "Cloud: AWS / Azure"
+            ]
+
+        return suggestions[:6]
+
+
+# ============ 风险分析器 ============
+
+class RiskAnalyzer:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    风险分析器
+    识别项目风险
+    """
+
+    @staticmethod
+    def identify_risks(task_desc: str, complexity_level: str, estimated_hours: float) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        识别风险
+        risks = []
+
+        # 1. 技术风险
+        if "AI" in task_desc or "机器学习" in task_desc:
+            risks.append("技术风险: AI/ML 模型训练和调优复杂度高")
+
+        if "微服务" in task_desc or "microservice" in task_desc.lower():
+            risks.append("技术风险: 微服务架构增加运维复杂度")
+
+        if "实时" in task_desc or "real-time" in task_desc.lower():
+            risks.append("技术风险: 实时数据处理需要高性能基础设施")
+
+        # 2. 进度风险
+        if complexity_level in ["High", "Very High"]:
+            risks.append("进度风险: 项目复杂度高,可能延期")
+
+        if estimated_hours > 2000:
+            risks.append("进度风险: 项目规模大,需要谨慎管理")
+
+        # 3. 资源风险
+        if "多租户" in task_desc or "multi-tenant" in task_desc.lower():
+            risks.append("资源风险: 多租户架构需要更多资源")
+
+        # 4. 集成风险
+        if "集成" in task_desc or "integration" in task_desc.lower():
+            risks.append("集成风险: 第三方集成可能存在不确定性")
+
+        # 默认风险
+        if not risks:
+            risks = [
+                "技术风险: 新技术栈学习曲线",
+                "进度风险: 需求变更可能影响进度"
+            ]
+
+        return risks[:8]
+
+
+# ============ 任务分析器(主入口) ============
+
+class TaskAnalyzer:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    任务分析器(主入口)
+    解析用户任务描述,生成完整的分析结果
+    """
+
+    @staticmethod
+    def analyze(task_description: str, metadata: Optional[Dict[str, Any]] = None) -> TaskAnalysisResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        分析任务
+
+        Args:
+            task_description: 任务描述
+            metadata: 元数据(预算,时间线,团队规模等)
+
+        Returns:
+            TaskAnalysisResult: 完整的分析结果
+        """
+        if metadata is None:
+            metadata = {}
+
+        # 1. 提取项目名称
+        project_name = TaskAnalyzer._extract_project_name(task_description)
+
+        # 2. 复杂度估算
+        estimated_hours, complexity_level, recommended_depth = \
+            ComplexityEstimator.estimate_complexity(task_description, metadata)
+
+        # 3. 需求提取
+        functional_reqs, non_functional_reqs = \
+            RequirementExtractor.extract_requirements(task_description)
+
+        # 4. 领域分析
+        domains, entities, business_rules = \
+            DomainAnalyzer.analyze_domain(task_description)
+
+        # 5. 技术栈建议
+        suggested_tech_stack = \
+            TechStackAnalyzer.suggest_tech_stack(task_description, functional_reqs)
+
+        # 6. 集成点识别
+        integration_points = TaskAnalyzer._identify_integrations(task_description)
+
+        # 7. 约束识别
+        constraints = TaskAnalyzer._identify_constraints(task_description, metadata)
+
+        # 8. 风险识别
+        identified_risks = \
+            RiskAnalyzer.identify_risks(task_description, complexity_level, estimated_hours)
+
+        # 9. 构建结果
+        result = TaskAnalysisResult(
+            project_name=project_name,
+            project_description=task_description,
+            estimated_hours=estimated_hours,
+            complexity_level=complexity_level,
+            recommended_depth=recommended_depth,
+            functional_requirements=functional_reqs,
+            non_functional_requirements=non_functional_reqs,
+            identified_domains=domains,
+            key_entities=entities,
+            business_rules=business_rules,
+            suggested_tech_stack=suggested_tech_stack,
+            integration_points=integration_points,
+            constraints=constraints,
+            identified_risks=identified_risks,
+            confidence=0.85  # 默认置信度
+        )
+
+        return result
+
+    @staticmethod
+    def _extract_project_name(task_desc: str) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        提取项目名称
+        # 简单启发式:取第一句话的关键词
+        first_sentence = task_desc.split(".")[0].split(".")[0]
+
+        # 常见项目类型关键词
+        project_types = ["平台", "系统", "应用", "工具", "服务", "网站",
+                        "platform", "system", "app", "tool", "service", "website"]
+
+        for ptype in project_types:
+            if ptype in first_sentence.lower():
+                # 提取类型前的词作为项目名
+                parts = first_sentence.split(ptype)
+                if parts[0].strip():
+                    return parts[0].strip() + ptype
+                else:
+                    return ptype + "项目"
+
+        # 如果没找到,使用默认名称
+        return "项目"
+
+    @staticmethod
+    def _identify_integrations(task_desc: str) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        识别集成点
+        integrations = []
+
+        # 常见集成关键词
+        integration_keywords = {
+            "Salesforce": "Salesforce CRM",
+            "HubSpot": "HubSpot",
+            "Stripe": "Stripe 支付",
+            "PayPal": "PayPal 支付",
+            "WeChat": "微信",
+            "Alipay": "支付宝",
+            "AWS": "AWS 云服务",
+            "Azure": "Azure 云服务",
+            "Google": "Google 服务",
+        }
+
+        text = task_desc
+        for keyword, integration_name in integration_keywords.items():
+            if keyword.lower() in text.lower():
+                integrations.append(integration_name)
+
+        return integrations
+
+    @staticmethod
+    def _identify_constraints(task_desc: str, metadata: Dict[str, Any]) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        识别约束条件
+        constraints = []
+
+        # 从元数据提取约束
+        if "budget" in metadata:
+            budget = metadata["budget"]
+            constraints.append(f"预算约束: {budget:,} 元")
+
+        if "timeline_months" in metadata:
+            months = metadata["timeline_months"]
+            constraints.append(f"时间约束: {months} 个月")
+
+        if "team_size" in metadata:
+            team = metadata["team_size"]
+            constraints.append(f"团队规模: {team} 人")
+
+        # 从描述中提取约束
+        if "合规" in task_desc or "compliance" in task_desc.lower():
+            constraints.append("必须符合相关法规要求(GDPR/HIPAA等)")
+
+        if "性能" in task_desc or "performance" in task_desc.lower():
+            constraints.append("必须满足性能要求")
+
+        # 默认约束
+        if not constraints:
+            constraints = [
+                "必须在预算和时间内完成",
+                "必须满足质量标准"
+            ]
+
+        return constraints
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

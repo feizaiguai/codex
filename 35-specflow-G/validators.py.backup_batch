@@ -1,0 +1,888 @@
+"""
+SpecFlow V2.0 - 质量验证系统
+原子级验证,一致性检查,完整性评分
+版本: 2.0.0
+"""
+
+from typing import List, Dict, Any, Tuple, Set, Optional, Union, Callable
+from dataclasses import dataclass, field
+import re
+
+import logging
+
+from atomic_component import (
+    AtomicComponent, UserStory, Feature,
+    BDDScenario, TestCase, EdgeCase, ErrorHandling
+)
+from models_v2 import (
+    SpecificationV2, Document, DocumentType,
+    QualityMetrics, QualityGrade, ValidationIssue,
+    Severity, BoundedContext, Aggregate
+)
+from config_v2 import SpecFlowConfigV2
+
+
+# ============ 验证结果 ============
+
+@dataclass
+class ValidationResult:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    验证结果
+    passed: bool                        # 是否通过
+    score: float                        # 得分(0-100)
+    issues: List[ValidationIssue] = field(default_factory=list)
+    suggestions: List[str] = field(default_factory=list)
+
+
+# ============ 原子性验证器 ============
+
+class AtomicityValidator:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    原子性验证器
+    验证组件是否符合原子级标准(基于原子级.txt)
+    """
+
+    @staticmethod
+    def validate_component(component: AtomicComponent) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证单个原子组件
+        issues = []
+        score = 100.0
+
+        # 1. 检查必填字段
+        required_fields = ['id', 'name', 'purpose', 'props']
+        for field_name in required_fields:
+            if not getattr(component, field_name, None):
+                issues.append(ValidationIssue(
+                    type="Missing",
+                    severity=Severity.HIGH,
+                    description=f"组件 {component.name} 缺少必填字段: {field_name}",
+                    location=f"Component:{component.id}",
+                    suggestion=f"添加 {field_name} 字段"
+                ))
+                score -= 15
+
+        # 2. 检查命名规范(自文档化)
+        if not AtomicityValidator._is_self_documenting_name(component.name):
+            issues.append(ValidationIssue(
+                type="Inconsistent",
+                severity=Severity.MEDIUM,
+                description=f"组件名称 {component.name} 不够自文档化",
+                location=f"Component:{component.id}",
+                suggestion="使用驼峰命名,如 UserLoginForm, ProductCatalogTable"
+            ))
+            score -= 5
+
+        # 3. 检查目的描述(一句话清晰)
+        if len(component.purpose) < 10:
+            issues.append(ValidationIssue(
+                type="Missing",
+                severity=Severity.MEDIUM,
+                description=f"组件 {component.name} 的 purpose 描述过短",
+                location=f"Component:{component.id}",
+                suggestion="提供清晰的一句话描述,如'允许用户通过邮箱和密码登录系统'"
+            ))
+            score -= 8
+
+        # 4. 检查属性定义(原子级)
+        if len(component.props) == 0:
+            issues.append(ValidationIssue(
+                type="Missing",
+                severity=Severity.HIGH,
+                description=f"组件 {component.name} 没有定义任何属性",
+                location=f"Component:{component.id}",
+                suggestion="添加原子级属性定义(name, type, required, validation)"
+            ))
+            score -= 12
+        else:
+            # 检查每个属性是否完整
+            for prop in component.props:
+                if not prop.name or not prop.type or not prop.description:
+                    issues.append(ValidationIssue(
+                        type="Missing",
+                        severity=Severity.MEDIUM,
+                        description=f"组件 {component.name} 的属性 {prop.name} 定义不完整",
+                        location=f"Component:{component.id}:Property:{prop.name}",
+                        suggestion="确保每个属性都有 name, type, description"
+                    ))
+                    score -= 3
+
+        # 5. 检查交互定义(事件驱动)
+        if len(component.interactions) == 0:
+            issues.append(ValidationIssue(
+                type="Missing",
+                severity=Severity.MEDIUM,
+                description=f"组件 {component.name} 没有定义交互行为",
+                location=f"Component:{component.id}",
+                suggestion="添加交互定义(event → result)"
+            ))
+            score -= 8
+
+        # 6. 检查边界情况
+        if len(component.edge_cases) == 0:
+            issues.append(ValidationIssue(
+                type="Missing",
+                severity=Severity.MEDIUM,
+                description=f"组件 {component.name} 没有考虑边界情况",
+                location=f"Component:{component.id}",
+                suggestion="添加边界情况处理(网络错误,无效输入等)"
+            ))
+            score -= 8
+
+        # 7. 检查验收标准(ATDD)
+        if len(component.acceptance_criteria) == 0:
+            issues.append(ValidationIssue(
+                type="Missing",
+                severity=Severity.HIGH,
+                description=f"组件 {component.name} 没有验收标准",
+                location=f"Component:{component.id}",
+                suggestion="添加可测试的验收标准"
+            ))
+            score -= 10
+
+        # 8. 检查 BDD 场景
+        if len(component.bdd_scenarios) == 0:
+            issues.append(ValidationIssue(
+                type="Missing",
+                severity=Severity.MEDIUM,
+                description=f"组件 {component.name} 没有 BDD 场景",
+                location=f"Component:{component.id}",
+                suggestion="添加 Given-When-Then 场景"
+            ))
+            score -= 5
+
+        # 确保分数不低于 0
+        score = max(0, score)
+
+        return ValidationResult(
+            passed=score >= 80,  # 80分及格
+            score=score,
+            issues=issues
+        )
+
+    @staticmethod
+    def _is_self_documenting_name(name: str) -> bool:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检查是否是自文档化命名(驼峰命名)
+        # 检查是否是驼峰命名(UserLoginForm, productCatalogTable)
+        return bool(re.match(r'^[A-Z][a-z]+([A-Z][a-z]+)*$|^[a-z]+([A-Z][a-z]+)+$', name))
+
+    @staticmethod
+    def validate_all_components(components: List[AtomicComponent]) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证所有组件
+        all_issues = []
+        total_score = 0.0
+        component_count = len(components)
+
+        if component_count == 0:
+            return ValidationResult(
+                passed=False,
+                score=0,
+                issues=[ValidationIssue(
+                    type="Missing",
+                    severity=Severity.CRITICAL,
+                    description="没有任何原子组件",
+                    location="Specification",
+                    suggestion="至少创建 3 个原子组件"
+                )],
+                suggestions=["至少创建 3 个原子组件"]
+            )
+
+        for component in components:
+            result = AtomicityValidator.validate_component(component)
+            all_issues.extend(result.issues)
+            total_score += result.score
+
+        avg_score = total_score / component_count
+
+        return ValidationResult(
+            passed=avg_score >= 80,
+            score=avg_score,
+            issues=all_issues,
+            suggestions=AtomicityValidator._generate_suggestions(all_issues)
+        )
+
+    @staticmethod
+    def _generate_suggestions(issues: List[ValidationIssue]) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成改进建议
+        suggestions = []
+
+        # 统计问题类型
+        missing_count = sum(1 for i in issues if i.type == "Missing")
+        inconsistent_count = sum(1 for i in issues if i.type == "Inconsistent")
+
+        if missing_count > 0:
+            suggestions.append(f"有 {missing_count} 个缺失项需要补充")
+        if inconsistent_count > 0:
+            suggestions.append(f"有 {inconsistent_count} 个不一致项需要修正")
+
+        # 按严重程度排序问题
+        critical_issues = [i for i in issues if i.severity == Severity.CRITICAL]
+        high_issues = [i for i in issues if i.severity == Severity.HIGH]
+
+        if critical_issues:
+            suggestions.append(f"优先处理 {len(critical_issues)} 个关键问题")
+        if high_issues:
+            suggestions.append(f"处理 {len(high_issues)} 个高优先级问题")
+
+        return suggestions[:5]  # 最多返回5条建议
+
+
+# ============ 一致性验证器 ============
+
+class ConsistencyValidator:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    一致性验证器
+    检查跨文档的术语,接口,数据模型一致性
+    """
+
+    @staticmethod
+    def validate_specification(spec: SpecificationV2) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证整个规格文档的一致性
+        issues = []
+        score = 100.0
+
+        # 1. 术语一致性
+        term_result = ConsistencyValidator._validate_terminology(spec)
+        issues.extend(term_result.issues)
+        score -= (100 - term_result.score) * 0.3
+
+        # 2. 接口一致性
+        interface_result = ConsistencyValidator._validate_interfaces(spec)
+        issues.extend(interface_result.issues)
+        score -= (100 - interface_result.score) * 0.3
+
+        # 3. 数据模型一致性
+        model_result = ConsistencyValidator._validate_data_models(spec)
+        issues.extend(model_result.issues)
+        score -= (100 - model_result.score) * 0.2
+
+        # 4. 引用完整性
+        ref_result = ConsistencyValidator._validate_references(spec)
+        issues.extend(ref_result.issues)
+        score -= (100 - ref_result.score) * 0.2
+
+        score = max(0, score)
+
+        return ValidationResult(
+            passed=score >= 95,  # 一致性要求 95 分
+            score=score,
+            issues=issues
+        )
+
+    @staticmethod
+    def _validate_terminology(spec: SpecificationV2) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证术语一致性
+        issues = []
+        score = 100.0
+
+        # 提取所有使用的术语
+        terms_usage: Dict[str, Set[str]] = {}  # term -> {locations}
+
+        # 从组件中提取
+        for component in spec.components:
+            terms = ConsistencyValidator._extract_terms(component.purpose)
+            for term in terms:
+                if term not in terms_usage:
+                    terms_usage[term] = set()
+                terms_usage[term].add(f"Component:{component.id}")
+
+        # 检查术语变体(可能的不一致)
+        # 例如: "用户" vs "user", "登录" vs "login"
+        potential_variants = ConsistencyValidator._find_term_variants(list(terms_usage.keys()))
+
+        for term1, term2, similarity in potential_variants:
+            issues.append(ValidationIssue(
+                type="Inconsistent",
+                severity=Severity.LOW,
+                description=f"术语可能不一致: '{term1}' 和 '{term2}'",
+                location="Terminology",
+                suggestion=f"统一使用 '{term1}' 或 '{term2}'"
+            ))
+            score -= 2
+
+        return ValidationResult(passed=True, score=max(0, score), issues=issues)
+
+    @staticmethod
+    def _extract_terms(text: str) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        从文本中提取关键术语
+        # 简化版:提取中文词汇和英文单词
+        chinese_words = re.findall(r'[\u4e00-\u9fff]+', text)
+        english_words = re.findall(r'\b[a-zA-Z]+\b', text.lower())
+        return chinese_words + english_words
+
+    @staticmethod
+    def _find_term_variants(terms: List[str]) -> List[Tuple[str, str, float]]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        查找可能的术语变体
+        variants = []
+        # 简化版:查找长度相近的术语
+        for i, term1 in enumerate(terms):
+            for term2 in terms[i+1:]:
+                if abs(len(term1) - len(term2)) <= 2:
+                    # 简单相似度计算
+                    if len(set(term1) & set(term2)) / max(len(term1), len(term2)) > 0.5:
+                        variants.append((term1, term2, 0.6))
+        return variants[:5]  # 最多返回5个
+
+    @staticmethod
+    def _validate_interfaces(spec: SpecificationV2) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证 API 接口一致性
+        issues = []
+        score = 100.0
+
+        # 收集所有 API 端点
+        api_endpoints: Dict[str, List[str]] = {}  # endpoint -> [component_ids]
+
+        for component in spec.components:
+            if component.api_contract:
+                endpoint = component.api_contract.endpoint
+                if endpoint not in api_endpoints:
+                    api_endpoints[endpoint] = []
+                api_endpoints[endpoint].append(component.id)
+
+        # 检查重复端点
+        for endpoint, component_ids in api_endpoints.items():
+            if len(component_ids) > 1:
+                issues.append(ValidationIssue(
+                    type="Conflict",
+                    severity=Severity.HIGH,
+                    description=f"API 端点 {endpoint} 被多个组件定义: {', '.join(component_ids)}",
+                    location="API",
+                    suggestion="确保每个端点只被一个组件定义"
+                ))
+                score -= 10
+
+        return ValidationResult(passed=True, score=max(0, score), issues=issues)
+
+    @staticmethod
+    def _validate_data_models(spec: SpecificationV2) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证数据模型一致性
+        issues = []
+        score = 100.0
+
+        # 收集所有数据模型
+        model_names: Dict[str, List[str]] = {}  # model_name -> [component_ids]
+
+        for component in spec.components:
+            if component.data_model:
+                name = component.data_model.entity_name
+                if name not in model_names:
+                    model_names[name] = []
+                model_names[name].append(component.id)
+
+        # 检查重复模型定义
+        for model_name, component_ids in model_names.items():
+            if len(component_ids) > 1:
+                issues.append(ValidationIssue(
+                    type="Conflict",
+                    severity=Severity.MEDIUM,
+                    description=f"数据模型 {model_name} 被多个组件定义: {', '.join(component_ids)}",
+                    location="DataModel",
+                    suggestion="统一数据模型定义,或使用不同名称"
+                ))
+                score -= 8
+
+        return ValidationResult(passed=True, score=max(0, score), issues=issues)
+
+    @staticmethod
+    def _validate_references(spec: SpecificationV2) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证引用完整性
+        issues = []
+        score = 100.0
+
+        # 收集所有组件 ID
+        component_ids = {c.id for c in spec.components}
+
+        # 检查依赖引用
+        for component in spec.components:
+            for dep in component.dependencies:
+                if dep not in component_ids:
+                    issues.append(ValidationIssue(
+                        type="Missing",
+                        severity=Severity.MEDIUM,
+                        description=f"组件 {component.id} 依赖的组件 {dep} 不存在",
+                        location=f"Component:{component.id}",
+                        suggestion=f"创建组件 {dep} 或移除依赖"
+                    ))
+                    score -= 5
+
+        return ValidationResult(passed=True, score=max(0, score), issues=issues)
+
+
+# ============ 完整性验证器 ============
+
+class CompletenessValidator:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    完整性验证器
+    检查规格文档的覆盖率和完整性
+    """
+
+    @staticmethod
+    def validate_specification(spec: SpecificationV2, config: Dict[str, Any]) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证规格文档完整性
+        issues = []
+        total_score = 0.0
+        checks = 0
+
+        # 1. 文档完整性
+        doc_score = CompletenessValidator._check_documents(spec, config)
+        total_score += doc_score
+        checks += 1
+
+        # 2. 组件完整性
+        comp_score = CompletenessValidator._check_components(spec, config)
+        total_score += comp_score
+        checks += 1
+
+        # 3. 用户故事完整性
+        story_score = CompletenessValidator._check_user_stories(spec, config)
+        total_score += story_score
+        checks += 1
+
+        # 4. 测试覆盖率
+        test_score = CompletenessValidator._check_test_coverage(spec)
+        total_score += test_score
+        checks += 1
+
+        # 5. DDD 模型完整性
+        ddd_score = CompletenessValidator._check_ddd_models(spec)
+        total_score += ddd_score
+        checks += 1
+
+        avg_score = total_score / checks if checks > 0 else 0
+
+        return ValidationResult(
+            passed=avg_score >= 95,
+            score=avg_score,
+            issues=issues,
+            suggestions=[f"完整性评分: {avg_score:.1f}/100"]
+        )
+
+    @staticmethod
+    def _check_documents(spec: SpecificationV2, config: Dict[str, Any]) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检查文档完整性
+        required_docs = config.get("documents", [])
+        existing_docs = list(spec.documents.keys())
+
+        if not required_docs:
+            return 100.0
+
+        coverage = len(existing_docs) / len(required_docs) * 100
+        return min(100, coverage)
+
+    @staticmethod
+    def _check_components(spec: SpecificationV2, config: Dict[str, Any]) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检查组件完整性
+        min_components = config.get("required_components", {}).get("functional_requirements_min", 5)
+        actual_components = len(spec.components)
+
+        if actual_components >= min_components:
+            return 100.0
+        else:
+            return (actual_components / min_components) * 100
+
+    @staticmethod
+    def _check_user_stories(spec: SpecificationV2, config: Dict[str, Any]) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检查用户故事完整性
+        min_stories = config.get("required_components", {}).get("user_stories_min", 3)
+        actual_stories = len(spec.user_stories)
+
+        if actual_stories >= min_stories:
+            return 100.0
+        else:
+            return (actual_stories / min_stories) * 100
+
+    @staticmethod
+    def _check_test_coverage(spec: SpecificationV2) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检查测试覆盖率
+        total_components = len(spec.components)
+        if total_components == 0:
+            return 0
+
+        components_with_tests = sum(
+            1 for c in spec.components
+            if len(c.test_cases) > 0 or len(c.bdd_scenarios) > 0
+        )
+
+        coverage = (components_with_tests / total_components) * 100
+        return coverage
+
+    @staticmethod
+    def _check_ddd_models(spec: SpecificationV2) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检查 DDD 模型完整性
+        if len(spec.bounded_contexts) == 0:
+            return 50  # 没有限界上下文,扣 50 分
+
+        if len(spec.aggregates) == 0:
+            return 70  # 没有聚合,扣 30 分
+
+        return 100.0
+
+
+# ============ Token 限制验证器 ============
+
+class TokenLimitValidator:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Token 限制验证器
+    确保每个文档不超过 token 预算
+    """
+
+    @staticmethod
+    def validate_document(doc: Document) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证单个文档的 token 使用
+        issues = []
+        score = 100.0
+
+        usage_pct = doc.token_usage_percentage
+
+        if usage_pct > 100:
+            issues.append(ValidationIssue(
+                type="Conflict",
+                severity=Severity.CRITICAL,
+                description=f"文档 {doc.title} 超出 token 预算 ({doc.token_count}/{doc.token_budget})",
+                location=f"Document:{doc.type.value}",
+                suggestion="减少示例数量或拆分为多个文档"
+            ))
+            score = 0
+        elif usage_pct > 90:
+            issues.append(ValidationIssue(
+                type="Conflict",
+                severity=Severity.HIGH,
+                description=f"文档 {doc.title} 接近 token 预算 ({usage_pct:.1f}%)",
+                location=f"Document:{doc.type.value}",
+                suggestion="考虑精简内容"
+            ))
+            score = 50
+
+        return ValidationResult(
+            passed=usage_pct <= 100,
+            score=score,
+            issues=issues
+        )
+
+    @staticmethod
+    def validate_all_documents(spec: SpecificationV2) -> ValidationResult:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证所有文档的 token 使用
+        all_issues = []
+        all_passed = True
+
+        for doc in spec.documents.values():
+            result = TokenLimitValidator.validate_document(doc)
+            all_issues.extend(result.issues)
+            if not result.passed:
+                all_passed = False
+
+        total_usage = spec.get_token_usage_percentage()
+
+        return ValidationResult(
+            passed=all_passed and total_usage <= 100,
+            score=100 if all_passed else 0,
+            issues=all_issues,
+            suggestions=[f"总 token 使用率: {total_usage:.1f}%"]
+        )
+
+
+# ============ 质量验证器(主入口) ============
+
+class QualityValidator:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    质量验证器(主入口)
+    综合所有验证器,生成质量报告
+    """
+
+    @staticmethod
+    def validate_specification(spec: SpecificationV2, config: Dict[str, Any]) -> QualityMetrics:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证整个规格文档
+        返回完整的质量指标
+        """
+        # 1. 原子性验证
+        atomicity_result = AtomicityValidator.validate_all_components(spec.components)
+        atomicity_score = atomicity_result.score
+
+        # 2. 一致性验证
+        consistency_result = ConsistencyValidator.validate_specification(spec)
+        consistency_score = consistency_result.score
+
+        # 3. 完整性验证
+        completeness_result = CompletenessValidator.validate_specification(spec, config)
+        completeness_score = completeness_result.score
+
+        # 4. Token 限制验证
+        token_result = TokenLimitValidator.validate_all_documents(spec)
+        token_passed = token_result.passed
+
+        # 5. 可行性评分(基于复杂度和资源)
+        feasibility_score = QualityValidator._calculate_feasibility(spec)
+
+        # 创建质量指标
+        metrics = QualityMetrics(
+            completeness_score=completeness_score,
+            consistency_score=consistency_score,
+            atomicity_score=atomicity_score,
+            feasibility_score=feasibility_score,
+            overall_grade=QualityGrade.A  # 临时值
+        )
+
+        # 计算总体等级
+        metrics.overall_grade = metrics.calculate_overall_grade()
+
+        # 收集所有验证问题
+        all_issues = (
+            atomicity_result.issues +
+            consistency_result.issues +
+            completeness_result.issues +
+            token_result.issues
+        )
+
+        # 更新规格文档的验证问题
+        spec.validation_issues = all_issues
+        spec.quality_metrics = metrics
+
+        return metrics
+
+    @staticmethod
+    def _calculate_feasibility(spec: SpecificationV2) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        计算可行性评分
+        score = 100.0
+
+        # 基于工作量估算的合理性
+        total_hours = sum(c.estimated_hours for c in spec.components)
+
+        # 如果总工时过高(> 5000 小时),降低可行性分数
+        if total_hours > 5000:
+            score -= 20
+        elif total_hours > 3000:
+            score -= 10
+
+        # 基于风险数量
+        critical_risks = sum(1 for r in spec.risks if r.severity == Severity.CRITICAL)
+        high_risks = sum(1 for r in spec.risks if r.severity == Severity.HIGH)
+
+        score -= critical_risks * 10
+        score -= high_risks * 5
+
+        return max(0, score)
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

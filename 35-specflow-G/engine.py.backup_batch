@@ -1,0 +1,97 @@
+"""
+35-specflow 规格文档生成引擎
+
+包装specflow_v4模块,提供统一的Engine接口
+"""
+
+from typing import Optional, Dict, Any, List, Tuple, Union, Callable
+from pathlib import Path
+from .core.models import SpecificationDocument, DepthLevel
+from .specflow_v4 import generate_from_json
+
+
+import logging
+
+class SpecFlowEngine:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    SpecFlow规格文档生成引擎
+
+    从JSON配置文件生成完整的技术规格文档
+    """
+
+    def __init__(self) -> None:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        初始化SpecFlow引擎
+        self.depth_level = DepthLevel.STANDARD
+
+    def generate(
+        """待添加文档字符串"""
+        self,
+        json_file: str,
+        output_dir: Optional[str] = None,
+        depth_level: Optional[str] = None
+    ) -> SpecificationDocument:
+        """
+        从JSON文件生成规格文档
+
+        Args:
+            json_file: JSON文件路径(ARCHITECTURE.json或DESIGN_DRAFT.json)
+            output_dir: 输出目录,默认为当前目录的output子目录
+            depth_level: 文档深度级别(MINIMAL/STANDARD/DETAILED)
+
+        Returns:
+            生成的规格文档对象
+
+        Raises:
+            FileNotFoundError: JSON文件不存在
+            ValueError: JSON格式无效
+        """
+        # 转换深度级别
+        if depth_level:
+            depth = DepthLevel[depth_level.upper()]
+        else:
+            depth = self.depth_level
+
+        # 调用V4生成器
+        return generate_from_json(
+            json_file=json_file,
+            output_dir=output_dir,
+            depth_level=depth,
+            use_legacy=False
+        )
+
+    def set_depth_level(self, level: str) -> None:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        设置文档深度级别
+
+        Args:
+            level: 深度级别(MINIMAL/STANDARD/DETAILED)
+
+        Raises:
+            ValueError: 无效的深度级别
+        """
+        try:
+            self.depth_level = DepthLevel[level.upper()]
+        except KeyError:
+            raise ValueError(f"无效的深度级别: {level}")

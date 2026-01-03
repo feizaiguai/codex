@@ -1,0 +1,873 @@
+"""
+SpecFlow V3.0 - Shift-Left 测试集成模块
+Shift-Left Testing Integration - 需求阶段前置验证
+
+功能:
+- 需求阶段前置验证(提前发现问题)
+- 可测试性评估
+- BDD 场景提前生成
+- 混沌工程集成
+- 持续验证和回归测试
+
+版本: 3.0.0
+日期: 2025-12-17
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional, Tuple, Union, Callable
+from enum import Enum
+import re
+
+
+# ============ 枚举类型 ============
+
+class TestabilityLevel(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    可测试性级别
+    HIGH = "高"
+    MEDIUM = "中"
+    LOW = "低"
+    VERY_LOW = "极低"
+
+
+class TestType(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    测试类型
+    UNIT = "单元测试"
+    INTEGRATION = "集成测试"
+    E2E = "端到端测试"
+    PERFORMANCE = "性能测试"
+    SECURITY = "安全测试"
+    CHAOS = "混沌测试"
+
+
+class ValidationStatus(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    验证状态
+    PASSED = "通过"
+    FAILED = "失败"
+    WARNING = "警告"
+    SKIPPED = "跳过"
+
+
+# ============ 数据模型 ============
+
+@dataclass
+class TestabilityIssue:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    可测试性问题
+    requirement_id: str             # 需求 ID
+    issue_type: str                 # 问题类型
+    severity: str                   # 严重程度(Critical/High/Medium/Low)
+    description: str                # 问题描述
+    impact: str                     # 影响说明
+    recommendation: str             # 修复建议
+    example: Optional[str] = None   # 示例
+
+
+@dataclass
+class BDDScenario:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    BDD 场景
+    scenario_id: str                # 场景 ID
+    title: str                      # 场景标题
+    given: List[str]                # Given 步骤(前置条件)
+    when: List[str]                 # When 步骤(操作)
+    then: List[str]                 # Then 步骤(预期结果)
+    tags: List[str] = field(default_factory=list)  # 标签
+    priority: str = "Medium"        # 优先级
+
+
+@dataclass
+class TestCase:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    测试用例
+    test_id: str                    # 测试 ID
+    title: str                      # 测试标题
+    test_type: TestType             # 测试类型
+    description: str                # 测试描述
+    preconditions: List[str]        # 前置条件
+    steps: List[str]                # 测试步骤
+    expected_result: str            # 预期结果
+    automated: bool = False         # 是否可自动化
+    estimated_hours: int = 0        # 估算工时
+
+
+@dataclass
+class ChaosScenario:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    混沌工程场景
+    scenario_id: str                # 场景 ID
+    title: str                      # 场景标题
+    failure_type: str               # 故障类型(网络/服务/数据库/磁盘等)
+    blast_radius: str               # 影响范围(Limited/Moderate/Wide)
+    hypothesis: str                 # 假设(系统应该如何应对)
+    experiment_steps: List[str]     # 实验步骤
+    success_criteria: List[str]     # 成功标准
+    rollback_plan: str              # 回滚计划
+
+
+@dataclass
+class ValidationReport:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    验证报告
+    report_id: str                  # 报告 ID
+    status: ValidationStatus        # 总体状态
+    testability_score: float        # 可测试性评分(0-100)
+    issues: List[TestabilityIssue]  # 发现的问题
+    bdd_scenarios: List[BDDScenario]  # 生成的 BDD 场景
+    test_cases: List[TestCase]      # 生成的测试用例
+    chaos_scenarios: List[ChaosScenario] = field(default_factory=list)  # 混沌场景
+    recommendations: List[str] = field(default_factory=list)  # 建议
+    estimated_test_hours: int = 0   # 估算测试工时
+
+
+# ============ Shift-Left 测试器 ============
+
+class ShiftLeftTester:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Shift-Left 测试集成器
+
+    核心功能:
+    1. 在需求阶段就进行可测试性验证
+    2. 提前生成 BDD 场景和测试用例
+    3. 集成混沌工程考量
+    4. 持续验证和回归检查
+    """
+
+    # 可测试性检查规则
+    TESTABILITY_RULES = {
+        "模糊词汇": {
+            "patterns": [r"快速|高效|友好|美观|灵活|智能|易用"],
+            "severity": "High",
+            "recommendation": "使用可量化的指标替代模糊词汇(如:响应时间 < 200ms,而不是'快速')"
+        },
+        "缺少验收标准": {
+            "severity": "Critical",
+            "recommendation": "每个需求必须包含明确的验收标准"
+        },
+        "不可观测": {
+            "patterns": [r"内部处理|后台|静默|隐式"],
+            "severity": "Medium",
+            "recommendation": "确保关键流程有可观测的输出(日志,事件,状态变化)"
+        },
+        "依赖外部系统": {
+            "patterns": [r"第三方|外部|集成|对接|同步"],
+            "severity": "High",
+            "recommendation": "为外部依赖提供 Mock/Stub 方案,确保测试可独立运行"
+        },
+        "时间依赖": {
+            "patterns": [r"定时|每天|每月|周期|调度"],
+            "severity": "Medium",
+            "recommendation": "使用时间注入或时钟 Mock,避免时间依赖的测试"
+        }
+    }
+
+    # BDD 场景模板
+    BDD_TEMPLATES = {
+        "CRUD": {
+            "Create": ("创建{entity}", ["系统状态正常", "用户已认证"], ["用户创建{entity}"], ["创建成功", "返回{entity} ID"]),
+            "Read": ("查询{entity}", ["系统中存在{entity}"], ["用户查询{entity}"], ["返回{entity}详情"]),
+            "Update": ("更新{entity}", ["系统中存在{entity}", "用户已认证"], ["用户更新{entity}"], ["更新成功"]),
+            "Delete": ("删除{entity}", ["系统中存在{entity}", "用户已认证"], ["用户删除{entity}"], ["删除成功"])
+        },
+        "Authentication": {
+            "Login": ("用户登录", ["用户已注册"], ["用户输入正确凭证", "用户点击登录"], ["登录成功", "跳转到首页"]),
+            "Logout": ("用户登出", ["用户已登录"], ["用户点击登出"], ["登出成功", "清除会话"])
+        }
+    }
+
+    # 混沌工程场景模板
+    CHAOS_TEMPLATES = {
+        "网络故障": {
+            "failure_type": "网络延迟/中断",
+            "scenarios": [
+                "第三方 API 超时",
+                "数据库连接中断",
+                "消息队列延迟"
+            ]
+        },
+        "服务故障": {
+            "failure_type": "服务不可用",
+            "scenarios": [
+                "依赖服务宕机",
+                "缓存服务失效",
+                "认证服务不可用"
+            ]
+        },
+        "资源耗尽": {
+            "failure_type": "资源耗尽",
+            "scenarios": [
+                "内存不足",
+                "磁盘空间满",
+                "连接池耗尽"
+            ]
+        }
+    }
+
+    def __init__(self):
+        """待添加文档字符串"""
+        self.validation_history: List[ValidationReport] = []
+
+    # ============ 核心功能:需求可测试性验证 ============
+
+    def validate_requirements_early(self, requirements: List[Dict[str, Any]]) -> ValidationReport:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        需求阶段前置验证
+
+        Args:
+            requirements: 需求列表(包含 id, title, description, acceptance_criteria 等)
+
+        Returns:
+            ValidationReport: 验证报告
+        """
+        report_id = f"VAL-{len(self.validation_history) + 1:03d}"
+
+        # 1. 可测试性检查
+        testability_issues = self._check_testability(requirements)
+
+        # 2. 计算可测试性评分
+        testability_score = self._calculate_testability_score(requirements, testability_issues)
+
+        # 3. 生成 BDD 场景
+        bdd_scenarios = self._generate_bdd_scenarios(requirements)
+
+        # 4. 生成测试用例
+        test_cases = self._generate_test_cases(requirements)
+
+        # 5. 生成混沌工程场景
+        chaos_scenarios = self._generate_chaos_scenarios(requirements)
+
+        # 6. 生成建议
+        recommendations = self._generate_testing_recommendations(
+            requirements, testability_issues, testability_score
+        )
+
+        # 7. 估算测试工时
+        estimated_test_hours = sum(tc.estimated_hours for tc in test_cases)
+
+        # 8. 确定总体状态
+        status = self._determine_status(testability_score, testability_issues)
+
+        report = ValidationReport(
+            report_id=report_id,
+            status=status,
+            testability_score=testability_score,
+            issues=testability_issues,
+            bdd_scenarios=bdd_scenarios,
+            test_cases=test_cases,
+            chaos_scenarios=chaos_scenarios,
+            recommendations=recommendations,
+            estimated_test_hours=estimated_test_hours
+        )
+
+        self.validation_history.append(report)
+
+        return report
+
+    def _check_testability(self, requirements: List[Dict[str, Any]]) -> List[TestabilityIssue]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检查需求可测试性
+        issues = []
+
+        for req in requirements:
+            req_id = req.get("id", "UNKNOWN")
+            description = req.get("description", "")
+            acceptance_criteria = req.get("acceptance_criteria", [])
+
+            # 检查 1: 模糊词汇
+            rule = self.TESTABILITY_RULES["模糊词汇"]
+            if re.search(rule["patterns"][0], description):
+                issues.append(TestabilityIssue(
+                    requirement_id=req_id,
+                    issue_type="模糊词汇",
+                    severity=rule["severity"],
+                    description=f"需求描述包含模糊词汇",
+                    impact="难以编写明确的测试用例,验收标准不清晰",
+                    recommendation=rule["recommendation"],
+                    example="'系统响应快速' → '系统在 200ms 内响应 95% 的请求'"
+                ))
+
+            # 检查 2: 缺少验收标准
+            if not acceptance_criteria or len(acceptance_criteria) == 0:
+                rule = self.TESTABILITY_RULES["缺少验收标准"]
+                issues.append(TestabilityIssue(
+                    requirement_id=req_id,
+                    issue_type="缺少验收标准",
+                    severity=rule["severity"],
+                    description=f"需求缺少验收标准",
+                    impact="无法验证需求是否被正确实现",
+                    recommendation=rule["recommendation"]
+                ))
+
+            # 检查 3: 不可观测
+            rule = self.TESTABILITY_RULES["不可观测"]
+            if re.search(rule["patterns"][0], description):
+                issues.append(TestabilityIssue(
+                    requirement_id=req_id,
+                    issue_type="不可观测",
+                    severity=rule["severity"],
+                    description=f"需求涉及不可观测的行为",
+                    impact="难以验证功能是否正确执行",
+                    recommendation=rule["recommendation"]
+                ))
+
+            # 检查 4: 依赖外部系统
+            rule = self.TESTABILITY_RULES["依赖外部系统"]
+            if re.search(rule["patterns"][0], description):
+                issues.append(TestabilityIssue(
+                    requirement_id=req_id,
+                    issue_type="依赖外部系统",
+                    severity=rule["severity"],
+                    description=f"需求依赖外部系统",
+                    impact="测试依赖外部环境,难以保证测试稳定性",
+                    recommendation=rule["recommendation"]
+                ))
+
+            # 检查 5: 时间依赖
+            rule = self.TESTABILITY_RULES["时间依赖"]
+            if re.search(rule["patterns"][0], description):
+                issues.append(TestabilityIssue(
+                    requirement_id=req_id,
+                    issue_type="时间依赖",
+                    severity=rule["severity"],
+                    description=f"需求包含时间依赖",
+                    impact="测试依赖真实时间,难以快速验证",
+                    recommendation=rule["recommendation"]
+                ))
+
+        return issues
+
+    def _calculate_testability_score(self, requirements: List[Dict[str, Any]],
+        """待添加文档字符串"""
+                                    issues: List[TestabilityIssue]) -> float:
+        """
+        计算可测试性评分(0-100)
+        if not requirements:
+            return 0.0
+
+        base_score = 100.0
+
+        # 按严重程度扣分
+        severity_penalty = {
+            "Critical": 20,
+            "High": 10,
+            "Medium": 5,
+            "Low": 2
+        }
+
+        for issue in issues:
+            penalty = severity_penalty.get(issue.severity, 0)
+            base_score -= penalty
+
+        # 评分不低于 0
+        score = max(0.0, base_score)
+
+        return round(score, 1)
+
+    def _generate_bdd_scenarios(self, requirements: List[Dict[str, Any]]) -> List[BDDScenario]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成 BDD 场景
+        scenarios = []
+
+        for idx, req in enumerate(requirements):
+            req_id = req.get("id", f"REQ-{idx+1:03d}")
+            title = req.get("title", "未命名需求")
+            description = req.get("description", "")
+            user_story = req.get("user_story", "")
+
+            # 识别需求类型并应用模板
+            scenario = self._apply_bdd_template(req_id, title, description, user_story)
+
+            if scenario:
+                scenarios.append(scenario)
+
+        return scenarios
+
+    def _apply_bdd_template(self, req_id: str, title: str,
+        """待添加文档字符串"""
+                           description: str, user_story: str) -> Optional[BDDScenario]:
+        """
+        应用 BDD 模板
+        # 识别 CRUD 操作
+        crud_keywords = {
+            "Create": ["创建", "新增", "添加", "注册"],
+            "Read": ["查询", "查看", "获取", "读取"],
+            "Update": ["更新", "修改", "编辑"],
+            "Delete": ["删除", "移除"]
+        }
+
+        for operation, keywords in crud_keywords.items():
+            if any(kw in description or kw in title for kw in keywords):
+                # 提取实体
+                entity = self._extract_entity(description, title)
+
+                template_name, given, when, then = self.BDD_TEMPLATES["CRUD"][operation]
+
+                return BDDScenario(
+                    scenario_id=f"BDD-{req_id}",
+                    title=template_name.format(entity=entity),
+                    given=[g.format(entity=entity) if "{entity}" in g else g for g in given],
+                    when=[w.format(entity=entity) if "{entity}" in w else w for w in when],
+                    then=[t.format(entity=entity) if "{entity}" in t else t for t in then],
+                    tags=[operation, entity],
+                    priority="High"
+                )
+
+        # 默认场景
+        return BDDScenario(
+            scenario_id=f"BDD-{req_id}",
+            title=title,
+            given=["系统状态正常"],
+            when=["执行相关操作"],
+            then=["符合需求描述的预期结果"],
+            tags=["Default"],
+            priority="Medium"
+        )
+
+    def _extract_entity(self, description: str, title: str) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        提取实体名称
+        # 简单的实体提取逻辑
+        common_entities = ["用户", "订单", "商品", "评论", "账户", "支付", "配置", "文章"]
+
+        for entity in common_entities:
+            if entity in description or entity in title:
+                return entity
+
+        # 如果没有识别到,使用标题的前几个字
+        words = title.split()
+        return words[0] if words else "对象"
+
+    def _generate_test_cases(self, requirements: List[Dict[str, Any]]) -> List[TestCase]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成测试用例
+        test_cases = []
+
+        for req in requirements:
+            req_id = req.get("id", "UNKNOWN")
+            title = req.get("title", "")
+            description = req.get("description", "")
+            acceptance_criteria = req.get("acceptance_criteria", [])
+
+            # 为每个验收标准生成一个测试用例
+            for idx, criteria in enumerate(acceptance_criteria):
+                test_id = f"TC-{req_id}-{idx+1:02d}"
+
+                test_cases.append(TestCase(
+                    test_id=test_id,
+                    title=f"验证: {criteria}",
+                    test_type=TestType.INTEGRATION,
+                    description=f"验证需求 {req_id} 的验收标准: {criteria}",
+                    preconditions=["系统部署完成", "测试数据准备完成"],
+                    steps=[
+                        "准备测试环境和数据",
+                        f"执行 {title} 相关操作",
+                        "验证结果"
+                    ],
+                    expected_result=criteria,
+                    automated=True,
+                    estimated_hours=4
+                ))
+
+            # 额外生成边界测试用例
+            if "数字" in description or "数量" in description or "金额" in description:
+                test_cases.append(TestCase(
+                    test_id=f"TC-{req_id}-BOUNDARY",
+                    title=f"{title} - 边界值测试",
+                    test_type=TestType.UNIT,
+                    description="测试边界值和异常情况",
+                    preconditions=["测试框架已配置"],
+                    steps=[
+                        "测试最小值",
+                        "测试最大值",
+                        "测试负值",
+                        "测试零值",
+                        "测试超出范围值"
+                    ],
+                    expected_result="边界值处理正确,异常情况有适当错误提示",
+                    automated=True,
+                    estimated_hours=2
+                ))
+
+        return test_cases
+
+    def _generate_chaos_scenarios(self, requirements: List[Dict[str, Any]]) -> List[ChaosScenario]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成混沌工程场景
+        chaos_scenarios = []
+
+        # 检查需求中是否涉及关键领域
+        has_external_integration = any(
+            "第三方" in req.get("description", "") or "集成" in req.get("description", "")
+            for req in requirements
+        )
+
+        has_database = any(
+            "数据库" in req.get("description", "") or "存储" in req.get("description", "")
+            for req in requirements
+        )
+
+        has_cache = any(
+            "缓存" in req.get("description", "") or "Redis" in req.get("description", "")
+            for req in requirements
+        )
+
+        # 根据需求生成相应的混沌场景
+        if has_external_integration:
+            chaos_scenarios.append(ChaosScenario(
+                scenario_id="CHAOS-001",
+                title="第三方 API 超时场景",
+                failure_type="网络延迟",
+                blast_radius="Moderate",
+                hypothesis="当第三方 API 超时时,系统应该有超时重试机制,并返回友好错误信息",
+                experiment_steps=[
+                    "使用工具(Toxiproxy)模拟网络延迟 5 秒",
+                    "触发依赖第三方 API 的功能",
+                    "观察系统行为和响应"
+                ],
+                success_criteria=[
+                    "系统在 10 秒内返回响应(而不是一直等待)",
+                    "返回明确的错误信息给用户",
+                    "系统其他功能不受影响"
+                ],
+                rollback_plan="停止 Toxiproxy,恢复正常网络"
+            ))
+
+        if has_database:
+            chaos_scenarios.append(ChaosScenario(
+                scenario_id="CHAOS-002",
+                title="数据库连接中断场景",
+                failure_type="服务不可用",
+                blast_radius="Wide",
+                hypothesis="当数据库连接中断时,系统应该启用降级方案(如读取缓存)",
+                experiment_steps=[
+                    "中断数据库连接(杀掉进程或防火墙阻断)",
+                    "触发需要数据库的功能",
+                    "观察系统行为"
+                ],
+                success_criteria=[
+                    "系统检测到数据库不可用并记录日志",
+                    "启用降级方案(如只读缓存)",
+                    "向用户返回降级服务提示"
+                ],
+                rollback_plan="恢复数据库连接"
+            ))
+
+        if has_cache:
+            chaos_scenarios.append(ChaosScenario(
+                scenario_id="CHAOS-003",
+                title="缓存服务失效场景",
+                failure_type="服务不可用",
+                blast_radius="Limited",
+                hypothesis="当缓存服务失效时,系统应该回退到数据库查询,性能降低但功能正常",
+                experiment_steps=[
+                    "停止缓存服务(Redis)",
+                    "触发需要缓存的功能",
+                    "观察系统行为和性能"
+                ],
+                success_criteria=[
+                    "系统自动回退到数据库查询",
+                    "功能正常,但响应时间增加",
+                    "记录缓存失效告警"
+                ],
+                rollback_plan="重启缓存服务"
+            ))
+
+        return chaos_scenarios
+
+    def _generate_testing_recommendations(self, requirements: List[Dict[str, Any]],
+        """待添加文档字符串"""
+                                         issues: List[TestabilityIssue],
+                                         testability_score: float) -> List[str]:
+        """
+        生成测试建议
+        recommendations = []
+
+        # 根据可测试性评分给建议
+        if testability_score < 50:
+            recommendations.append("可测试性评分较低,建议优先修复 Critical 和 High 级别的问题")
+            recommendations.append("建议与产品团队重新澄清需求,增加可量化的验收标准")
+
+        if testability_score < 70:
+            recommendations.append("建议为所有需求补充完整的验收标准")
+
+        # 根据问题类型给建议
+        issue_types = {issue.issue_type for issue in issues}
+
+        if "依赖外部系统" in issue_types:
+            recommendations.append("建议为所有外部依赖建立 Mock/Stub 方案,实现测试环境自给自足")
+
+        if "时间依赖" in issue_types:
+            recommendations.append("建议引入时间注入机制(如依赖注入的时钟服务),避免测试依赖真实时间")
+
+        if "模糊词汇" in issue_types:
+            recommendations.append("建议制定需求描述规范,避免使用模糊词汇,使用可量化的指标")
+
+        # 测试策略建议
+        recommendations.append("建议采用测试金字塔策略:70% 单元测试,20% 集成测试,10% E2E 测试")
+        recommendations.append("建议集成 CI/CD 流水线,每次提交自动运行测试")
+        recommendations.append("建议定期(每月)执行混沌工程实验,验证系统韧性")
+
+        return recommendations
+
+    def _determine_status(self, testability_score: float,
+        """待添加文档字符串"""
+                         issues: List[TestabilityIssue]) -> ValidationStatus:
+        """
+        确定验证状态
+        # 检查是否有 Critical 问题
+        has_critical = any(issue.severity == "Critical" for issue in issues)
+
+        if has_critical:
+            return ValidationStatus.FAILED
+
+        if testability_score < 60:
+            return ValidationStatus.WARNING
+
+        return ValidationStatus.PASSED
+
+    # ============ 持续验证 ============
+
+    def regression_check(self, old_report: ValidationReport,
+        """待添加文档字符串"""
+                        new_requirements: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        回归检查:对比新旧需求的可测试性
+
+        Args:
+            old_report: 之前的验证报告
+            new_requirements: 新的需求列表
+
+        Returns:
+            Dict: 回归检查结果
+        """
+        # 重新验证新需求
+        new_report = self.validate_requirements_early(new_requirements)
+
+        regression_result = {
+            "old_score": old_report.testability_score,
+            "new_score": new_report.testability_score,
+            "score_change": new_report.testability_score - old_report.testability_score,
+            "new_issues": len(new_report.issues) - len(old_report.issues),
+            "status": "improved" if new_report.testability_score > old_report.testability_score else "degraded",
+            "summary": ""
+        }
+
+        if regression_result["score_change"] > 0:
+            regression_result["summary"] = f"可测试性提升 {regression_result['score_change']} 分 "
+        elif regression_result["score_change"] < 0:
+            regression_result["summary"] = f"可测试性下降 {abs(regression_result['score_change'])} 分 "
+        else:
+            regression_result["summary"] = "可测试性保持不变"
+
+        return regression_result
+
+
+# ============ 辅助函数 ============
+
+def create_shift_left_tester() -> ShiftLeftTester:
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    创建 Shift-Left 测试器实例
+    return ShiftLeftTester()
+
+
+# ============ 测试代码 ============
+
+if __name__ == "__main__":
+    # 测试 Shift-Left 验证
+    tester = create_shift_left_tester()
+
+    test_requirements = [
+        {
+            "id": "REQ-001",
+            "title": "用户登录功能",
+            "description": "用户可以使用邮箱和密码登录系统",
+            "user_story": "作为用户,我希望能够登录系统,以便访问个人数据",
+            "acceptance_criteria": [
+                "用户输入正确的邮箱和密码后可以登录",
+                "登录后跳转到用户首页",
+                "错误的凭证会显示错误消息"
+            ]
+        },
+        {
+            "id": "REQ-002",
+            "title": "第三方支付集成",
+            "description": "系统需要快速集成支付宝和微信支付,支付流程要友好",
+            "user_story": "作为买家,我希望能够使用支付宝或微信支付,以便完成订单支付",
+            "acceptance_criteria": []  # 故意缺少验收标准
+        },
+        {
+            "id": "REQ-003",
+            "title": "每日数据统计",
+            "description": "系统每天凌晨 2 点自动生成昨日数据统计报告",
+            "user_story": "作为管理员,我希望每天自动生成统计报告,以便了解业务情况",
+            "acceptance_criteria": [
+                "每天凌晨 2 点自动触发统计任务",
+                "生成报告并发送邮件给管理员"
+            ]
+        }
+    ]
+
+    print("=" * 80)
+    print("Shift-Left 测试验证")
+    print("=" * 80)
+
+    # 1. 验证需求
+    report = tester.validate_requirements_early(test_requirements)
+
+    print(f"\n验证报告 ID: {report.report_id}")
+    print(f"总体状态: {report.status.value}")
+    print(f"可测试性评分: {report.testability_score}/100")
+
+    # 2. 显示发现的问题
+    print(f"\n发现 {len(report.issues)} 个可测试性问题:")
+    for issue in report.issues:
+        print(f"\n[{issue.severity}] {issue.issue_type} - {issue.requirement_id}")
+        print(f"  描述: {issue.description}")
+        print(f"  影响: {issue.impact}")
+        print(f"  建议: {issue.recommendation}")
+        if issue.example:
+            print(f"  示例: {issue.example}")
+
+    # 3. 显示生成的 BDD 场景
+    print(f"\n生成 {len(report.bdd_scenarios)} 个 BDD 场景:")
+    for scenario in report.bdd_scenarios[:3]:  # 只显示前 3 个
+        print(f"\n场景: {scenario.title} ({scenario.scenario_id})")
+        print(f"  Given:")
+        for g in scenario.given:
+            print(f"    - {g}")
+        print(f"  When:")
+        for w in scenario.when:
+            print(f"    - {w}")
+        print(f"  Then:")
+        for t in scenario.then:
+            print(f"    - {t}")
+
+    # 4. 显示生成的测试用例
+    print(f"\n生成 {len(report.test_cases)} 个测试用例 (估算 {report.estimated_test_hours} 小时)")
+
+    # 5. 显示混沌场景
+    print(f"\n生成 {len(report.chaos_scenarios)} 个混沌工程场景:")
+    for chaos in report.chaos_scenarios:
+        print(f"\n{chaos.title} ({chaos.scenario_id})")
+        print(f"  故障类型: {chaos.failure_type}")
+        print(f"  影响范围: {chaos.blast_radius}")
+        print(f"  假设: {chaos.hypothesis}")
+
+    # 6. 显示建议
+    print(f"\n测试建议:")
+    for rec in report.recommendations:
+        print(f"  - {rec}")
+
+    print("\n" + "=" * 80)
+    print("测试完成")
+    print("=" * 80)
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

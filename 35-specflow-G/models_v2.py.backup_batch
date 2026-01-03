@@ -1,0 +1,621 @@
+"""
+SpecFlow V2.0 - 核心数据模型
+多文档架构的主要数据结构
+版本: 2.0.0
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional, Tuple, Union, Callable
+from enum import Enum
+from datetime import datetime
+
+import logging
+
+from atomic_component import (
+    AtomicComponent, UserStory, Feature,
+    Priority, Severity, ComponentCategory
+)
+
+
+# ============ 枚举类型 ============
+
+class DocumentType(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    文档类型
+    OVERVIEW = "00-项目概览"
+    REQUIREMENTS = "01-需求规格"
+    DOMAIN_MODEL = "02-领域模型"
+    ARCHITECTURE = "03-架构设计"
+    IMPLEMENTATION = "04-实施计划"
+    TEST_STRATEGY = "05-测试策略"
+    RISK_ASSESSMENT = "06-风险评估"
+    QUALITY_REPORT = "07-质量报告"
+
+
+class DocumentStatus(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    文档状态
+    DRAFT = "Draft"
+    IN_REVIEW = "In Review"
+    APPROVED = "Approved"
+    FINAL = "Final"
+
+
+class DepthLevel(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    深度级别
+    SIMPLE = "simple"
+    STANDARD = "standard"
+    COMPREHENSIVE = "comprehensive"
+
+
+class QualityGrade(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    质量等级
+    A_PLUS = "A+"
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+    F = "F"
+
+
+# ============ DDD 领域模型 ============
+
+@dataclass
+class BoundedContext:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    限界上下文(DDD)
+    name: str                           # 上下文名称:用户管理
+    description: str                    # 描述
+    aggregates: List[str]               # 聚合根列表
+    entities: List[str]                 # 实体列表
+    value_objects: List[str]            # 值对象列表
+    domain_events: List[str]            # 领域事件
+    ubiquitous_language: Dict[str, str] # 通用语言术语表
+    dependencies: List[str] = field(default_factory=list)  # 依赖其他上下文
+
+
+@dataclass
+class Aggregate:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    聚合根(DDD)
+    name: str                           # 聚合根名称:Order
+    description: str                    # 描述
+    root_entity: str                    # 根实体
+    entities: List[str]                 # 包含的实体
+    value_objects: List[str]            # 包含的值对象
+    invariants: List[str]               # 不变量(业务规则)
+    domain_events: List[str]            # 发布的领域事件
+
+
+# ============ 架构设计模型 ============
+
+@dataclass
+class ArchitectureDecisionRecord:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    架构决策记录(ADR)
+    id: str                             # ADR-001
+    title: str                          # 决策标题
+    date: str                           # 决策日期
+    status: str                         # Proposed / Accepted / Deprecated
+    context: str                        # 上下文:为什么需要这个决策
+    decision: str                       # 决策内容
+    consequences: List[str]             # 后果(优缺点)
+    alternatives: List[str] = field(default_factory=list)  # 备选方案
+
+
+@dataclass
+class TechStack:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    技术栈
+    category: str                       # Frontend / Backend / Database / Infrastructure
+    technology: str                     # React / Node.js / PostgreSQL / AWS
+    version: str                        # 版本号
+    justification: str                  # 选择理由
+    alternatives_considered: List[str] = field(default_factory=list)
+
+
+# ============ 测试策略模型 ============
+
+@dataclass
+class TestPyramid:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    测试金字塔
+    unit_tests: int                     # 单元测试数量
+    integration_tests: int              # 集成测试数量
+    e2e_tests: int                      # 端到端测试数量
+    total_tests: int                    # 总测试数
+    coverage_target: float              # 覆盖率目标(%)
+
+
+@dataclass
+class TestStrategy:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    测试策略
+    approach: str                       # 测试方法:TDD / BDD / ATDD
+    frameworks: List[str]               # 测试框架:Jest, Pytest, Selenium
+    pyramid: TestPyramid               # 测试金字塔
+    ci_cd_integration: str             # CI/CD 集成说明
+    performance_testing: Optional[str] = None  # 性能测试
+    security_testing: Optional[str] = None     # 安全测试
+
+
+# ============ 风险评估模型 ============
+
+@dataclass
+class Risk:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    风险项
+    id: str                             # RISK-001
+    title: str                          # 风险标题
+    category: str                       # Technical / Schedule / Resource / Business
+    description: str                    # 风险描述
+    probability: str                    # High / Medium / Low
+    impact: str                         # Critical / High / Medium / Low
+    severity: Severity                  # 综合严重程度
+    mitigation: str                     # 缓解措施
+    contingency: str                    # 应急计划
+    owner: Optional[str] = None         # 负责人
+
+
+# ============ 实施计划模型 ============
+
+@dataclass
+class Milestone:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    里程碑
+    id: str                             # M1
+    name: str                           # MVP 发布
+    description: str                    # 里程碑描述
+    deliverables: List[str]             # 交付物
+    estimated_date: str                 # 预计完成日期
+    dependencies: List[str] = field(default_factory=list)
+
+
+@dataclass
+class WorkBreakdownStructure:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    工作分解结构(WBS)
+    phase: str                          # 阶段名称:MVP / Phase 1
+    features: List[Feature]             # 特性列表
+    user_stories: List[UserStory]       # 用户故事
+    components: List[AtomicComponent]   # 原子组件
+    estimated_hours: float              # 估算工时(PERT)
+    milestones: List[Milestone]         # 里程碑
+
+
+# ============ 文档模型 ============
+
+@dataclass
+class Document:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    单个文档(8个文档中的一个)
+    每个文档都有独立的 token 预算和内容结构
+    """
+    # 基础信息
+    type: DocumentType                  # 文档类型
+    title: str                          # 文档标题
+    version: str                        # 版本号:2.0.0
+
+    # 内容
+    content: Dict[str, Any]             # 文档内容(结构化)
+    markdown: str = ""                  # Markdown 格式内容
+
+    # 元数据
+    status: DocumentStatus = DocumentStatus.DRAFT
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    # Token 管理
+    token_count: int = 0                # 实际 token 数
+    token_budget: int = 15000           # Token 预算
+    token_usage_percentage: float = 0.0  # Token 使用率
+
+    def update_token_stats(self, token_count: int):
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        更新 token 统计
+        self.token_count = token_count
+        self.token_usage_percentage = (token_count / self.token_budget) * 100
+        self.updated_at = datetime.now().isoformat()
+
+    def is_within_budget(self) -> bool:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检查是否在预算内
+        return self.token_count <= self.token_budget
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为字典
+        return {
+            "type": self.type.value,
+            "title": self.title,
+            "version": self.version,
+            "status": self.status.value,
+            "token_count": self.token_count,
+            "token_budget": self.token_budget,
+            "token_usage": f"{self.token_usage_percentage:.1f}%",
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }
+
+
+# ============ 质量评估模型 ============
+
+@dataclass
+class QualityMetrics:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    质量指标
+    completeness_score: float           # 完整性评分(0-100)
+    consistency_score: float            # 一致性评分(0-100)
+    atomicity_score: float              # 原子性评分(0-100)
+    feasibility_score: float            # 可行性评分(0-100)
+    overall_grade: QualityGrade         # 总体等级
+
+    def calculate_overall_grade(self) -> QualityGrade:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        计算总体等级
+        avg = (self.completeness_score + self.consistency_score +
+               self.atomicity_score + self.feasibility_score) / 4
+
+        if avg >= 95 and self.consistency_score == 100 and self.atomicity_score >= 90:
+            return QualityGrade.A_PLUS
+        elif avg >= 90 and self.consistency_score >= 95 and self.atomicity_score >= 85:
+            return QualityGrade.A
+        elif avg >= 80 and self.consistency_score >= 90 and self.atomicity_score >= 75:
+            return QualityGrade.B
+        elif avg >= 70:
+            return QualityGrade.C
+        elif avg >= 60:
+            return QualityGrade.D
+        else:
+            return QualityGrade.F
+
+
+@dataclass
+class ValidationIssue:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    验证问题
+    type: str                           # Conflict / Missing / Inconsistent
+    severity: Severity                  # 严重程度
+    description: str                    # 问题描述
+    location: str                       # 位置(文档/章节)
+    suggestion: str                     # 改进建议
+
+
+# ============ 规格文档 V2.0(核心) ============
+
+@dataclass
+class SpecificationV2:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    SpecFlow V2.0 完整规格文档集
+    包含 8 个独立文档,每个文档独立生成和管理
+    """
+    # 项目信息
+    project_name: str                   # 项目名称
+    project_version: str                # 项目版本
+    depth_level: DepthLevel             # 深度级别(必需参数)
+    spec_version: str = "2.0.0"         # 规格版本
+
+    # 8个核心文档
+    documents: Dict[DocumentType, Document] = field(default_factory=dict)
+
+    # 原子级组件集合(跨文档共享)
+    components: List[AtomicComponent] = field(default_factory=list)
+    user_stories: List[UserStory] = field(default_factory=list)
+    features: List[Feature] = field(default_factory=list)
+
+    # DDD 模型
+    bounded_contexts: List[BoundedContext] = field(default_factory=list)
+    aggregates: List[Aggregate] = field(default_factory=list)
+
+    # 架构决策
+    architecture_decisions: List[ArchitectureDecisionRecord] = field(default_factory=list)
+    tech_stack: List[TechStack] = field(default_factory=list)
+
+    # 测试与风险
+    test_strategy: Optional[TestStrategy] = None
+    risks: List[Risk] = field(default_factory=list)
+
+    # 实施计划
+    wbs: List[WorkBreakdownStructure] = field(default_factory=list)
+    milestones: List[Milestone] = field(default_factory=list)
+
+    # 质量
+    quality_metrics: Optional[QualityMetrics] = None
+    validation_issues: List[ValidationIssue] = field(default_factory=list)
+
+    # 元数据
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def add_document(self, doc: Document):
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        添加文档
+        self.documents[doc.type] = doc
+        self.updated_at = datetime.now().isoformat()
+
+    def get_document(self, doc_type: DocumentType) -> Optional[Document]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        获取文档
+        return self.documents.get(doc_type)
+
+    def get_total_tokens(self) -> int:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        获取总 token 数
+        return sum(doc.token_count for doc in self.documents.values())
+
+    def get_token_budget(self) -> int:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        获取总 token 预算
+        return sum(doc.token_budget for doc in self.documents.values())
+
+    def get_token_usage_percentage(self) -> float:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        获取总 token 使用率
+        total = self.get_total_tokens()
+        budget = self.get_token_budget()
+        return (total / budget * 100) if budget > 0 else 0
+
+    def is_within_budget(self) -> bool:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检查是否所有文档都在预算内
+        return all(doc.is_within_budget() for doc in self.documents.values())
+
+    def get_summary(self) -> Dict[str, Any]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        获取摘要
+        return {
+            "project_name": self.project_name,
+            "project_version": self.project_version,
+            "spec_version": self.spec_version,
+            "depth_level": self.depth_level.value,
+            "documents_count": len(self.documents),
+            "components_count": len(self.components),
+            "user_stories_count": len(self.user_stories),
+            "features_count": len(self.features),
+            "total_tokens": self.get_total_tokens(),
+            "token_budget": self.get_token_budget(),
+            "token_usage": f"{self.get_token_usage_percentage():.1f}%",
+            "within_budget": self.is_within_budget(),
+            "quality_grade": self.quality_metrics.overall_grade.value if self.quality_metrics else "N/A",
+            "validation_issues_count": len(self.validation_issues),
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }
+
+    def to_markdown_index(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成文档索引页
+        md = f"# {self.project_name} - 规格文档集\n\n"
+        md += f"**项目版本**: {self.project_version}\n"
+        md += f"**规格版本**: {self.spec_version}\n"
+        md += f"**深度级别**: {self.depth_level.value}\n"
+        md += f"**生成时间**: {self.created_at}\n\n"
+
+        md += "## 📚 文档目录\n\n"
+        for doc_type in DocumentType:
+            doc = self.documents.get(doc_type)
+            if doc:
+                status_icon = "" if doc.is_within_budget() else ""
+                md += f"{status_icon} [{doc.title}]({doc.type.value}.md) "
+                md += f"({doc.token_count:,} / {doc.token_budget:,} tokens, "
+                md += f"{doc.token_usage_percentage:.1f}%)\n"
+        md += "\n"
+
+        md += "## 📊 统计信息\n\n"
+        summary = self.get_summary()
+        md += f"- **原子组件**: {summary['components_count']}\n"
+        md += f"- **用户故事**: {summary['user_stories_count']}\n"
+        md += f"- **特性**: {summary['features_count']}\n"
+        md += f"- **限界上下文**: {len(self.bounded_contexts)}\n"
+        md += f"- **架构决策**: {len(self.architecture_decisions)}\n"
+        md += f"- **风险项**: {len(self.risks)}\n\n"
+
+        md += "## 🎯 质量评估\n\n"
+        if self.quality_metrics:
+            md += f"- **总体等级**: {self.quality_metrics.overall_grade.value}\n"
+            md += f"- **完整性**: {self.quality_metrics.completeness_score:.1f}/100\n"
+            md += f"- **一致性**: {self.quality_metrics.consistency_score:.1f}/100\n"
+            md += f"- **原子性**: {self.quality_metrics.atomicity_score:.1f}/100\n"
+            md += f"- **可行性**: {self.quality_metrics.feasibility_score:.1f}/100\n\n"
+
+        if self.validation_issues:
+            md += "##  验证问题\n\n"
+            for issue in self.validation_issues[:10]:  # 只显示前10个
+                md += f"- **{issue.severity.value}**: {issue.description} ({issue.location})\n"
+            if len(self.validation_issues) > 10:
+                md += f"\n...以及 {len(self.validation_issues) - 10} 个其他问题\n"
+
+        md += "\n---\n"
+        md += f"*由 SpecFlow V2.0 自动生成*\n"
+
+        return md
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

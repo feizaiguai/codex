@@ -1,0 +1,626 @@
+"""
+SpecFlow V2.0 - 扩展文档生成器
+包含实施计划,风险评估,质量报告生成器和主生成器
+版本: 2.0.0
+"""
+
+from typing import List, Dict, Any, Optional, Tuple, Union, Callable
+from datetime import datetime, timedelta
+
+from generator import BaseGenerator
+from atomic_component import AtomicComponent, UserStory, Feature
+from models_v2 import (
+    SpecificationV2, Document, DocumentType, DocumentStatus,
+    DepthLevel, QualityMetrics, Risk, Milestone,
+    WorkBreakdownStructure
+)
+from config_v2 import SpecFlowConfigV2
+from validators import QualityValidator
+
+
+# ============ 实施计划生成器 ============
+
+class ImplementationPlanGenerator(BaseGenerator):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    04-实施计划 生成器
+
+    def generate(self) -> Document:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成实施计划文档
+        content = {
+            "wbs": self._generate_wbs(),
+            "milestones": self._generate_milestones(),
+            "timeline": self._generate_timeline(),
+            "resource_plan": self._generate_resource_plan()
+        }
+
+        return self._create_document(
+            DocumentType.IMPLEMENTATION,
+            f"{self.spec.project_name} - 实施计划",
+            content,
+            self._get_token_budget(DocumentType.IMPLEMENTATION)
+        )
+
+    def _generate_wbs(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成工作分解结构
+        wbs = "## 工作分解结构(WBS)\n\n"
+
+        if self.spec.wbs:
+            for phase_wbs in self.spec.wbs:
+                wbs += f"### 阶段: {phase_wbs.phase}\n\n"
+                wbs += f"**估算工时**: {phase_wbs.estimated_hours:.1f} 小时\n\n"
+
+                if phase_wbs.features:
+                    wbs += "**特性**:\n"
+                    for feature in phase_wbs.features[:5]:
+                        wbs += f"- {feature.name} ({feature.estimated_hours:.1f}h)\n"
+                    wbs += "\n"
+
+                wbs += "---\n\n"
+        else:
+            # 从组件生成简单的 WBS
+            wbs += "### MVP 阶段\n\n"
+
+            # 按分类分组组件
+            categories = {}
+            for component in self.spec.components:
+                cat = component.category.value
+                if cat not in categories:
+                    categories[cat] = []
+                categories[cat].append(component)
+
+            for cat, components in list(categories.items())[:4]:
+                wbs += f"#### {cat}\n\n"
+                total_hours = sum(c.estimated_hours for c in components)
+                wbs += f"**总工时**: {total_hours:.1f} 小时\n\n"
+
+                for component in components[:5]:
+                    wbs += f"- {component.name} ({component.estimated_hours:.1f}h)\n"
+                wbs += "\n"
+
+        return wbs
+
+    def _generate_milestones(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成里程碑
+        milestones = "## 里程碑\n\n"
+
+        if self.spec.milestones:
+            for milestone in self.spec.milestones:
+                milestones += f"### {milestone.name}\n\n"
+                milestones += f"**预计完成**: {milestone.estimated_date}\n\n"
+                milestones += "**交付物**:\n"
+                for deliverable in milestone.deliverables:
+                    milestones += f"- {deliverable}\n"
+                milestones += "\n---\n\n"
+        else:
+            # 生成默认里程碑
+            milestones += "### M1: MVP 发布\n\n"
+            milestones += "**预计完成**: 3 个月后\n\n"
+            milestones += "**交付物**:\n- 核心功能\n- 基础测试\n\n"
+
+        return milestones
+
+    def _generate_timeline(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成时间线
+        timeline = "## 项目时间线\n\n"
+        timeline += "```\n"
+        timeline += "Phase 1 (MVP)     : ████████░░░░░░░░░░ (0-3月)\n"
+        timeline += "Phase 2 (扩展)    : ░░░░░░░░████████░░ (3-6月)\n"
+        timeline += "Phase 3 (优化)    : ░░░░░░░░░░░░░░████ (6-9月)\n"
+        timeline += "```\n\n"
+        return timeline
+
+    def _generate_resource_plan(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成资源计划
+        resource = "## 资源计划\n\n"
+        resource += "| 角色 | 人数 | 技能要求 |\n"
+        resource += "|------|------|----------|\n"
+        resource += "| 前端开发 | 2 | React, TypeScript |\n"
+        resource += "| 后端开发 | 3 | Node.js / Python |\n"
+        resource += "| 测试工程师 | 1 | 自动化测试 |\n"
+        resource += "| DevOps | 1 | AWS, Docker, K8s |\n\n"
+        return resource
+
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"# {self.spec.project_name} - 实施计划\n\n"
+        md += f"**版本**: {self.spec.project_version}\n"
+        md += f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        md += "---\n\n"
+
+        for section_content in content.values():
+            md += section_content
+
+        return md
+
+
+# ============ 风险评估生成器 ============
+
+class RiskAssessmentGenerator(BaseGenerator):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    06-风险评估 生成器
+
+    def generate(self) -> Document:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成风险评估文档
+        content = {
+            "risk_matrix": self._generate_risk_matrix(),
+            "risk_details": self._generate_risk_details(),
+            "mitigation_plan": self._generate_mitigation_plan()
+        }
+
+        return self._create_document(
+            DocumentType.RISK_ASSESSMENT,
+            f"{self.spec.project_name} - 风险评估",
+            content,
+            self._get_token_budget(DocumentType.RISK_ASSESSMENT)
+        )
+
+    def _generate_risk_matrix(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成风险矩阵
+        matrix = "## 风险矩阵\n\n"
+        matrix += "```\n"
+        matrix += "影响 ↑\n"
+        matrix += "高  │  🟡   🔴   🔴  \n"
+        matrix += "中  │  🟢   🟡   🔴  \n"
+        matrix += "低  │  🟢   🟢   🟡  \n"
+        matrix += "    └───────────────→ 概率\n"
+        matrix += "       低   中   高\n"
+        matrix += "```\n\n"
+        return matrix
+
+    def _generate_risk_details(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成风险详情
+        details = "## 风险详情\n\n"
+
+        if self.spec.risks:
+            for risk in self.spec.risks:
+                details += f"### {risk.id}: {risk.title}\n\n"
+                details += f"**类别**: {risk.category}\n"
+                details += f"**概率**: {risk.probability}\n"
+                details += f"**影响**: {risk.impact}\n"
+                details += f"**严重程度**: {risk.severity.value}\n\n"
+                details += f"**描述**: {risk.description}\n\n"
+                details += f"**缓解措施**: {risk.mitigation}\n\n"
+                details += "---\n\n"
+        else:
+            # 生成默认风险
+            details += "### RISK-001: 技术风险\n\n"
+            details += "**描述**: 新技术栈学习曲线\n\n"
+            details += "**缓解**: 提供培训和技术支持\n\n"
+
+        return details
+
+    def _generate_mitigation_plan(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成缓解计划
+        plan = "## 缓解计划\n\n"
+        plan += "| 风险ID | 缓解措施 | 责任人 | 时间表 |\n"
+        plan += "|--------|---------|--------|--------|\n"
+
+        if self.spec.risks:
+            for risk in self.spec.risks[:10]:
+                owner = risk.owner if risk.owner else "待定"
+                plan += f"| {risk.id} | {risk.mitigation[:50]}... | {owner} | 持续 |\n"
+        else:
+            plan += "| 待定 | 待定 | 待定 | 待定 |\n"
+
+        plan += "\n"
+        return plan
+
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"# {self.spec.project_name} - 风险评估\n\n"
+        md += f"**版本**: {self.spec.project_version}\n"
+        md += f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        md += "---\n\n"
+
+        for section_content in content.values():
+            md += section_content
+
+        return md
+
+
+# ============ 质量报告生成器 ============
+
+class QualityReportGenerator(BaseGenerator):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    07-质量报告 生成器
+
+    def generate(self) -> Document:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成质量报告文档
+        content = {
+            "quality_summary": self._generate_quality_summary(),
+            "validation_results": self._generate_validation_results(),
+            "improvement_recommendations": self._generate_recommendations()
+        }
+
+        return self._create_document(
+            DocumentType.QUALITY_REPORT,
+            f"{self.spec.project_name} - 质量报告",
+            content,
+            self._get_token_budget(DocumentType.QUALITY_REPORT)
+        )
+
+    def _generate_quality_summary(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成质量摘要
+        summary = "## 质量摘要\n\n"
+
+        if self.spec.quality_metrics:
+            qm = self.spec.quality_metrics
+            summary += f"### 总体评级: {qm.overall_grade.value}\n\n"
+            summary += "| 维度 | 得分 | 目标 | 状态 |\n"
+            summary += "|------|------|------|------|\n"
+            summary += f"| 完整性 | {qm.completeness_score:.1f} | ≥ 95 | {'' if qm.completeness_score >= 95 else ''} |\n"
+            summary += f"| 一致性 | {qm.consistency_score:.1f} | 100 | {'' if qm.consistency_score == 100 else ''} |\n"
+            summary += f"| 原子性 | {qm.atomicity_score:.1f} | ≥ 90 | {'' if qm.atomicity_score >= 90 else ''} |\n"
+            summary += f"| 可行性 | {qm.feasibility_score:.1f} | ≥ 90 | {'' if qm.feasibility_score >= 90 else ''} |\n\n"
+        else:
+            summary += "质量指标待计算\n\n"
+
+        return summary
+
+    def _generate_validation_results(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成验证结果
+        results = "## 验证结果\n\n"
+
+        if self.spec.validation_issues:
+            # 按严重程度分组
+            critical = [i for i in self.spec.validation_issues if i.severity.value == "Critical"]
+            high = [i for i in self.spec.validation_issues if i.severity.value == "High"]
+            medium = [i for i in self.spec.validation_issues if i.severity.value == "Medium"]
+
+            results += f"### 问题统计\n\n"
+            results += f"- 🔴 关键问题: {len(critical)}\n"
+            results += f"- 🟡 高优先级: {len(high)}\n"
+            results += f"- 🟢 中优先级: {len(medium)}\n\n"
+
+            if critical:
+                results += "### 🔴 关键问题\n\n"
+                for issue in critical[:5]:
+                    results += f"- **{issue.description}**\n"
+                    results += f"  - 位置: {issue.location}\n"
+                    results += f"  - 建议: {issue.suggestion}\n\n"
+        else:
+            results += " 未发现验证问题\n\n"
+
+        return results
+
+    def _generate_recommendations(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成改进建议
+        recommendations = "## 改进建议\n\n"
+
+        if self.spec.quality_metrics:
+            qm = self.spec.quality_metrics
+
+            if qm.completeness_score < 95:
+                recommendations += "### 完整性改进\n\n"
+                recommendations += "- 补充缺失的组件定义\n"
+                recommendations += "- 完善用户故事和验收标准\n\n"
+
+            if qm.consistency_score < 100:
+                recommendations += "### 一致性改进\n\n"
+                recommendations += "- 统一术语使用\n"
+                recommendations += "- 解决接口冲突\n\n"
+
+            if qm.atomicity_score < 90:
+                recommendations += "### 原子性改进\n\n"
+                recommendations += "- 细化组件粒度\n"
+                recommendations += "- 补充边界情况处理\n\n"
+
+        if not recommendations.count("###"):
+            recommendations += " 规格质量优秀,无需改进\n\n"
+
+        return recommendations
+
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"# {self.spec.project_name} - 质量报告\n\n"
+        md += f"**版本**: {self.spec.project_version}\n"
+        md += f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        md += "---\n\n"
+
+        for section_content in content.values():
+            md += section_content
+
+        return md
+
+
+# ============ 主规格生成器(编排器) ============
+
+class SpecificationGenerator:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    主规格生成器
+    编排所有文档生成器,生成完整的 V2.0 规格文档集
+    """
+
+    def __init__(self, config: Dict[str, Any]):
+        """待添加文档字符串"""
+        self.config = config
+        self.depth_level = DepthLevel(config.get("depth_level", "standard"))
+
+    def generate(
+        """待添加文档字符串"""
+        self,
+        project_name: str,
+        task_description: str,
+        analysis_result: Any,  # TaskAnalysisResult
+        components: List[AtomicComponent],
+        user_stories: List[UserStory],
+        features: List[Feature]
+    ) -> SpecificationV2:
+        """
+        生成完整的规格文档集
+
+        Args:
+            project_name: 项目名称
+            task_description: 任务描述
+            analysis_result: 任务分析结果
+            components: 原子组件列表
+            user_stories: 用户故事列表
+            features: 特性列表
+
+        Returns:
+            SpecificationV2: 完整的规格文档集
+        """
+
+        # 1. 创建规格对象
+        spec = SpecificationV2(
+            project_name=project_name,
+            project_version="1.0.0",
+            depth_level=self.depth_level,
+            components=components,
+            user_stories=user_stories,
+            features=features
+        )
+
+        # 2. 根据深度级别确定要生成的文档
+        multi_doc_config = SpecFlowConfigV2.MULTI_DOC_CONFIGS.get(
+            self.depth_level.value,
+            SpecFlowConfigV2.MULTI_DOC_CONFIGS["standard"]
+        )
+
+        required_documents = multi_doc_config["documents"]
+
+        # 3. 生成每个文档
+        generators_map = {
+            DocumentType.OVERVIEW: OverviewGenerator,
+            DocumentType.REQUIREMENTS: RequirementsGenerator,
+            DocumentType.DOMAIN_MODEL: DomainModelGenerator,
+            DocumentType.ARCHITECTURE: ArchitectureGenerator,
+            DocumentType.IMPLEMENTATION: ImplementationPlanGenerator,
+            DocumentType.TEST_STRATEGY: TestStrategyGenerator,
+            DocumentType.RISK_ASSESSMENT: RiskAssessmentGenerator,
+            DocumentType.QUALITY_REPORT: QualityReportGenerator
+        }
+
+        # 需要先导入这些生成器类(在实际使用时)
+        from generator import (
+            OverviewGenerator, RequirementsGenerator,
+            DomainModelGenerator, ArchitectureGenerator,
+            TestStrategyGenerator
+        )
+
+        for doc_type in required_documents:
+            generator_class = generators_map.get(doc_type)
+            if generator_class:
+                generator = generator_class(spec, self.config)
+                document = generator.generate()
+                spec.add_document(document)
+
+        # 4. 运行质量验证
+        quality_metrics = QualityValidator.validate_specification(spec, multi_doc_config)
+        spec.quality_metrics = quality_metrics
+
+        # 5. 更新规格状态
+        spec.updated_at = datetime.now().isoformat()
+
+        return spec
+
+    def save_specification(self, spec: SpecificationV2, output_dir: str):
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        保存规格文档到文件系统
+
+        Args:
+            spec: 规格对象
+            output_dir: 输出目录
+        """
+        import os
+
+        # 创建项目目录
+        project_dir = os.path.join(output_dir, f"{spec.project_name}-specs")
+        os.makedirs(project_dir, exist_ok=True)
+
+        # 保存每个文档
+        for doc_type, document in spec.documents.items():
+            filename = f"{doc_type.value}.md"
+            filepath = os.path.join(project_dir, filename)
+
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(document.markdown)
+
+        # 保存索引文件
+        index_file = os.path.join(project_dir, "README.md")
+        with open(index_file, 'w', encoding='utf-8') as f:
+            f.write(spec.to_markdown_index())
+
+        print(f" 规格文档已保存到: {project_dir}")
+        print(f"   - {len(spec.documents)} 个文档")
+        print(f"   - 总 Token: {spec.get_total_tokens():,}")
+        print(f"   - 质量等级: {spec.quality_metrics.overall_grade.value if spec.quality_metrics else 'N/A'}")
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

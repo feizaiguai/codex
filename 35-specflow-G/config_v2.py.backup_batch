@@ -1,0 +1,631 @@
+"""
+SpecFlow V2.0 Configuration
+原子级多文档配置系统
+版本: 2.0.0
+"""
+
+from typing import Dict, Any, List, Optional, Tuple, Union, Callable
+from enum import Enum
+
+
+import logging
+
+class DepthLevel(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    深度级别
+    SIMPLE = "simple"
+    STANDARD = "standard"
+    COMPREHENSIVE = "comprehensive"
+
+
+class DocumentType(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    文档类型
+    OVERVIEW = "00-项目概览"
+    REQUIREMENTS = "01-需求规格"
+    DOMAIN_MODEL = "02-领域模型"
+    ARCHITECTURE = "03-架构设计"
+    IMPLEMENTATION = "04-实施计划"
+    TEST_STRATEGY = "05-测试策略"
+    RISK_ASSESSMENT = "06-风险评估"
+    QUALITY_REPORT = "07-质量报告"
+
+
+class SpecFlowConfigV2:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    SpecFlow V2.0 配置
+
+    # ============ 版本信息 ============
+    VERSION = "2.0.0"
+    ARCHITECTURE = "原子级多文档"
+
+    # ============ 多文档配置 ============
+
+    MULTI_DOC_CONFIGS = {
+        "simple": {
+            "description": "简单项目(< 200 小时)",
+            "documents": [
+                DocumentType.OVERVIEW,
+                DocumentType.REQUIREMENTS,
+                DocumentType.ARCHITECTURE,
+                DocumentType.TEST_STRATEGY
+            ],
+            "max_token_per_doc": 10000,
+            "total_token_target": 40000,
+            "total_pages_target": 15,
+            "detail_level": "high_level",
+            "atomicity_level": "component",  # 组件级
+            "examples_per_component": 1
+        },
+        "standard": {
+            "description": "标准项目(200-1000 小时)",
+            "documents": [
+                DocumentType.OVERVIEW,
+                DocumentType.REQUIREMENTS,
+                DocumentType.DOMAIN_MODEL,
+                DocumentType.ARCHITECTURE,
+                DocumentType.IMPLEMENTATION,
+                DocumentType.TEST_STRATEGY
+            ],
+            "max_token_per_doc": 12000,
+            "total_token_target": 72000,
+            "total_pages_target": 30,
+            "detail_level": "detailed",
+            "atomicity_level": "atomic",  # 原子级
+            "examples_per_component": 2
+        },
+        "comprehensive": {
+            "description": "复杂项目(> 1000 小时)",
+            "documents": [
+                DocumentType.OVERVIEW,
+                DocumentType.REQUIREMENTS,
+                DocumentType.DOMAIN_MODEL,
+                DocumentType.ARCHITECTURE,
+                DocumentType.IMPLEMENTATION,
+                DocumentType.TEST_STRATEGY,
+                DocumentType.RISK_ASSESSMENT,
+                DocumentType.QUALITY_REPORT
+            ],
+            "max_token_per_doc": 15000,
+            "total_token_target": 120000,
+            "total_pages_target": 60,
+            "detail_level": "comprehensive",
+            "atomicity_level": "molecular",  # 分子级(最细粒度)
+            "examples_per_component": 3
+        }
+    }
+
+    # ============ 文档模板配置 ============
+
+    DOCUMENT_TEMPLATES = {
+        DocumentType.OVERVIEW: {
+            "name": "项目概览",
+            "sections": [
+                "executive_summary",      # 执行摘要
+                "vision_statement",       # 愿景声明
+                "business_background",    # 业务背景
+                "stakeholder_analysis",   # 利益相关者分析
+                "success_metrics",        # 成功指标
+                "constraints",            # 约束条件
+                "assumptions"             # 假设条件
+            ],
+            "token_budget": {
+                "simple": 8000,
+                "standard": 10000,
+                "comprehensive": 12000
+            },
+            "required_components": {
+                "stakeholders_min": 2,
+                "success_metrics_min": 3,
+                "constraints_min": 3
+            }
+        },
+
+        DocumentType.REQUIREMENTS: {
+            "name": "需求规格",
+            "sections": [
+                "functional_requirements",    # 功能需求(原子级)
+                "non_functional_requirements", # 非功能需求
+                "user_stories",                # 用户故事(ATDD)
+                "bdd_scenarios",               # BDD 场景
+                "ui_component_specs",          # UI 组件规格(原子级)
+                "api_contracts",               # API 契约(SDD)
+                "data_models",                 # 数据模型
+                "glossary"                     # 术语表
+            ],
+            "token_budget": {
+                "simple": 10000,
+                "standard": 12000,
+                "comprehensive": 15000
+            },
+            "required_components": {
+                "functional_requirements_min": 5,
+                "user_stories_min": 3,
+                "bdd_scenarios_min": 5
+            },
+            "atomic_component_template": {
+                "required_fields": [
+                    "id", "name", "purpose", "props",
+                    "interactions", "dependencies",
+                    "edge_cases", "acceptance_criteria"
+                ]
+            }
+        },
+
+        DocumentType.DOMAIN_MODEL: {
+            "name": "领域模型",
+            "sections": [
+                "bounded_contexts",        # 限界上下文(DDD)
+                "aggregates",              # 聚合(DDD)
+                "entities",                # 实体
+                "value_objects",           # 值对象
+                "domain_events",           # 领域事件
+                "domain_services",         # 领域服务
+                "ubiquitous_language"      # 通用语言
+            ],
+            "token_budget": {
+                "simple": 0,  # 简单项目不生成
+                "standard": 10000,
+                "comprehensive": 12000
+            },
+            "ddd_patterns": ["entity", "value_object", "aggregate", "domain_event"]
+        },
+
+        DocumentType.ARCHITECTURE: {
+            "name": "架构设计",
+            "sections": [
+                "architecture_overview",   # 架构概览
+                "architecture_pattern",    # 架构模式
+                "tech_stack",              # 技术栈
+                "component_design",        # 组件设计
+                "api_design",              # API 设计(RESTful/GraphQL)
+                "data_architecture",       # 数据架构
+                "adrs",                    # 架构决策记录
+                "deployment_architecture"  # 部署架构
+            ],
+            "token_budget": {
+                "simple": 10000,
+                "standard": 12000,
+                "comprehensive": 15000
+            },
+            "required_components": {
+                "tech_stack_min": 5,
+                "adrs_min": 3,
+                "api_endpoints_min": 5
+            }
+        },
+
+        DocumentType.IMPLEMENTATION: {
+            "name": "实施计划",
+            "sections": [
+                "wbs",                     # 工作分解结构(FDD)
+                "feature_prioritization",  # 特性优先级
+                "pert_estimates",          # PERT 三点估算
+                "critical_path",           # 关键路径(CPM)
+                "milestones",              # 里程碑
+                "resource_allocation",     # 资源分配
+                "implementation_phases",   # 实施阶段
+                "timeline"                 # 时间线
+            ],
+            "token_budget": {
+                "simple": 8000,
+                "standard": 10000,
+                "comprehensive": 12000
+            },
+            "estimation_formula": {
+                "method": "PERT",
+                "weights": {"optimistic": 1, "most_likely": 4, "pessimistic": 1}
+            }
+        },
+
+        DocumentType.TEST_STRATEGY: {
+            "name": "测试策略",
+            "sections": [
+                "test_pyramid",            # 测试金字塔
+                "unit_tests",              # 单元测试(TDD)
+                "integration_tests",       # 集成测试
+                "e2e_tests",               # 端到端测试
+                "bdd_test_scenarios",      # BDD 测试场景
+                "performance_benchmarks",  # 性能基准
+                "security_testing",        # 安全测试
+                "test_automation_strategy" # 测试自动化策略
+            ],
+            "token_budget": {
+                "simple": 10000,
+                "standard": 12000,
+                "comprehensive": 15000
+            },
+            "test_pyramid_distribution": {
+                "unit": 70,
+                "integration": 20,
+                "e2e": 10
+            }
+        },
+
+        DocumentType.RISK_ASSESSMENT: {
+            "name": "风险评估",
+            "sections": [
+                "risk_matrix",             # 风险矩阵
+                "technical_risks",         # 技术风险
+                "business_risks",          # 业务风险
+                "resource_risks",          # 资源风险
+                "schedule_risks",          # 进度风险
+                "mitigation_strategies",   # 缓解策略
+                "contingency_plans"        # 应急计划
+            ],
+            "token_budget": {
+                "simple": 0,  # 简单项目不生成
+                "standard": 0,  # 标准项目不生成
+                "comprehensive": 10000
+            }
+        },
+
+        DocumentType.QUALITY_REPORT: {
+            "name": "质量报告",
+            "sections": [
+                "quality_metrics",         # 质量指标
+                "completeness_score",      # 完整性评分
+                "consistency_score",       # 一致性评分
+                "feasibility_score",       # 可行性评分
+                "atomicity_validation",    # 原子性验证
+                "improvement_recommendations" # 改进建议
+            ],
+            "token_budget": {
+                "simple": 0,  # 简单项目不生成
+                "standard": 0,  # 标准项目不生成
+                "comprehensive": 10000
+            }
+        }
+    }
+
+    # ============ 原子级组件配置 ============
+
+    ATOMIC_COMPONENT_CONFIG = {
+        "naming_convention": {
+            "format": "{Domain}{Entity}{Action}{Type}",
+            "examples": [
+                "UserLoginForm",
+                "ProductCatalogTable",
+                "OrderCheckoutWizard",
+                "InvoiceGenerationService"
+            ],
+            "rules": [
+                "使用 PascalCase",
+                "名称自文档化",
+                "包含领域,实体,动作,类型"
+            ]
+        },
+
+        "required_fields": [
+            "id",                    # 唯一标识
+            "name",                  # 自文档化名称
+            "category",              # 分类
+            "purpose",               # 目的(一句话)
+            "context",               # 上下文
+            "props",                 # 属性(原子级)
+            "interactions",          # 交互
+            "dependencies",          # 依赖
+            "constraints",           # 约束
+            "edge_cases",            # 边界情况
+            "acceptance_criteria",   # 验收标准
+            "test_cases"             # 测试用例
+        ],
+
+        "optional_fields": [
+            "ui_spec",               # UI 规格(仅 UI 组件)
+            "api_contract",          # API 契约(仅 API)
+            "data_model",            # 数据模型(仅数据组件)
+            "business_rules",        # 业务规则
+            "error_handling",        # 错误处理
+            "performance_requirements" # 性能要求
+        ],
+
+        "validation_rules": {
+            "name_min_length": 5,
+            "name_max_length": 100,
+            "purpose_min_length": 10,
+            "purpose_max_length": 200,
+            "props_min_count": 1,
+            "acceptance_criteria_min_count": 1,
+            "test_cases_min_count": 1
+        }
+    }
+
+    # ============ 6种驱动模式配置 ============
+
+    METHODOLOGY_CONFIG = {
+        "TDD": {
+            "name": "Test-Driven Development",
+            "name_zh": "测试驱动开发",
+            "principles": [
+                "Red-Green-Refactor 循环",
+                "测试先行",
+                "小步迭代",
+                "快速反馈"
+            ],
+            "application": {
+                "in_spec": "每个组件都包含完整的测试用例",
+                "format": "Given-When-Then 或 Arrange-Act-Assert",
+                "coverage_target": 80
+            }
+        },
+
+        "BDD": {
+            "name": "Behavior-Driven Development",
+            "name_zh": "行为驱动开发",
+            "principles": [
+                "业务语言描述",
+                "Given-When-Then 格式",
+                "活文档",
+                "三方协作(BA/Dev/QA)"
+            ],
+            "application": {
+                "in_spec": "所有功能需求都有 BDD 场景",
+                "format": "Gherkin 语法",
+                "scenario_min_count": 3
+            }
+        },
+
+        "DDD": {
+            "name": "Domain-Driven Design",
+            "name_zh": "领域驱动设计",
+            "principles": [
+                "限界上下文",
+                "聚合根",
+                "通用语言",
+                "领域事件"
+            ],
+            "application": {
+                "in_spec": "完整的领域模型文档",
+                "patterns": ["Entity", "Value Object", "Aggregate", "Domain Event"],
+                "context_min_count": 1
+            }
+        },
+
+        "ATDD": {
+            "name": "Acceptance Test-Driven Development",
+            "name_zh": "验收测试驱动开发",
+            "principles": [
+                "验收标准前置",
+                "客户语言",
+                "自动化验收测试",
+                "明确成功标准"
+            ],
+            "application": {
+                "in_spec": "每个用户故事都有验收标准",
+                "format": "清单式验收标准 + 自动化测试示例",
+                "ac_min_per_story": 3
+            }
+        },
+
+        "FDD": {
+            "name": "Feature-Driven Development",
+            "name_zh": "特性驱动开发",
+            "principles": [
+                "特性列表",
+                "按价值优先级",
+                "小而频繁交付",
+                "领域对象建模"
+            ],
+            "application": {
+                "in_spec": "完整的特性分解和优先级排序",
+                "feature_max_duration_days": 10,
+                "prioritization_criteria": ["价值", "复杂度", "依赖", "风险"]
+            }
+        },
+
+        "SDD": {
+            "name": "Specification-Driven Development",
+            "name_zh": "规格驱动开发",
+            "principles": [
+                "规格即代码",
+                "契约优先",
+                "强类型定义",
+                "可执行规格"
+            ],
+            "application": {
+                "in_spec": "OpenAPI/GraphQL 规格 + TypeScript 接口定义",
+                "format": "OpenAPI 3.0 / GraphQL Schema",
+                "include_code_generation": True
+            }
+        }
+    }
+
+    # ============ 质量标准 ============
+
+    QUALITY_THRESHOLDS = {
+        "A+": {
+            "completeness_min": 98,
+            "consistency_min": 100,
+            "feasibility_min": 95,
+            "atomicity_score_min": 95,
+            "description": "专家级,生产就绪"
+        },
+        "A": {
+            "completeness_min": 95,
+            "consistency_min": 98,
+            "feasibility_min": 90,
+            "atomicity_score_min": 90,
+            "description": "优秀,可直接实施"
+        },
+        "B": {
+            "completeness_min": 90,
+            "consistency_min": 95,
+            "feasibility_min": 85,
+            "atomicity_score_min": 80,
+            "description": "良好,需少量完善"
+        },
+        "C": {
+            "completeness_min": 80,
+            "consistency_min": 90,
+            "feasibility_min": 75,
+            "atomicity_score_min": 70,
+            "description": "可用,需改进"
+        },
+        "D": {
+            "completeness_min": 0,
+            "consistency_min": 0,
+            "feasibility_min": 0,
+            "atomicity_score_min": 0,
+            "description": "不合格"
+        }
+    }
+
+    # ============ Token 管理配置 ============
+
+    TOKEN_MANAGEMENT = {
+        "max_total_output": 120000,  # 总输出限制(多文档总和)
+        "max_per_document": 15000,   # 单文档限制
+        "safety_margin": 0.9,        # 安全边界(90%)
+        "token_estimation_multiplier": {
+            "chinese": 0.5,  # 中文字符 token 估算系数
+            "code": 0.3,     # 代码 token 估算系数
+            "markdown": 0.4  # Markdown token 估算系数
+        }
+    }
+
+    # ============ 输出格式配置 ============
+
+    OUTPUT_CONFIG = {
+        "language": "简体中文",
+        "format": "Markdown",
+        "include_toc": True,
+        "include_diagrams": True,
+        "diagram_format": "Mermaid",
+        "code_blocks": True,
+        "syntax_highlighting": True,
+        "document_structure": {
+            "use_frontmatter": True,
+            "max_heading_depth": 4,
+            "include_document_links": True,
+            "include_index_file": True
+        }
+    }
+
+    @classmethod
+    def get_config_for_depth(cls, depth: DepthLevel) -> Dict[str, Any]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        获取指定深度的配置
+        return cls.MULTI_DOC_CONFIGS.get(depth.value, cls.MULTI_DOC_CONFIGS["standard"])
+
+    @classmethod
+    def get_documents_for_depth(cls, depth: DepthLevel) -> List[DocumentType]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        获取指定深度需要生成的文档列表
+        config = cls.get_config_for_depth(depth)
+        return config["documents"]
+
+    @classmethod
+    def get_token_budget_for_document(
+        """待添加文档字符串"""
+        cls,
+        doc_type: DocumentType,
+        depth: DepthLevel
+    ) -> int:
+        """
+        获取特定文档的 token 预算
+        template = cls.DOCUMENT_TEMPLATES.get(doc_type)
+        if not template:
+            return 10000
+
+        budget = template.get("token_budget", {})
+        return budget.get(depth.value, 10000)
+
+    @classmethod
+    def validate_atomicity(cls, component: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        验证组件的原子性
+        required = cls.ATOMIC_COMPONENT_CONFIG["required_fields"]
+        validation = cls.ATOMIC_COMPONENT_CONFIG["validation_rules"]
+
+        issues = []
+        score = 100
+
+        # 检查必需字段
+        for field in required:
+            if field not in component:
+                issues.append(f"缺少必需字段: {field}")
+                score -= 10
+
+        # 检查名称规范
+        if "name" in component:
+            name_len = len(component["name"])
+            if name_len < validation["name_min_length"]:
+                issues.append(f"名称过短: {name_len} < {validation['name_min_length']}")
+                score -= 5
+            if name_len > validation["name_max_length"]:
+                issues.append(f"名称过长: {name_len} > {validation['name_max_length']}")
+                score -= 5
+
+        # 检查目的描述
+        if "purpose" in component:
+            purpose_len = len(component["purpose"])
+            if purpose_len < validation["purpose_min_length"]:
+                issues.append(f"目的描述过短: {purpose_len} < {validation['purpose_min_length']}")
+                score -= 5
+
+        # 检查属性数量
+        if "props" in component:
+            props_count = len(component["props"])
+            if props_count < validation["props_min_count"]:
+                issues.append(f"属性数量不足: {props_count} < {validation['props_min_count']}")
+                score -= 10
+
+        # 检查验收标准
+        if "acceptance_criteria" in component:
+            ac_count = len(component["acceptance_criteria"])
+            if ac_count < validation["acceptance_criteria_min_count"]:
+                issues.append(f"验收标准不足: {ac_count} < {validation['acceptance_criteria_min_count']}")
+                score -= 10
+
+        return {
+            "valid": score >= 70,
+            "score": max(0, score),
+            "issues": issues
+        }
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

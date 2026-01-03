@@ -1,0 +1,20 @@
+"""33-gemini 命令行接口"""
+import argparse
+from engine import GeminiAssistant, GeminiTask, TaskCategory
+
+def main():
+    parser = argparse.ArgumentParser(description='33-gemini: 全能型AI助手')
+    parser.add_argument('task', help='任务描述')
+    parser.add_argument('--category', choices=[c.value for c in TaskCategory], default='development')
+    args = parser.parse_args()
+
+    assistant = GeminiAssistant()
+    task = GeminiTask(args.task, TaskCategory(args.category), {})
+    result = assistant.execute(task)
+
+    print(f"策略: {result.strategy}")
+    print(f"成功: {result.success}")
+    print(f"洞察: {', '.join(result.insights)}")
+
+if __name__ == '__main__':
+    main()

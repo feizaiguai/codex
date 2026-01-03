@@ -1,0 +1,133 @@
+{
+  "timestamp": "2025-12-12T19:19:30.179750",
+  "total_time": 19.280308,
+  "total_apis": 7,
+  "working_count": 4,
+  "failed_count": 3,
+  "working_apis": [
+    "Exa.ai",
+    "Brave Search",
+    "Jina Reader",
+    "Jina Embedding"
+  ],
+  "failed_apis": [
+    "Perplexity",
+    "Gemini",
+    "You.com"
+  ],
+  "detailed_results": [
+    {
+      "name": "Exa.ai",
+      "status": "✅ WORKING",
+      "endpoint": "https://api.exa.ai/search",
+      "response_time": 7354.523999999999,
+      "result_count": 3,
+      "features": [
+        "Fast search",
+        "Auto mode",
+        "Deep search",
+        "Neural search"
+      ],
+      "sample_response": [
+        {
+          "id": "https://www.datacamp.com/tutorial/python-async-programming",
+          "title": "Python Async Programming: The Complete Guide - DataCamp",
+          "url": "https://www.datacamp.com/tutorial/python-async-programming",
+          "publishedDate": "2025-12-08T11:19:19.720Z",
+          "author": null
+        }
+      ]
+    },
+    {
+      "name": "Brave Search",
+      "status": "✅ WORKING",
+      "endpoint": "https://api.search.brave.com/res/v1/web/search",
+      "response_time": 6333.173000000001,
+      "result_count": 3,
+      "features": [
+        "Privacy-focused",
+        "Web search",
+        "News search",
+        "Image search"
+      ],
+      "sample_response": [
+        {
+          "title": "asyncio — Asynchronous I/O",
+          "url": "https://docs.python.org/3/library/asyncio.html",
+          "is_source_local": false,
+          "is_source_both": false,
+          "description": "Hello World!: <strong>asyncio is a library to write concurrent code using the async/await syntax</strong>. asyncio is used as a foundation for multiple Python asynchronous frameworks that provide high-performance n...",
+          "profile": {
+            "name": "Python",
+            "url": "https://docs.python.org/3/library/asyncio.html",
+            "long_name": "docs.python.org",
+            "img": "https://imgs.search.brave.com/TlYesPBh-Uw2IGKqnRKzWEoKLx3rLOTNmBHkVjoB1ro/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMTUzOTFjOGVi/YTcyOTVmODA3ODIy/YjE2NzFjY2ViMjhl/NzRlY2JhYTc5YjNm/ZjhmODAyZWI2OGUw/ZjU4NDVlNy9kb2Nz/LnB5dGhvbi5vcmcv"
+          },
+          "language": "en",
+          "family_friendly": true,
+          "type": "search_result",
+          "subtype": "generic",
+          "is_live": false,
+          "meta_url": {
+            "scheme": "https",
+            "netloc": "docs.python.org",
+            "hostname": "docs.python.org",
+            "favicon": "https://imgs.search.brave.com/TlYesPBh-Uw2IGKqnRKzWEoKLx3rLOTNmBHkVjoB1ro/rs:fit:32:32:1:0/g:ce/aHR0cDovL2Zhdmlj/b25zLnNlYXJjaC5i/cmF2ZS5jb20vaWNv/bnMvMTUzOTFjOGVi/YTcyOTVmODA3ODIy/YjE2NzFjY2ViMjhl/NzRlY2JhYTc5YjNm/ZjhmODAyZWI2OGUw/ZjU4NDVlNy9kb2Nz/LnB5dGhvbi5vcmcv",
+            "path": "› 3  › library  › asyncio.html"
+          },
+          "thumbnail": {
+            "src": "https://imgs.search.brave.com/x6XIGQbE46Q9nzEJMgk9uzMeO6eilp2XtCiJMmygJ8s/rs:fit:200:200:1:0/g:ce/aHR0cHM6Ly9kb2Nz/LnB5dGhvbi5vcmcv/My4xNC9faW1hZ2Vz/L3NvY2lhbF9wcmV2/aWV3cy9zdW1tYXJ5/X2xpYnJhcnlfYXN5/bmNpb19jMGQ4MmVi/NC5wbmc",
+            "original": "https://docs.python.org/3.14/_images/social_previews/summary_library_asyncio_c0d82eb4.png",
+            "logo": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Perplexity",
+      "status": "❌ FAILED",
+      "endpoint": "https://api.perplexity.ai/chat/completions",
+      "error": "HTTP 400: {\"error\":{\"message\":\"Invalid model 'llama-3.1-sonar-small-128k-online'. Permitted models can be found in the documentation at https://docs.perplexity.ai/getting-started/models.\",\"type\":\"invalid_model\""
+    },
+    {
+      "name": "Jina Reader",
+      "status": "✅ WORKING",
+      "endpoint": "https://r.jina.ai/",
+      "response_time": 4722.835,
+      "content_length": 3071,
+      "features": [
+        "Free",
+        "No API key",
+        "Clean markdown output",
+        "URL prefix service"
+      ],
+      "sample_response": "Title: asyncio — Asynchronous I/O\n\nURL Source: https://docs.python.org/3/library/asyncio.html\n\nMarkdown Content:\n* * *\n\nasyncio is a library to write **concurrent** code using the **async/await** synt"
+    },
+    {
+      "name": "Jina Embedding",
+      "status": "✅ WORKING",
+      "endpoint": "https://api.jina.ai/v1/embeddings",
+      "response_time": 14975.177,
+      "embedding_count": 1,
+      "features": [
+        "Semantic similarity",
+        "MTEB #1",
+        "Multiple dimensions",
+        "Late chunking"
+      ],
+      "embedding_dimension": 1024
+    },
+    {
+      "name": "Gemini",
+      "status": "❌ FAILED",
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+      "error": "All API keys failed"
+    },
+    {
+      "name": "You.com",
+      "status": "❌ FAILED",
+      "endpoint": "https://api.ydc-index.io/search",
+      "error": "HTTP 403: {\"message\":\"Forbidden\"}"
+    }
+  ]
+}

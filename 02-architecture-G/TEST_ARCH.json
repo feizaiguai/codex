@@ -1,0 +1,695 @@
+{
+  "meta": {
+    "project_name": "开发一个基于AI的智能文档管理系统，帮助企业高效管理和检索文档。",
+    "version": "1.0.0",
+    "generated_at": "2025-12-18T21:35:54.554151Z",
+    "generated_by": "02-architecture"
+  },
+  "spec_model": {
+    "context": {
+      "core_problem": "开发一个基于AI的智能文档管理系统，帮助企业高效管理和检索文档。",
+      "target_users": [
+        "企业文档管理员",
+        "普通员工",
+        "管理层"
+      ],
+      "value_proposition": "- 提高文档检索效率80%\n- 降低文档管理成本50%\n- 提升协作效率",
+      "technical_challenges": [
+        "大规模文档存储和检索、AI模型集成和优化、实时协作同步、高并发处理"
+      ],
+      "mvp_scope": "智能文档上传和分类、AI驱动的全文搜索、文档版本控制、权限管理、实时协作编辑"
+    },
+    "impact_mapping": {
+      "business_goal": "- 提高文档检索效率80%\n- 降低文档管理成本50%\n- 提升协作效率（核心问题：开发一个基于AI的智能文档管理系统，帮助企业高效管理和检索文档。）",
+      "actors": [
+        {
+          "name": "企业文档管理员",
+          "role": "管理者",
+          "impacts": [
+            "提升企业文档管理员的工作效率和满意度"
+          ]
+        },
+        {
+          "name": "普通员工",
+          "role": "主要用户",
+          "impacts": [
+            "提升普通员工的工作效率和满意度"
+          ]
+        },
+        {
+          "name": "管理层",
+          "role": "管理者",
+          "impacts": [
+            "提升管理层的工作效率和满意度"
+          ]
+        }
+      ],
+      "deliverables": [
+        "智能文档上传和分类",
+        "AI驱动的全文搜索",
+        "文档版本控制",
+        "权限管理",
+        "实时协作编辑"
+      ]
+    },
+    "flow_modeling": {
+      "user_stories": [
+        {
+          "id": "US-001",
+          "title": "注册/登录相关功能1",
+          "as_a": "企业文档管理员",
+          "i_want": "完成注册/登录的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-002",
+          "title": "注册/登录相关功能2",
+          "as_a": "普通员工",
+          "i_want": "完成注册/登录的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-003",
+          "title": "注册/登录相关功能3",
+          "as_a": "管理层",
+          "i_want": "完成注册/登录的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-004",
+          "title": "配置相关功能1",
+          "as_a": "企业文档管理员",
+          "i_want": "完成配置的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-005",
+          "title": "配置相关功能2",
+          "as_a": "普通员工",
+          "i_want": "完成配置的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-006",
+          "title": "配置相关功能3",
+          "as_a": "管理层",
+          "i_want": "完成配置的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-007",
+          "title": "核心操作相关功能1",
+          "as_a": "企业文档管理员",
+          "i_want": "完成核心操作的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-008",
+          "title": "核心操作相关功能2",
+          "as_a": "普通员工",
+          "i_want": "完成核心操作的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-009",
+          "title": "核心操作相关功能3",
+          "as_a": "管理层",
+          "i_want": "完成核心操作的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-010",
+          "title": "查看结果相关功能1",
+          "as_a": "企业文档管理员",
+          "i_want": "完成查看结果的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-011",
+          "title": "查看结果相关功能2",
+          "as_a": "普通员工",
+          "i_want": "完成查看结果的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        },
+        {
+          "id": "US-012",
+          "title": "查看结果相关功能3",
+          "as_a": "管理层",
+          "i_want": "完成查看结果的操作",
+          "so_that": "达成业务目标",
+          "priority": "HIGH",
+          "acceptance_criteria": []
+        }
+      ],
+      "event_flow": [
+        {
+          "event": "智能文档上传和分类Completed",
+          "trigger": "Complete智能文档上传和分类",
+          "actions": [],
+          "outcome": "当智能文档上传和分类完成时触发"
+        },
+        {
+          "event": "AI驱动的全文搜索Completed",
+          "trigger": "CompleteAI驱动的全文搜索",
+          "actions": [],
+          "outcome": "当AI驱动的全文搜索完成时触发"
+        },
+        {
+          "event": "文档版本控制Completed",
+          "trigger": "Complete文档版本控制",
+          "actions": [],
+          "outcome": "当文档版本控制完成时触发"
+        },
+        {
+          "event": "权限管理Completed",
+          "trigger": "Complete权限管理",
+          "actions": [],
+          "outcome": "当权限管理完成时触发"
+        },
+        {
+          "event": "实时协作编辑Completed",
+          "trigger": "Complete实时协作编辑",
+          "actions": [],
+          "outcome": "当实时协作编辑完成时触发"
+        }
+      ]
+    },
+    "domain_modeling": {
+      "entities": [
+        {
+          "name": "智能文档上传和分类",
+          "attributes": [
+            "id",
+            "name",
+            "status",
+            "createdAt",
+            "updatedAt"
+          ],
+          "behaviors": [
+            "create()",
+            "update()",
+            "delete()",
+            "validate()"
+          ]
+        },
+        {
+          "name": "AI驱动的全文搜索",
+          "attributes": [
+            "id",
+            "name",
+            "status",
+            "createdAt",
+            "updatedAt"
+          ],
+          "behaviors": [
+            "create()",
+            "update()",
+            "delete()",
+            "validate()"
+          ]
+        },
+        {
+          "name": "文档版本控制",
+          "attributes": [
+            "id",
+            "name",
+            "status",
+            "createdAt",
+            "updatedAt"
+          ],
+          "behaviors": [
+            "create()",
+            "update()",
+            "delete()",
+            "validate()"
+          ]
+        },
+        {
+          "name": "权限管理",
+          "attributes": [
+            "id",
+            "name",
+            "status",
+            "createdAt",
+            "updatedAt"
+          ],
+          "behaviors": [
+            "create()",
+            "update()",
+            "delete()",
+            "validate()"
+          ]
+        },
+        {
+          "name": "实时协作编辑",
+          "attributes": [
+            "id",
+            "name",
+            "status",
+            "createdAt",
+            "updatedAt"
+          ],
+          "behaviors": [
+            "create()",
+            "update()",
+            "delete()",
+            "validate()"
+          ]
+        }
+      ],
+      "bounded_contexts": [
+        {
+          "name": "核心业务上下文",
+          "entities": [
+            "智能文档上传和分类",
+            "AI驱动的全文搜索"
+          ],
+          "responsibilities": [
+            "处理核心业务流程和主要功能"
+          ]
+        },
+        {
+          "name": "支持服务上下文",
+          "entities": [
+            "文档版本控制",
+            "权限管理",
+            "实时协作编辑"
+          ],
+          "responsibilities": [
+            "提供支持性服务和辅助功能"
+          ]
+        }
+      ]
+    },
+    "bdd_scenarios": [
+      {
+        "feature": "注册/登录相关功能1",
+        "scenario": "注册/登录相关功能1 - 成功路径",
+        "given": [
+          "系统处于就绪状态",
+          "企业文档管理员拥有有效的账户信息"
+        ],
+        "when": [
+          "企业文档管理员提交注册/登录相关功能1请求",
+          "系统验证输入数据"
+        ],
+        "then": [
+          "验证通过",
+          "系统完成操作",
+          "企业文档管理员收到成功反馈"
+        ]
+      },
+      {
+        "feature": "注册/登录相关功能1",
+        "scenario": "注册/登录相关功能1 - 异常处理",
+        "given": [
+          "企业文档管理员已登录系统",
+          "系统处于就绪状态"
+        ],
+        "when": [
+          "企业文档管理员提交无效的注册/登录相关功能1请求",
+          "系统检测到数据错误"
+        ],
+        "then": [
+          "系统拒绝请求",
+          "返回错误提示",
+          "企业文档管理员看到友好的错误信息",
+          "系统状态保持一致"
+        ]
+      },
+      {
+        "feature": "注册/登录相关功能2",
+        "scenario": "注册/登录相关功能2 - 成功路径",
+        "given": [
+          "系统处于就绪状态",
+          "普通员工拥有有效的账户信息"
+        ],
+        "when": [
+          "普通员工提交注册/登录相关功能2请求",
+          "系统验证输入数据"
+        ],
+        "then": [
+          "验证通过",
+          "系统完成操作",
+          "普通员工收到成功反馈"
+        ]
+      },
+      {
+        "feature": "注册/登录相关功能2",
+        "scenario": "注册/登录相关功能2 - 异常处理",
+        "given": [
+          "普通员工已登录系统",
+          "系统处于就绪状态"
+        ],
+        "when": [
+          "普通员工提交无效的注册/登录相关功能2请求",
+          "系统检测到数据错误"
+        ],
+        "then": [
+          "系统拒绝请求",
+          "返回错误提示",
+          "普通员工看到友好的错误信息",
+          "系统状态保持一致"
+        ]
+      },
+      {
+        "feature": "注册/登录相关功能3",
+        "scenario": "注册/登录相关功能3 - 成功路径",
+        "given": [
+          "系统处于就绪状态",
+          "管理层拥有有效的账户信息"
+        ],
+        "when": [
+          "管理层提交注册/登录相关功能3请求",
+          "系统验证输入数据"
+        ],
+        "then": [
+          "验证通过",
+          "系统完成操作",
+          "管理层收到成功反馈"
+        ]
+      },
+      {
+        "feature": "注册/登录相关功能3",
+        "scenario": "注册/登录相关功能3 - 异常处理",
+        "given": [
+          "管理层已登录系统",
+          "系统处于就绪状态"
+        ],
+        "when": [
+          "管理层提交无效的注册/登录相关功能3请求",
+          "系统检测到数据错误"
+        ],
+        "then": [
+          "系统拒绝请求",
+          "返回错误提示",
+          "管理层看到友好的错误信息",
+          "系统状态保持一致"
+        ]
+      },
+      {
+        "feature": "配置相关功能1",
+        "scenario": "配置相关功能1 - 成功路径",
+        "given": [
+          "企业文档管理员已登录系统",
+          "系统允许配置操作"
+        ],
+        "when": [
+          "企业文档管理员打开配置相关功能1界面",
+          "企业文档管理员修改配置参数",
+          "保存配置"
+        ],
+        "then": [
+          "配置保存成功",
+          "系统应用新配置",
+          "企业文档管理员看到更新后的设置"
+        ]
+      },
+      {
+        "feature": "配置相关功能1",
+        "scenario": "配置相关功能1 - 异常处理",
+        "given": [
+          "企业文档管理员已登录系统",
+          "系统处于就绪状态"
+        ],
+        "when": [
+          "企业文档管理员提交无效的配置相关功能1请求",
+          "系统检测到数据错误"
+        ],
+        "then": [
+          "系统拒绝请求",
+          "返回错误提示",
+          "企业文档管理员看到友好的错误信息",
+          "系统状态保持一致"
+        ]
+      },
+      {
+        "feature": "配置相关功能2",
+        "scenario": "配置相关功能2 - 成功路径",
+        "given": [
+          "普通员工已登录系统",
+          "系统允许配置操作"
+        ],
+        "when": [
+          "普通员工打开配置相关功能2界面",
+          "普通员工修改配置参数",
+          "保存配置"
+        ],
+        "then": [
+          "配置保存成功",
+          "系统应用新配置",
+          "普通员工看到更新后的设置"
+        ]
+      },
+      {
+        "feature": "配置相关功能2",
+        "scenario": "配置相关功能2 - 异常处理",
+        "given": [
+          "普通员工已登录系统",
+          "系统处于就绪状态"
+        ],
+        "when": [
+          "普通员工提交无效的配置相关功能2请求",
+          "系统检测到数据错误"
+        ],
+        "then": [
+          "系统拒绝请求",
+          "返回错误提示",
+          "普通员工看到友好的错误信息",
+          "系统状态保持一致"
+        ]
+      },
+      {
+        "feature": "配置相关功能3",
+        "scenario": "配置相关功能3 - 成功路径",
+        "given": [
+          "管理层已登录系统",
+          "系统允许配置操作"
+        ],
+        "when": [
+          "管理层打开配置相关功能3界面",
+          "管理层修改配置参数",
+          "保存配置"
+        ],
+        "then": [
+          "配置保存成功",
+          "系统应用新配置",
+          "管理层看到更新后的设置"
+        ]
+      },
+      {
+        "feature": "核心操作相关功能1",
+        "scenario": "核心操作相关功能1 - 成功路径",
+        "given": [
+          "企业文档管理员已登录系统",
+          "系统处于就绪状态",
+          "必要的前置条件已满足"
+        ],
+        "when": [
+          "企业文档管理员发起核心操作相关功能1操作",
+          "系统处理请求",
+          "系统验证数据"
+        ],
+        "then": [
+          "处理成功",
+          "系统保存结果",
+          "企业文档管理员收到成功通知"
+        ]
+      },
+      {
+        "feature": "核心操作相关功能2",
+        "scenario": "核心操作相关功能2 - 成功路径",
+        "given": [
+          "普通员工已登录系统",
+          "系统处于就绪状态",
+          "必要的前置条件已满足"
+        ],
+        "when": [
+          "普通员工发起核心操作相关功能2操作",
+          "系统处理请求",
+          "系统验证数据"
+        ],
+        "then": [
+          "处理成功",
+          "系统保存结果",
+          "普通员工收到成功通知"
+        ]
+      }
+    ]
+  },
+  "arch_model": {
+    "scale_assessment": {
+      "scale": "Medium",
+      "score": 15.0,
+      "complexity_level": "Medium",
+      "details": {
+        "R1_用户规模": {
+          "score": 1.0,
+          "user_count": 50
+        },
+        "R2_实体复杂度": {
+          "score": 2.0,
+          "entity_count": 5,
+          "avg_attributes": 5.0
+        },
+        "R3_功能点数量": {
+          "score": 3.0,
+          "feature_count": 12
+        },
+        "R4_上下文数量": {
+          "score": 1.0,
+          "context_count": 2
+        },
+        "R5_聚合根复杂度": {
+          "score": 1.0,
+          "aggregate_count": 0,
+          "entities_in_aggregates": 0
+        },
+        "R6_工作流复杂度": {
+          "score": 1.0,
+          "workflow_count": 0,
+          "avg_steps": 0
+        },
+        "R7_优先级分布": {
+          "score": 1.0,
+          "p0_count": 0,
+          "p1_count": 12
+        },
+        "R8_用户故事数量": {
+          "score": 3.0,
+          "story_count": 12
+        },
+        "R9_值对象使用": {
+          "score": 1.0,
+          "value_object_count": 0
+        },
+        "R10_业务复杂度": {
+          "score": 1.0,
+          "complexity_indicator": 5.7
+        }
+      },
+      "reasoning": "中型系统（总分：15.0/50）\n\nR1: 用户规模未明确，默认小规模（1分）\nR2: 5个实体，平均5.0个属性 → 2.0分\nR3: 12个功能点 → 3.0分\nR4: 2个限界上下文 → 1.0分\nR5: 0个聚合根，包含0个实体 → 1.0分\nR6: 0个工作流，平均0.0步 → 1.0分\nR7: 0个P0功能，12个P1功能 → 1.0分\nR8: 12个用户故事 → 3.0分\nR9: 0个值对象 → 1.0分\nR10: 业务描述复杂度指标5.7 → 1.0分"
+    },
+    "tech_stack": {
+      "backend_language": {
+        "recommendation": "Go",
+        "alternatives": [
+          "Java",
+          "TypeScript/Node.js"
+        ],
+        "rationale": "**推荐Go作为后端语言**\n- 系统规模：Medium（100用户）\n- 性能评分：10.0/10\n- 生态系统：8.0/10\n- 适用场景：微服务, 高性能API, 云原生应用"
+      },
+      "database": {
+        "recommendation": "PostgreSQL",
+        "alternatives": [
+          "MySQL",
+          "Redis + PostgreSQL"
+        ],
+        "rationale": "**推荐PostgreSQL作为数据库**\n- 系统规模：Medium（5个实体）\n- 数据库类型：关系型\n- 关系型需求：强\n- 适用场景：复杂查询, 强一致性, 事务处理, JSONB支持"
+      },
+      "cache": {
+        "recommendation": "Redis",
+        "rationale": "**推荐Redis作为缓存方案**\n- 系统规模：Medium\n- 性能评分：10.0/10\n- 适用场景：分布式缓存, 会话存储, 排行榜, 消息队列"
+      },
+      "api_style": {
+        "recommendation": "RESTful",
+        "rationale": "**推荐RESTful作为API风格**\n- 系统规模：Medium\n- 简单性：9.0/10\n- 性能：8.0/10\n- 适用场景：CRUD操作, 资源导向, 通用API"
+      }
+    },
+    "pattern_selection": {
+      "primary_pattern": "Microservices",
+      "supporting_patterns": [
+        "Layered"
+      ],
+      "rationale": "## 架构模式选择\n\n**主模式**：Microservices（评分：7.0/10）\n\n**系统规模**：Medium\n- 预估用户：100\n- 实体数量：5\n- 限界上下文：2\n- 功能点：12\n\n**选择理由**：\n1. 系统规模为Medium，需要良好的可扩展性\n2. 2个限界上下文可拆分为独立服务\n3. 微服务架构支持团队独立开发和部署\n\n**支持模式**：Layered\n这些模式可以与主模式结合使用，提供额外的架构优势"
+    },
+    "adrs": [
+      {
+        "id": "ADR-001",
+        "title": "架构模式选择",
+        "status": "Accepted",
+        "context": "系统规模为Medium，预计100用户，5个核心实体，2个限界上下文。需要选择合适的架构模式来支持系统的可扩展性、可维护性和性能需求。",
+        "decision": "采用**Microservices**作为主架构模式。\n\n**模式特性**：\n- 可扩展性：High\n- 复杂度：High\n- 灵活性：High\n\n**支持模式**：Layered",
+        "consequences": "**正面影响**：\n- 适合Medium规模的系统\n- 可扩展性达到High级别\n- 支持以下场景：大型系统, 多团队, 独立部署, 云原生\n\n**负面影响**：\n- 复杂度为High级别\n- 不适合以下场景：小型项目, 简单业务, 资源受限"
+      },
+      {
+        "id": "ADR-002",
+        "title": "后端语言选择",
+        "status": "Accepted",
+        "context": "系统规模为Medium，需要选择性能优秀、生态丰富、团队熟悉的后端语言。需要考虑开发效率、运行性能、可维护性等多方面因素。",
+        "decision": "选择**Go**作为后端开发语言。\n\n**评分**：47.7/10\n\n**理由**：\n**推荐Go作为后端语言**\n- 系统规模：Medium（100用户）\n- 性能评分：10.0/10\n- 生态系统：8.0/10\n- 适用场景：微服务, 高性能API, 云原生应用",
+        "consequences": "**正面影响**：\n- 适合Medium规模的系统开发\n- 拥有丰富的生态系统和成熟的框架\n- 团队熟悉度高，降低学习成本\n\n**负面影响**：\n- 需要遵循该语言的最佳实践\n- 可能需要针对性能进行优化"
+      },
+      {
+        "id": "ADR-003",
+        "title": "数据库技术选择",
+        "status": "Accepted",
+        "context": "系统包含5个实体，0个聚合根。需要选择合适的数据库来存储和管理数据，同时满足性能、一致性和可扩展性需求。",
+        "decision": "选择**PostgreSQL**作为主数据库。\n\n**评分**：52.9/10\n\n**理由**：\n**推荐PostgreSQL作为数据库**\n- 系统规模：Medium（5个实体）\n- 数据库类型：关系型\n- 关系型需求：强\n- 适用场景：复杂查询, 强一致性, 事务处理, JSONB支持",
+        "consequences": "**正面影响**：\n- 满足数据存储和查询需求\n- 支持事务和数据一致性\n- 可扩展性良好\n\n**负面影响**：\n- 需要设计合理的表结构或文档结构\n- 需要考虑查询优化和索引设计"
+      },
+      {
+        "id": "ADR-004",
+        "title": "缓存策略选择",
+        "status": "Accepted",
+        "context": "系统规模为Medium，需要优化读取性能和降低数据库压力。需要选择合适的缓存方案来提升系统响应速度。",
+        "decision": "采用**Redis**作为缓存方案。\n\n**评分**：42.6/10\n\n**理由**：\n**推荐Redis作为缓存方案**\n- 系统规模：Medium\n- 性能评分：10.0/10\n- 适用场景：分布式缓存, 会话存储, 排行榜, 消息队列",
+        "consequences": "**正面影响**：\n- 显著提升读取性能\n- 降低数据库负载\n- 支持高并发访问\n\n**负面影响**：\n- 需要处理缓存一致性问题\n- 需要设计缓存更新策略"
+      },
+      {
+        "id": "ADR-005",
+        "title": "API设计风格选择",
+        "status": "Accepted",
+        "context": "采用Microservices架构模式，需要设计清晰的API接口。需要选择合适的API风格来满足前后端通信、服务间通信的需求。",
+        "decision": "采用**RESTful**作为API设计风格。\n\n**评分**：35.9/10\n\n**理由**：\n**推荐RESTful作为API风格**\n- 系统规模：Medium\n- 简单性：9.0/10\n- 性能：8.0/10\n- 适用场景：CRUD操作, 资源导向, 通用API",
+        "consequences": "**正面影响**：\n- 前后端接口清晰明确\n- 生态系统成熟，工具链完善\n- 易于文档化和测试\n\n**负面影响**：\n- 需要遵循API设计规范\n- 需要考虑版本管理和兼容性"
+      },
+      {
+        "id": "ADR-006",
+        "title": "消息队列技术选择",
+        "status": "Accepted",
+        "context": "系统规模为Medium，需要处理异步任务和服务间通信。需要选择合适的消息队列来解耦服务、提升系统弹性。",
+        "decision": "采用**RabbitMQ**作为消息队列方案。\n\n**评分**：39.1/10\n\n**理由**：\n**推荐RabbitMQ作为消息队列**\n- 系统规模：Medium\n- 可靠性：10.0/10\n- 适用场景：可靠消息传递, 复杂路由, 企业级",
+        "consequences": "**正面影响**：\n- 服务解耦，提升系统弹性\n- 支持异步处理，提升响应速度\n- 消息可靠传递\n\n**负面影响**：\n- 增加系统复杂度\n- 需要处理消息幂等性和顺序性"
+      },
+      {
+        "id": "ADR-007",
+        "title": "领域驱动设计（DDD）实施",
+        "status": "Accepted",
+        "context": "系统包含5个实体、0个聚合根、2个限界上下文。采用Microservices架构模式。需要明确DDD的实施策略和边界。",
+        "decision": "采用**战术DDD**进行领域建模，明确以下要素：\n\n**实体（Entity）**：5个\n- 智能文档上传和分类, AI驱动的全文搜索, 文档版本控制, 权限管理, 实时协作编辑\n\n**聚合根（Aggregate Root）**：0个\n- \n\n**限界上下文（Bounded Context）**：2个\n- 核心业务上下文, 支持服务上下文\n\n**值对象（Value Object）**：0个",
+        "consequences": "**正面影响**：\n- 领域边界清晰，职责明确\n- 聚合根保证业务一致性\n- 上下文映射明确服务边界\n- 值对象保证领域模型纯粹性\n\n**负面影响**：\n- 需要团队理解DDD概念\n- 初期建模成本较高"
+      },
+      {
+        "id": "ADR-008",
+        "title": "部署策略选择",
+        "status": "Accepted",
+        "context": "系统规模为Medium，采用Microservices架构模式。需要选择合适的部署策略来保证系统的可用性、可扩展性和运维效率。",
+        "decision": "采用**Kubernetes容器化部署**作为部署策略。\n\n**理由**：大型系统或微服务架构，需要容器编排和自动化运维\n\n**部署要素**：\n- CI/CD流水线自动化\n- 蓝绿部署或金丝雀发布\n- 健康检查和自动恢复\n- 日志收集和监控告警",
+        "consequences": "**正面影响**：\n- 自动化部署，降低人为错误\n- 支持快速回滚\n- 弹性伸缩，应对流量波动\n\n**负面影响**：\n- 需要建设DevOps能力\n- 初期基础设施投入较大"
+      }
+    ]
+  }
+}

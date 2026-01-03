@@ -1,0 +1,6 @@
+# test outputs
+reports/
+__pycache__/
+*.pyc
+*.log
+.env

@@ -1,0 +1,509 @@
+"""
+SpecFlow V4.0 - JSON驱动版本(升级版)
+使用生成器工厂和策略模式
+
+关键改进:
+1.  策略模式:每个文档类型独立生成器
+2.  向后兼容:保持与V3完全相同的API
+3.  三技能联动:完整支持01→02→35 JSON工作流
+"""
+from typing import Optional, Dict, List, Any, Tuple, Union, Callable
+from pathlib import Path
+import sys
+
+# 添加路径
+SPECFLOW_DIR = Path(__file__).parent
+sys.path.insert(0, str(SPECFLOW_DIR))
+sys.path.insert(0, str(SPECFLOW_DIR.parent))
+
+from loaders.json_loader import (
+    load_json,
+    extract_data_from_json,
+    create_requirements_from_json,
+    create_quality_report_from_json
+)
+
+from core.models import SpecificationDocument, DepthLevel
+from generators.factory import GeneratorFactory
+
+# 向后兼容:导入V3生成器作为降级方案
+try:
+    from generator_v3 import SpecificationGenerator as LegacyGenerator
+    LEGACY_AVAILABLE = True
+except ImportError:
+    LEGACY_AVAILABLE = False
+    print("  V3生成器不可用,仅使用V4生成器")
+
+
+def generate_from_json(
+    """待添加文档字符串"""
+    json_file: str,
+    output_dir: Optional[str] = None,
+    depth_level: DepthLevel = DepthLevel.STANDARD,
+    use_legacy: bool = False
+) -> SpecificationDocument:
+    """
+    从JSON文件生成完整规格文档
+
+    参数:
+        json_file: JSON文件路径(ARCHITECTURE.json或DESIGN_DRAFT.json)
+        output_dir: 输出目录
+        depth_level: 文档深度级别
+        use_legacy: 是否使用V3旧版生成器(向后兼容)
+
+    返回:
+        SpecificationDocument: 完整规格文档对象
+    """
+
+    print(f"\n{'='*70}")
+    print(f"  SpecFlow - JSON驱动模式 {'V3 (Legacy)' if use_legacy else 'V4.0'}")
+    print('='*70)
+    print(f"输入文件: {json_file}")
+    print(f"深度: {depth_level.value}")
+    print('='*70)
+
+    # 步骤1-4: 数据加载和准备(保持不变)
+    print("\n[步骤1/6] 加载JSON数据...")
+    json_data = load_json(json_file)
+    print(f"  ✓ JSON加载成功")
+    print(f"  ✓ 生成者: {json_data.get('meta', {}).get('generated_by', 'unknown')}")
+
+    # 验证三技能联动数据完整性
+    _validate_three_skills_data(json_data)
+
+    print("\n[步骤2/6] 提取结构化数据...")
+    extracted_data = extract_data_from_json(json_data)
+    print(f"  ✓ 项目名称: {extracted_data['project_name']}")
+    print(f"  ✓ 用户故事数: {len(extracted_data['user_stories'])}")
+    print(f"  ✓ BDD场景数: {len(extracted_data.get('bdd_scenarios', []))}")
+    print(f"  ✓ 实体数: {len(extracted_data['entities'])}")
+    print(f"  ✓ 复杂度: {extracted_data['complexity'].value}")
+
+    print("\n[步骤3/6] 创建需求和质量报告...")
+    requirements = create_requirements_from_json(extracted_data)
+    quality_report = create_quality_report_from_json(extracted_data, json_data)  # V5: 传递json_data进行内容质量检查
+    print(f"  ✓ 需求项数: {len(requirements)}")
+    print(f"  ✓ 估算工时: {quality_report.estimated_hours}小时")
+    print(f"  ✓ 质量等级: {quality_report.metrics.overall_grade.value} ({quality_report.metrics.overall_score:.1f}/100)")  # V5: 显示总体得分
+
+    # V5: 显示质量问题(如果有)
+    if quality_report.validation_issues:
+        print(f"    质量问题数: {len(quality_report.validation_issues)}")
+        for issue in quality_report.validation_issues[:3]:  # 显示前3个
+            print(f"      - {issue}")
+
+    print("\n[步骤4/6] 创建规格文档...")
+    spec = SpecificationDocument(
+        project_name=extracted_data["project_name"],
+        project_version=extracted_data["project_version"],
+        depth_level=depth_level,
+        spec_version="4.0.0"  # 升级版本号
+    )
+
+    spec.requirements = requirements
+    for req in requirements:
+        spec.user_stories.extend(req.user_stories)
+
+    spec.quality_report = quality_report
+
+    print(f"  ✓ 用户故事数: {len(spec.user_stories)}")
+    print(f"  ✓ 需求项数: {len(spec.requirements)}")
+
+    # 步骤5: 选择生成方式
+    print("\n[步骤5/6] 生成核心文档...")
+
+    if use_legacy and LEGACY_AVAILABLE:
+        print("  → 使用V3旧版生成器(向后兼容模式)")
+        _generate_with_legacy(spec, extracted_data)
+    else:
+        print("  → 使用V4新版生成器工厂")
+        _generate_with_factory(spec, extracted_data)
+
+    print(f"  ✓ 生成文档数: {len(spec.documents)}")
+
+    # 步骤6: 输出文档
+    if output_dir:
+        print(f"\n[步骤6/6] 输出文档到: {output_dir}")
+        _save_documents(spec, output_dir)
+        print(f"  ✓ 文档已保存")
+    else:
+        print("\n[步骤6/6] 跳过输出(未指定输出目录)")
+
+    print(f"\n{'='*70}")
+    print("  生成完成!")
+    print('='*70)
+    print(f"总体质量等级: {spec.quality_report.metrics.overall_grade.value} ({spec.quality_report.metrics.overall_score:.1f}/100)")  # V5: 显示总体得分
+    print(f"估算工时: {quality_report.estimated_hours}小时 ({quality_report.estimated_hours/8:.1f}工作日)")
+    print('='*70)
+
+    return spec
+
+
+def _validate_three_skills_data(json_data: dict):
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    验证三技能联动数据完整性
+
+    确保JSON包含必要的spec_model和arch_model
+    """
+    meta = json_data.get('meta', {})
+    generated_by = meta.get('generated_by', 'unknown')
+
+    if 'spec_model' not in json_data:
+        print("  警告: JSON缺少spec_model(来自01-spec-explorer)")
+        print("   这可能导致用户故事,BDD场景等数据缺失")
+
+    if 'arch_model' not in json_data:
+        if generated_by != '01-spec-explorer':
+            print("  警告: JSON缺少arch_model(来自02-architecture)")
+            print("   架构设计文档将使用默认模板")
+
+    # 检查关键数据
+    if 'spec_model' in json_data:
+        spec_model = json_data['spec_model']
+        flow = spec_model.get('flow_modeling', {})
+        user_stories = flow.get('user_stories', [])
+        bdd_scenarios = spec_model.get('bdd_scenarios', [])
+
+        if len(user_stories) == 0:
+            print("  警告: 用户故事为空")
+        if len(bdd_scenarios) == 0:
+            print("  注意: BDD场景为空(这可能是正常的)")
+
+
+def _generate_with_factory(spec: SpecificationDocument, extracted_data: dict):
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    使用V4生成器工厂生成文档
+
+    # 准备通用上下文(包含所有8个生成器需要的字段)
+    base_context = {
+        # 基础项目信息
+        'project_name': spec.project_name,
+        'project_version': spec.project_version,
+        'task_description': f"基于{len(spec.user_stories)}个用户故事的系统开发",
+
+        # 质量报告和指标
+        'quality_report': spec.quality_report,
+        'complexity': spec.quality_report.complexity,
+        'domain': spec.quality_report.domain,
+        'estimated_hours': spec.quality_report.estimated_hours,
+        'validation_issues': spec.quality_report.validation_issues,
+
+        # 需求和用户故事
+        'requirements': spec.requirements,
+        'user_stories': spec.user_stories,
+
+        # BDD场景和测试用例
+        'bdd_scenarios': extracted_data.get('bdd_scenarios', []),
+        'test_cases': [],  # 将在后续版本支持
+    }
+
+    # V4.0: 使用所有8个生成器
+
+    available_v4_generators = GeneratorFactory.list_available()
+    print(f"  V4可用生成器: {', '.join(available_v4_generators)}")
+
+    # 使用V4生成器生成所有文档
+    failed_generators = []
+    for generator_type in available_v4_generators:
+        try:
+            generator = GeneratorFactory.create(generator_type)
+            document = generator.generate(base_context)
+            spec.add_document(document)
+            print(f"  ✓ V4生成: {document.title}")
+        except Exception as e:
+            print(f"    V4生成失败 ({generator_type}): {e}")
+            failed_generators.append(generator_type)
+
+    # 如果有生成器失败且V3可用,使用V3作为降级方案
+    if failed_generators and LEGACY_AVAILABLE:
+        print(f"  → 使用V3降级方案处理{len(failed_generators)}个失败的生成器")
+        _generate_remaining_with_v3(spec, extracted_data)
+
+
+def _generate_remaining_with_v3(spec: SpecificationDocument, extracted_data: dict):
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    使用V3生成器生成剩余文档(向后兼容)
+    from generator_v3 import SpecificationGenerator
+
+    generator = SpecificationGenerator()
+
+    # 生成其他文档(除了已由V4生成的)
+    existing_types = [doc.type for doc in spec.documents.values()]
+
+    # 01-需求规格
+    if not any(t.value == "01-需求规格" for t in existing_types):
+        requirements_doc = generator.generate_requirements(
+            spec.requirements,
+            spec.user_stories
+        )
+        spec.add_document(requirements_doc)
+
+    # 02-领域模型
+    if not any(t.value == "02-领域模型" for t in existing_types):
+        domain_doc = generator.generate_domain_model(
+            spec.quality_report.domain,
+            spec.requirements
+        )
+        spec.add_document(domain_doc)
+
+    # 03-架构设计
+    if not any(t.value == "03-架构设计" for t in existing_types):
+        architecture_doc = generator.generate_architecture(
+            spec.quality_report.complexity,
+            spec.quality_report.domain
+        )
+        spec.add_document(architecture_doc)
+
+    # 04-实施计划
+    if not any(t.value == "04-实施计划" for t in existing_types):
+        implementation_doc = generator.generate_implementation_plan(
+            spec.user_stories,
+            spec.quality_report.estimated_hours
+        )
+        spec.add_document(implementation_doc)
+
+    # 05-测试策略(含BDD场景)
+    if not any(t.value == "05-测试策略" for t in existing_types):
+        test_doc = generator.generate_test_strategy(
+            spec.user_stories,
+            []
+        )
+
+        # 集成BDD场景
+        bdd_scenarios = extracted_data.get("bdd_scenarios", [])
+        if bdd_scenarios:
+            bdd_section = _generate_bdd_section(bdd_scenarios)
+            test_doc.markdown += bdd_section
+
+        spec.add_document(test_doc)
+
+    # 06-风险评估
+    if not any(t.value == "06-风险评估" for t in existing_types):
+        risk_doc = generator.generate_risk_assessment(
+            spec.quality_report.complexity,
+            spec.quality_report.validation_issues
+        )
+        spec.add_document(risk_doc)
+
+    # 07-质量报告
+    if not any(t.value == "07-质量报告" for t in existing_types):
+        quality_doc = generator.generate_quality_report(
+            spec.quality_report
+        )
+        spec.add_document(quality_doc)
+
+
+def _generate_bdd_section(bdd_scenarios: list) -> str:
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    生成BDD场景章节(优化后的字符串拼接)
+    if not bdd_scenarios:
+        return ""
+
+    # 使用列表+join优化性能
+    parts = [
+        "\n\n## BDD测试场景(来自需求分析)\n\n",
+        f"共{len(bdd_scenarios)}个BDD场景:\n\n"
+    ]
+
+    for idx, scenario in enumerate(bdd_scenarios[:10], 1):
+        parts.append(f"### 场景{idx}: {scenario.get('scenario', 'N/A')}\n\n")
+        parts.append(f"**Feature**: {scenario.get('feature', 'N/A')}\n\n")
+        parts.append("```gherkin\n")
+        parts.append(f"Scenario: {scenario.get('scenario', 'N/A')}\n")
+
+        # Given步骤
+        for given in scenario.get('given', []):
+            parts.append(f"  Given {given}\n")
+
+        # When步骤
+        for when in scenario.get('when', []):
+            parts.append(f"  When {when}\n")
+
+        # Then步骤
+        for then in scenario.get('then', []):
+            parts.append(f"  Then {then}\n")
+
+        parts.append("```\n\n")
+
+    return "".join(parts)
+
+
+def _generate_with_legacy(spec: SpecificationDocument, extracted_data: dict):
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    使用V3旧版生成器(向后兼容)
+    from generator_v3 import SpecificationGenerator
+
+    generator = SpecificationGenerator()
+
+    # 调用V3的生成逻辑
+    _generate_remaining_with_v3(spec, extracted_data)
+
+
+def _save_documents(spec: SpecificationDocument, output_dir: str):
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    保存所有文档到目录
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    # 保存README
+    readme_path = output_path / "README.md"
+    with open(readme_path, 'w', encoding='utf-8') as f:
+        f.write(f"# {spec.project_name} 需求规格文档\n\n")
+        f.write(f"**版本**: {spec.project_version}\n")
+        f.write(f"**规格版本**: {spec.spec_version}\n")
+        f.write(f"**生成时间**: {spec.created_at}\n\n")
+        f.write("## 文档列表\n\n")
+        for doc in spec.documents.values():
+            doc_type = doc.type.value
+            f.write(f"- [{doc.title}]({doc_type}.md)\n")
+
+    # 保存各个文档
+    for doc in spec.documents.values():
+        doc_type = doc.type.value
+        doc_path = output_path / f"{doc_type}.md"
+        with open(doc_path, 'w', encoding='utf-8') as f:
+            content = doc.markdown if doc.markdown else str(doc.content)
+            f.write(content)
+
+
+def main():
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    命令行入口
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='SpecFlow V4.0 - JSON驱动模式',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  # 使用V4新版生成器
+  python specflow_v4.py -i ARCHITECTURE.json -o output/
+
+  # 使用V3旧版生成器(向后兼容)
+  python specflow_v4.py -i ARCHITECTURE.json -o output/ --legacy
+
+输入: ARCHITECTURE.json(来自02-architecture)或DESIGN_DRAFT.json(来自01-spec-explorer)
+输出: 8个规格文档到指定目录
+
+三技能联动工作流:
+  01-spec-explorer → DESIGN.json
+          ↓
+  02-architecture → ARCHITECTURE.json (spec_model + arch_model)
+          ↓
+  35-specflow (JSON模式) → 高质量规格文档集
+        """
+    )
+
+    parser.add_argument(
+        '-i', '--input',
+        required=True,
+        help='输入JSON文件路径'
+    )
+
+    parser.add_argument(
+        '-o', '--output',
+        required=True,
+        help='输出目录'
+    )
+
+    parser.add_argument(
+        '--depth',
+        choices=['minimal', 'standard', 'detailed'],
+        default='standard',
+        help='文档深度级别(默认:standard)'
+    )
+
+    parser.add_argument(
+        '--legacy',
+        action='store_true',
+        help='使用V3旧版生成器(向后兼容模式)'
+    )
+
+    args = parser.parse_args()
+
+    # 映射depth参数到DepthLevel
+    depth_mapping = {
+        'minimal': DepthLevel.SIMPLE,
+        'standard': DepthLevel.STANDARD,
+        'detailed': DepthLevel.COMPREHENSIVE
+    }
+    depth_level = depth_mapping[args.depth]
+
+    try:
+        spec = generate_from_json(
+            json_file=args.input,
+            output_dir=args.output,
+            depth_level=depth_level,
+            use_legacy=args.legacy
+        )
+        print(f"\n 成功生成规格文档到: {args.output}\n")
+        return 0
+    except FileNotFoundError as e:
+        print(f"\n 文件不存在: {e}\n")
+        return 2
+    except Exception as e:
+        print(f"\n 错误: {e}\n")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(main())

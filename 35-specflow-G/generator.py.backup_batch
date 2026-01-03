@@ -1,0 +1,1023 @@
+"""
+SpecFlow V2.0 - 文档生成系统
+生成 8 个独立的规格文档
+版本: 2.0.0
+"""
+
+from typing import List, Dict, Any, Optional, Tuple, Union, Callable
+from abc import ABC, abstractmethod
+from datetime import datetime
+
+import logging
+
+from atomic_component import (
+    AtomicComponent, UserStory, Feature,
+    BDDScenario, TestCase, EdgeCase
+)
+from models_v2 import (
+    SpecificationV2, Document, DocumentType, DocumentStatus,
+    DepthLevel, QualityMetrics, BoundedContext, Aggregate,
+    ArchitectureDecisionRecord, TechStack, TestStrategy,
+    Risk, Milestone, WorkBreakdownStructure
+)
+from config_v2 import SpecFlowConfigV2
+from analyzer import TaskAnalysisResult
+from validators import QualityValidator
+
+
+# ============ 基础生成器 ============
+
+class BaseGenerator(ABC):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    基础文档生成器
+    所有文档生成器的抽象基类
+    """
+
+    def __init__(self, spec: SpecificationV2, config: Dict[str, Any]):
+        """待添加文档字符串"""
+        self.spec = spec
+        self.config = config
+        self.depth_level = spec.depth_level
+
+    @abstractmethod
+    def generate(self) -> Document:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成文档
+        pass
+
+    def _create_document(
+        """待添加文档字符串"""
+        self,
+        doc_type: DocumentType,
+        title: str,
+        content: Dict[str, Any],
+        token_budget: int
+    ) -> Document:
+        """
+        创建文档对象
+        # 生成 Markdown
+        markdown = self._dict_to_markdown(content)
+
+        # 估算 token 数(简化版:每个字符约 0.4 token)
+        token_count = int(len(markdown) * 0.4)
+
+        doc = Document(
+            type=doc_type,
+            title=title,
+            version=self.spec.spec_version,
+            content=content,
+            markdown=markdown,
+            token_budget=token_budget,
+            status=DocumentStatus.DRAFT
+        )
+
+        doc.update_token_stats(token_count)
+
+        return doc
+
+    @abstractmethod
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        将内容字典转换为 Markdown
+        pass
+
+    def _get_token_budget(self, doc_type: DocumentType) -> int:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        获取文档的 token 预算
+        template = SpecFlowConfigV2.DOCUMENT_TEMPLATES.get(doc_type, {})
+        budgets = template.get("token_budget", {})
+        return budgets.get(self.depth_level.value, 15000)
+
+
+# ============ 文档生成器实现 ============
+
+class OverviewGenerator(BaseGenerator):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    00-项目概览 生成器
+
+    def generate(self) -> Document:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成项目概览文档
+        content = {
+            "executive_summary": self._generate_executive_summary(),
+            "vision_statement": self._generate_vision(),
+            "business_background": self._generate_business_background(),
+            "stakeholder_analysis": self._generate_stakeholder_analysis(),
+            "success_metrics": self._generate_success_metrics(),
+            "constraints": self._generate_constraints(),
+            "assumptions": self._generate_assumptions()
+        }
+
+        return self._create_document(
+            DocumentType.OVERVIEW,
+            f"{self.spec.project_name} - 项目概览",
+            content,
+            self._get_token_budget(DocumentType.OVERVIEW)
+        )
+
+    def _generate_executive_summary(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成执行摘要
+        summary = f"## 执行摘要\n\n"
+        summary += f"**项目名称**: {self.spec.project_name}\n\n"
+        summary += f"**版本**: {self.spec.project_version}\n\n"
+        summary += f"本项目旨在构建{self.spec.project_name},"
+        summary += f"包含 {len(self.spec.features)} 个核心特性,"
+        summary += f"{len(self.spec.components)} 个原子级组件.\n\n"
+
+        if self.spec.quality_metrics:
+            summary += f"**质量等级**: {self.spec.quality_metrics.overall_grade.value}\n\n"
+
+        return summary
+
+    def _generate_vision(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成愿景声明
+        vision = "## 愿景声明\n\n"
+        vision += f"通过{self.spec.project_name},我们致力于为用户提供高质量的解决方案,"
+        vision += "提升业务效率,创造商业价值.\n\n"
+        return vision
+
+    def _generate_business_background(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成业务背景
+        bg = "## 业务背景\n\n"
+        bg += f"### 业务领域\n\n"
+
+        if self.spec.bounded_contexts:
+            for bc in self.spec.bounded_contexts[:3]:
+                bg += f"- **{bc.name}**: {bc.description}\n"
+        else:
+            bg += "- 核心业务领域待定义\n"
+
+        bg += "\n"
+        return bg
+
+    def _generate_stakeholder_analysis(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成利益相关者分析
+        stakeholders = "## 利益相关者分析\n\n"
+        stakeholders += "| 角色 | 关注点 | 期望 |\n"
+        stakeholders += "|------|-------|------|\n"
+        stakeholders += "| 最终用户 | 易用性,性能 | 高效完成任务 |\n"
+        stakeholders += "| 业务负责人 | ROI,上市时间 | 快速交付价值 |\n"
+        stakeholders += "| 技术团队 | 可维护性,扩展性 | 稳定可靠的系统 |\n"
+        stakeholders += "| 运维团队 | 稳定性,可监控性 | 易于运维管理 |\n\n"
+        return stakeholders
+
+    def _generate_success_metrics(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成成功指标
+        metrics = "## 成功指标\n\n"
+        metrics += "项目成功的关键指标:\n\n"
+        metrics += "1. **用户满意度**: 目标 ≥ 85%\n"
+        metrics += "2. **系统可用性**: 目标 ≥ 99.9%\n"
+        metrics += "3. **性能指标**: 平均响应时间 < 200ms\n"
+        metrics += "4. **按时交付率**: 目标 ≥ 90%\n\n"
+        return metrics
+
+    def _generate_constraints(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成约束条件
+        constraints = "## 约束条件\n\n"
+
+        # 从配置获取约束
+        config_constraints = self.config.get("constraints", [])
+        if config_constraints:
+            for constraint in config_constraints:
+                constraints += f"- {constraint}\n"
+        else:
+            constraints += "- 预算和时间约束\n"
+            constraints += "- 技术栈选择约束\n"
+            constraints += "- 合规性要求\n"
+
+        constraints += "\n"
+        return constraints
+
+    def _generate_assumptions(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成假设条件
+        assumptions = "## 假设条件\n\n"
+        assumptions += "- 用户具有基本的计算机操作能力\n"
+        assumptions += "- 网络连接稳定可用\n"
+        assumptions += "- 第三方服务可靠稳定\n"
+        assumptions += "- 团队成员具备相关技术能力\n\n"
+        return assumptions
+
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"# {self.spec.project_name} - 项目概览\n\n"
+        md += f"**版本**: {self.spec.project_version}\n"
+        md += f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        md += "---\n\n"
+
+        for section_content in content.values():
+            md += section_content
+
+        return md
+
+
+class RequirementsGenerator(BaseGenerator):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    01-需求规格 生成器
+
+    def generate(self) -> Document:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成需求规格文档
+        content = {
+            "functional_requirements": self._generate_functional_requirements(),
+            "non_functional_requirements": self._generate_non_functional_requirements(),
+            "user_stories": self._generate_user_stories(),
+            "atomic_components": self._generate_atomic_components(),
+            "glossary": self._generate_glossary()
+        }
+
+        return self._create_document(
+            DocumentType.REQUIREMENTS,
+            f"{self.spec.project_name} - 需求规格",
+            content,
+            self._get_token_budget(DocumentType.REQUIREMENTS)
+        )
+
+    def _generate_functional_requirements(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成功能需求
+        fr = "## 功能需求(原子级)\n\n"
+
+        if self.spec.features:
+            for i, feature in enumerate(self.spec.features, 1):
+                fr += f"### FR-{i}: {feature.name}\n\n"
+                fr += f"**描述**: {feature.description}\n\n"
+                fr += f"**价值**: {feature.value}\n"
+                fr += f"**复杂度**: {feature.complexity}\n\n"
+        else:
+            fr += "待补充功能需求\n\n"
+
+        return fr
+
+    def _generate_non_functional_requirements(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成非功能需求
+        nfr = "## 非功能需求\n\n"
+
+        categories = [
+            ("性能", ["系统平均响应时间应 < 200ms", "支持 1000 并发用户"]),
+            ("安全性", ["数据传输使用 HTTPS 加密", "实施 OAuth 2.0 认证"]),
+            ("可扩展性", ["支持水平扩展", "微服务架构设计"]),
+            ("可用性", ["系统可用性 ≥ 99.9%", "自动故障恢复"])
+        ]
+
+        for category, requirements in categories:
+            nfr += f"### {category}\n\n"
+            for req in requirements:
+                nfr += f"- {req}\n"
+            nfr += "\n"
+
+        return nfr
+
+    def _generate_user_stories(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成用户故事
+        stories = "## 用户故事(ATDD)\n\n"
+
+        if self.spec.user_stories:
+            for story in self.spec.user_stories[:10]:  # 最多10个
+                stories += story.to_markdown()
+                stories += "\n---\n\n"
+        else:
+            stories += "待补充用户故事\n\n"
+
+        return stories
+
+    def _generate_atomic_components(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成原子级组件
+        components = "## 原子级组件\n\n"
+
+        if self.spec.components:
+            for component in self.spec.components[:15]:  # 最多15个
+                components += component.to_markdown()
+                components += "\n---\n\n"
+        else:
+            components += "待补充原子级组件\n\n"
+
+        return components
+
+    def _generate_glossary(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成术语表
+        glossary = "## 术语表\n\n"
+        glossary += "| 术语 | 定义 |\n"
+        glossary += "|------|------|\n"
+
+        # 从限界上下文提取术语
+        if self.spec.bounded_contexts:
+            for bc in self.spec.bounded_contexts:
+                for term, definition in list(bc.ubiquitous_language.items())[:5]:
+                    glossary += f"| {term} | {definition} |\n"
+
+        if glossary.count("\n") <= 3:  # 没有术语
+            glossary += "| 用户 | 系统使用者 |\n"
+            glossary += "| 组件 | 系统功能模块 |\n"
+
+        glossary += "\n"
+        return glossary
+
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"# {self.spec.project_name} - 需求规格\n\n"
+        md += f"**版本**: {self.spec.project_version}\n"
+        md += f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        md += "---\n\n"
+
+        for section_content in content.values():
+            md += section_content
+
+        return md
+
+
+class DomainModelGenerator(BaseGenerator):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    02-领域模型 生成器
+
+    def generate(self) -> Document:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成领域模型文档
+        content = {
+            "bounded_contexts": self._generate_bounded_contexts(),
+            "aggregates": self._generate_aggregates(),
+            "domain_events": self._generate_domain_events(),
+            "context_map": self._generate_context_map()
+        }
+
+        return self._create_document(
+            DocumentType.DOMAIN_MODEL,
+            f"{self.spec.project_name} - 领域模型",
+            content,
+            self._get_token_budget(DocumentType.DOMAIN_MODEL)
+        )
+
+    def _generate_bounded_contexts(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成限界上下文
+        contexts = "## 限界上下文(DDD)\n\n"
+
+        if self.spec.bounded_contexts:
+            for bc in self.spec.bounded_contexts:
+                contexts += f"### {bc.name}\n\n"
+                contexts += f"**描述**: {bc.description}\n\n"
+                contexts += f"**聚合**: {', '.join(bc.aggregates)}\n\n"
+                contexts += f"**实体**: {', '.join(bc.entities)}\n\n"
+                contexts += f"**值对象**: {', '.join(bc.value_objects)}\n\n"
+                contexts += f"**领域事件**: {', '.join(bc.domain_events)}\n\n"
+                contexts += "---\n\n"
+        else:
+            contexts += "待定义限界上下文\n\n"
+
+        return contexts
+
+    def _generate_aggregates(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成聚合
+        aggregates = "## 聚合(DDD)\n\n"
+
+        if self.spec.aggregates:
+            for agg in self.spec.aggregates:
+                aggregates += f"### {agg.name}\n\n"
+                aggregates += f"**描述**: {agg.description}\n\n"
+                aggregates += f"**根实体**: {agg.root_entity}\n\n"
+                aggregates += f"**不变量**:\n"
+                for inv in agg.invariants:
+                    aggregates += f"- {inv}\n"
+                aggregates += "\n---\n\n"
+        else:
+            aggregates += "待定义聚合\n\n"
+
+        return aggregates
+
+    def _generate_domain_events(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成领域事件
+        events = "## 领域事件\n\n"
+        events += "| 事件 | 触发条件 | 影响 |\n"
+        events += "|------|---------|------|\n"
+
+        if self.spec.bounded_contexts:
+            for bc in self.spec.bounded_contexts:
+                for event in bc.domain_events[:5]:
+                    events += f"| {event} | 业务操作触发 | 状态变更 |\n"
+
+        if events.count("\n") <= 3:
+            events += "| 待定义 | - | - |\n"
+
+        events += "\n"
+        return events
+
+    def _generate_context_map(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成上下文映射图
+        context_map = "## 上下文映射图\n\n"
+        context_map += "```\n"
+
+        if self.spec.bounded_contexts:
+            for bc in self.spec.bounded_contexts:
+                context_map += f"[{bc.name}]\n"
+                if bc.dependencies:
+                    for dep in bc.dependencies:
+                        context_map += f"  --> {dep}\n"
+
+        context_map += "```\n\n"
+        return context_map
+
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"# {self.spec.project_name} - 领域模型\n\n"
+        md += f"**版本**: {self.spec.project_version}\n"
+        md += f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        md += "---\n\n"
+
+        for section_content in content.values():
+            md += section_content
+
+        return md
+
+
+class ArchitectureGenerator(BaseGenerator):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    03-架构设计 生成器
+
+    def generate(self) -> Document:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成架构设计文档
+        content = {
+            "architecture_overview": self._generate_architecture_overview(),
+            "tech_stack": self._generate_tech_stack(),
+            "architecture_decisions": self._generate_adrs(),
+            "api_contracts": self._generate_api_contracts(),
+            "data_architecture": self._generate_data_architecture()
+        }
+
+        return self._create_document(
+            DocumentType.ARCHITECTURE,
+            f"{self.spec.project_name} - 架构设计",
+            content,
+            self._get_token_budget(DocumentType.ARCHITECTURE)
+        )
+
+    def _generate_architecture_overview(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成架构概览
+        arch = "## 架构概览\n\n"
+        arch += "### 系统架构图\n\n"
+        arch += "```\n"
+        arch += "[Frontend] --> [API Gateway] --> [Backend Services]\n"
+        arch += "                                  |\n"
+        arch += "                                  +--> [Database]\n"
+        arch += "                                  |\n"
+        arch += "                                  +--> [Cache (Redis)]\n"
+        arch += "```\n\n"
+        return arch
+
+    def _generate_tech_stack(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成技术栈
+        tech = "## 技术栈\n\n"
+
+        if self.spec.tech_stack:
+            categories = {}
+            for ts in self.spec.tech_stack:
+                if ts.category not in categories:
+                    categories[ts.category] = []
+                categories[ts.category].append(ts)
+
+            for category, items in categories.items():
+                tech += f"### {category}\n\n"
+                for item in items:
+                    tech += f"- **{item.technology}** ({item.version}): {item.justification}\n"
+                tech += "\n"
+        else:
+            tech += "待定义技术栈\n\n"
+
+        return tech
+
+    def _generate_adrs(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成架构决策记录
+        adrs = "## 架构决策记录(ADR)\n\n"
+
+        if self.spec.architecture_decisions:
+            for adr in self.spec.architecture_decisions[:5]:
+                adrs += f"### {adr.id}: {adr.title}\n\n"
+                adrs += f"**状态**: {adr.status}\n\n"
+                adrs += f"**上下文**: {adr.context}\n\n"
+                adrs += f"**决策**: {adr.decision}\n\n"
+                adrs += "---\n\n"
+        else:
+            adrs += "待补充架构决策记录\n\n"
+
+        return adrs
+
+    def _generate_api_contracts(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成 API 契约
+        apis = "## API 契约(SDD)\n\n"
+
+        # 从组件中提取 API
+        api_components = [c for c in self.spec.components if c.api_contract]
+
+        if api_components:
+            for component in api_components[:10]:
+                api = component.api_contract
+                apis += f"### {api.method} {api.endpoint}\n\n"
+                apis += f"**描述**: {component.purpose}\n\n"
+
+                if api.request_body:
+                    apis += "**请求体**:\n```json\n"
+                    apis += str(api.request_body)
+                    apis += "\n```\n\n"
+
+                apis += "---\n\n"
+        else:
+            apis += "待定义 API 契约\n\n"
+
+        return apis
+
+    def _generate_data_architecture(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成数据架构
+        data = "## 数据架构\n\n"
+        data += "### 数据库设计\n\n"
+
+        # 从组件中提取数据模型
+        data_components = [c for c in self.spec.components if c.data_model]
+
+        if data_components:
+            for component in data_components[:8]:
+                dm = component.data_model
+                data += f"#### {dm.entity_name}\n\n"
+                data += "| 字段 | 类型 | 必填 | 描述 |\n"
+                data += "|------|------|------|------|\n"
+
+                for field in dm.fields[:5]:
+                    required = "" if field.required else ""
+                    data += f"| {field.name} | {field.type} | {required} | {field.description} |\n"
+
+                data += "\n"
+        else:
+            data += "待定义数据模型\n\n"
+
+        return data
+
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"# {self.spec.project_name} - 架构设计\n\n"
+        md += f"**版本**: {self.spec.project_version}\n"
+        md += f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        md += "---\n\n"
+
+        for section_content in content.values():
+            md += section_content
+
+        return md
+
+
+class TestStrategyGenerator(BaseGenerator):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    05-测试策略 生成器
+
+    def generate(self) -> Document:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成测试策略文档
+        content = {
+            "test_approach": self._generate_test_approach(),
+            "bdd_scenarios": self._generate_bdd_scenarios(),
+            "test_pyramid": self._generate_test_pyramid(),
+            "test_coverage": self._generate_test_coverage()
+        }
+
+        return self._create_document(
+            DocumentType.TEST_STRATEGY,
+            f"{self.spec.project_name} - 测试策略",
+            content,
+            self._get_token_budget(DocumentType.TEST_STRATEGY)
+        )
+
+    def _generate_test_approach(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成测试方法
+        approach = "## 测试方法\n\n"
+        approach += "本项目采用 **TDD + BDD + ATDD** 的综合测试方法:\n\n"
+        approach += "- **TDD** (测试驱动开发): 先写测试,后写实现\n"
+        approach += "- **BDD** (行为驱动开发): Given-When-Then 场景\n"
+        approach += "- **ATDD** (验收测试驱动开发): 明确验收标准\n\n"
+        return approach
+
+    def _generate_bdd_scenarios(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成 BDD 场景
+        scenarios = "## BDD 场景(Given-When-Then)\n\n"
+
+        # 从组件中收集 BDD 场景
+        all_scenarios = []
+        for component in self.spec.components:
+            all_scenarios.extend(component.bdd_scenarios)
+
+        if all_scenarios:
+            for scenario in all_scenarios[:15]:  # 最多15个
+                scenarios += f"### {scenario.name}\n\n"
+                scenarios += "```gherkin\n"
+                scenarios += "Given " + "\nAnd ".join(scenario.given) + "\n"
+                scenarios += "When " + "\nAnd ".join(scenario.when) + "\n"
+                scenarios += "Then " + "\nAnd ".join(scenario.then) + "\n"
+                scenarios += "```\n\n"
+                scenarios += "---\n\n"
+        else:
+            scenarios += "待补充 BDD 场景\n\n"
+
+        return scenarios
+
+    def _generate_test_pyramid(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成测试金字塔
+        pyramid = "## 测试金字塔\n\n"
+        pyramid += "```\n"
+        pyramid += "        /\\  E2E Tests (10%)\n"
+        pyramid += "       /  \\\n"
+        pyramid += "      /----\\  Integration Tests (30%)\n"
+        pyramid += "     /      \\\n"
+        pyramid += "    /--------\\  Unit Tests (60%)\n"
+        pyramid += "   /          \\\n"
+        pyramid += "```\n\n"
+        return pyramid
+
+    def _generate_test_coverage(self) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成测试覆盖率
+        coverage = "## 测试覆盖率目标\n\n"
+        coverage += "| 类型 | 目标覆盖率 |\n"
+        coverage += "|------|----------|\n"
+        coverage += "| 单元测试 | ≥ 80% |\n"
+        coverage += "| 集成测试 | ≥ 70% |\n"
+        coverage += "| E2E 测试 | 核心流程 100% |\n\n"
+        return coverage
+
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        转换为 Markdown
+        md = f"# {self.spec.project_name} - 测试策略\n\n"
+        md += f"**版本**: {self.spec.project_version}\n"
+        md += f"**生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+        md += "---\n\n"
+
+        for section_content in content.values():
+            md += section_content
+
+        return md
+
+
+# (继续下一部分...)
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

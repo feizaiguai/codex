@@ -1,0 +1,280 @@
+"""
+SpecFlow 配置文件加载器
+支持YAML配置文件加载和解析(零依赖实现)
+
+版本: 1.0.0
+"""
+
+import os
+from typing import Dict, Any, Optional, List, Tuple, Union, Callable
+from pathlib import Path
+
+
+class ConfigLoader:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    配置文件加载器(简化版,不依赖yaml库)
+    使用简单的键值对解析
+    """
+
+    def __init__(self, config_path: Optional[str] = None):
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        初始化配置加载器
+
+        Args:
+            config_path: 配置文件路径,默认为当前目录下的config.yaml
+        """
+        if config_path:
+            self.config_path = Path(config_path)
+        else:
+            current_dir = Path.cwd()
+            self.config_path = current_dir / "config.yaml"
+
+        self.config = self._load_default_config()
+
+        # 如果配置文件存在,加载配置
+        if self.config_path.exists():
+            self._load_config_file()
+
+    def _load_default_config(self) -> Dict[str, Any]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        加载默认配置
+        return {
+            "project": {
+                "name": "未命名项目",
+                "version": "1.0.0",
+                "description": ""
+            },
+            "defaults": {
+                "domain": "通用",
+                "complexity": "中等",
+                "quality_threshold": 80
+            },
+            "templates": {
+                "directory": "",
+                "template_set": "detailed"
+            },
+            "generation": {
+                "documents": {
+                    "overview": True,
+                    "requirements": True,
+                    "domain_model": True,
+                    "architecture": True,
+                    "implementation": True,
+                    "test_strategy": True,
+                    "risk_assessment": True,
+                    "quality_report": True
+                }
+            },
+            "validation": {
+                "enable_invest_check": True,
+                "enable_5w1h_check": True,
+                "enable_quantifiable_check": True,
+                "strictness": "normal"
+            },
+            "output": {
+                "directory": "./output",
+                "formats": ["markdown"],
+                "single_file": False
+            },
+            "batch": {
+                "input_file": "",
+                "concurrency": 5
+            },
+            "interactive": {
+                "enabled": False,
+                "auto_save_interval": 60
+            },
+            "advanced": {
+                "max_document_lines": 10000,
+                "token_budget": 20000
+            }
+        }
+
+    def _load_config_file(self):
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        加载配置文件(简化实现)
+        仅支持简单的键值对格式
+        """
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+
+            current_section = None
+            for line in lines:
+                line = line.strip()
+
+                # 跳过注释和空行
+                if not line or line.startswith('#'):
+                    continue
+
+                # 检查是否是节名
+                if line.endswith(':') and not line.startswith(' '):
+                    current_section = line[:-1]
+                    if current_section not in self.config:
+                        self.config[current_section] = {}
+                    continue
+
+                # 解析键值对
+                if ':' in line and current_section:
+                    key, value = line.split(':', 1)
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+
+                    # 类型转换
+                    if value.lower() == 'true':
+                        value = True
+                    elif value.lower() == 'false':
+                        value = False
+                    elif value.isdigit():
+                        value = int(value)
+
+                    self.config[current_section][key] = value
+
+        except Exception as e:
+            print(f"警告: 加载配置文件失败,使用默认配置.错误: {e}")
+
+    def get(self, key_path: str, default: Any = None) -> Any:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        获取配置值
+
+        Args:
+            key_path: 配置键路径,使用.分隔,如 "project.name"
+            default: 默认值
+
+        Returns:
+            配置值
+        """
+        keys = key_path.split('.')
+        value = self.config
+
+        for key in keys:
+            if isinstance(value, dict) and key in value:
+                value = value[key]
+            else:
+                return default
+
+        return value
+
+    def set(self, key_path: str, value: Any):
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        设置配置值
+
+        Args:
+            key_path: 配置键路径
+            value: 配置值
+        """
+        keys = key_path.split('.')
+        config = self.config
+
+        for key in keys[:-1]:
+            if key not in config:
+                config[key] = {}
+            config = config[key]
+
+        config[keys[-1]] = value
+
+    def save(self, output_path: Optional[str] = None):
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        保存配置到文件
+
+        Args:
+            output_path: 输出路径,默认为原配置文件路径
+        """
+        path = Path(output_path) if output_path else self.config_path
+
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write("# SpecFlow 配置文件\n")
+            f.write(f"# 自动生成\n\n")
+
+            for section, settings in self.config.items():
+                f.write(f"{section}:\n")
+                if isinstance(settings, dict):
+                    for key, value in settings.items():
+                        if isinstance(value, str):
+                            f.write(f"  {key}: \"{value}\"\n")
+                        else:
+                            f.write(f"  {key}: {value}\n")
+                f.write("\n")
+
+
+# 便捷函数
+def load_config(config_path: Optional[str] = None) -> ConfigLoader:
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    加载配置文件
+    return ConfigLoader(config_path)
+
+
+def get_config_value(key_path: str, default: Any = None, config_path: Optional[str] = None) -> Any:
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    快速获取配置值
+    loader = load_config(config_path)
+    return loader.get(key_path, default)

@@ -1,0 +1,747 @@
+"""
+SpecFlow V3.0 - 用户故事地图模块
+功能: 用户旅程可视化,优先级排序,发布规划
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional, Tuple, Set, Any, Union, Callable
+from enum import Enum
+import json
+
+
+class Priority(Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    优先级枚举
+    CRITICAL = "关键"
+    HIGH = "高"
+    MEDIUM = "中"
+    LOW = "低"
+
+
+class UserType(Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    用户类型
+    PRIMARY = "主要用户"
+    SECONDARY = "次要用户"
+    ADMIN = "管理员"
+    SYSTEM = "系统用户"
+
+
+@dataclass
+class UserStory:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    用户故事
+    id: str
+    title: str
+    description: str
+    user_type: UserType
+    priority: Priority
+    business_value: int  # 1-100
+    effort_estimate: int  # 工时估算(小时)
+    dependencies: List[str] = field(default_factory=list)  # 依赖的其他 story ID
+    acceptance_criteria: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
+
+
+@dataclass
+class Activity:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    用户活动(用户旅程中的高层次活动)
+    id: str
+    name: str
+    description: str
+    user_type: UserType
+    stories: List[UserStory] = field(default_factory=list)
+
+
+@dataclass
+class StoryMap:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    用户故事地图
+    activities: List[Activity]
+    total_stories: int
+    user_types: List[UserType]
+    visualization: str  # ASCII 可视化
+
+
+@dataclass
+class Release:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    发布计划
+    version: str
+    name: str
+    stories: List[UserStory]
+    total_effort: int  # 总工时
+    business_value: int  # 总业务价值
+    priority_score: float  # 优先级分数
+
+
+@dataclass
+class PrioritizedBacklog:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    优先级排序的待办列表
+    releases: List[Release]
+    total_stories: int
+    total_effort: int
+    prioritization_method: str
+
+
+class UserStoryMapper:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    用户故事地图生成器
+
+    def __init__(self):
+        """待添加文档字符串"""
+        self.story_id_counter = 0
+        self.activity_id_counter = 0
+
+    def generate_stories_from_requirements(
+        """待添加文档字符串"""
+        self,
+        requirements: List[Dict[str, any]]
+    ) -> List[UserStory]:
+        """从需求生成用户故事
+
+        Args:
+            requirements: 需求列表,每个需求包含 title, description, priority 等字段
+
+        Returns:
+            用户故事列表
+        """
+        stories = []
+
+        for req in requirements:
+            self.story_id_counter += 1
+            story_id = f"US-{self.story_id_counter:03d}"
+
+            # 检测用户类型
+            user_type = self._detect_user_type(req.get("title", ""), req.get("description", ""))
+
+            # 映射优先级
+            priority = self._map_priority(req.get("priority", "中"))
+
+            # 估算业务价值
+            business_value = self._estimate_business_value(req, priority)
+
+            # 估算工时
+            effort = self._estimate_effort(req)
+
+            # 生成验收标准
+            acceptance_criteria = self._generate_acceptance_criteria(req)
+
+            story = UserStory(
+                id=story_id,
+                title=req.get("title", "未命名用户故事"),
+                description=self._format_as_user_story(req, user_type),
+                user_type=user_type,
+                priority=priority,
+                business_value=business_value,
+                effort_estimate=effort,
+                acceptance_criteria=acceptance_criteria,
+                tags=req.get("tags", [])
+            )
+
+            stories.append(story)
+
+        # 检测依赖关系
+        self._detect_dependencies(stories, requirements)
+
+        return stories
+
+    def _detect_user_type(self, title: str, description: str) -> UserType:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检测用户类型
+        text = (title + " " + description).lower()
+
+        if any(keyword in text for keyword in ["管理", "admin", "配置", "后台"]):
+            return UserType.ADMIN
+        elif any(keyword in text for keyword in ["系统", "自动", "定时", "批处理"]):
+            return UserType.SYSTEM
+        elif any(keyword in text for keyword in ["次要", "辅助", "可选"]):
+            return UserType.SECONDARY
+        else:
+            return UserType.PRIMARY
+
+    def _map_priority(self, priority_str: str) -> Priority:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        映射优先级
+        mapping = {
+            "关键": Priority.CRITICAL,
+            "高": Priority.HIGH,
+            "中": Priority.MEDIUM,
+            "低": Priority.LOW,
+            "P0": Priority.CRITICAL,
+            "P1": Priority.HIGH,
+            "P2": Priority.MEDIUM,
+            "P3": Priority.LOW,
+        }
+        return mapping.get(priority_str, Priority.MEDIUM)
+
+    def _estimate_business_value(self, req: Dict, priority: Priority) -> int:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        估算业务价值(1-100)
+        base_value = {
+            Priority.CRITICAL: 90,
+            Priority.HIGH: 70,
+            Priority.MEDIUM: 50,
+            Priority.LOW: 30,
+        }[priority]
+
+        # 根据关键词调整
+        text = (req.get("title", "") + " " + req.get("description", "")).lower()
+
+        if any(keyword in text for keyword in ["核心", "关键", "必须", "收入"]):
+            base_value += 10
+        if any(keyword in text for keyword in ["可选", "次要", "辅助"]):
+            base_value -= 10
+
+        return max(1, min(100, base_value))
+
+    def _estimate_effort(self, req: Dict) -> int:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        估算工时(小时)
+        # 简化估算:基于描述长度和复杂度关键词
+        description = req.get("description", "")
+        base_effort = 8  # 默认 1 天
+
+        if len(description) > 500:
+            base_effort += 16
+        elif len(description) > 200:
+            base_effort += 8
+
+        text = description.lower()
+        if any(keyword in text for keyword in ["复杂", "集成", "第三方", "算法"]):
+            base_effort *= 2
+        if any(keyword in text for keyword in ["简单", "基础", "常规"]):
+            base_effort *= 0.5
+
+        return int(base_effort)
+
+    def _generate_acceptance_criteria(self, req: Dict) -> List[str]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成验收标准
+        criteria = []
+
+        # 基于描述提取验收标准
+        description = req.get("description", "")
+
+        # 简化实现:基于关键词提取
+        if "响应时间" in description or "性能" in description:
+            criteria.append("系统响应时间满足性能要求")
+
+        if "准确" in description or "正确" in description:
+            criteria.append("功能正确性通过测试验证")
+
+        if "用户" in description:
+            criteria.append("用户体验符合设计规范")
+
+        # 默认标准
+        if not criteria:
+            criteria.append(f"实现 {req.get('title', '需求')} 的核心功能")
+            criteria.append("通过所有相关测试用例")
+
+        return criteria
+
+    def _format_as_user_story(self, req: Dict, user_type: UserType) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        格式化为用户故事格式
+        role_map = {
+            UserType.PRIMARY: "普通用户",
+            UserType.SECONDARY: "次要用户",
+            UserType.ADMIN: "管理员",
+            UserType.SYSTEM: "系统",
+        }
+
+        role = role_map[user_type]
+        title = req.get("title", "")
+
+        return f"作为{role},我想要{title},以便于提升业务价值"
+
+    def _detect_dependencies(self, stories: List[UserStory], requirements: List[Dict]):
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        检测故事间的依赖关系
+        # 简化实现:基于关键词匹配
+        for i, story in enumerate(stories):
+            for j, other_story in enumerate(stories):
+                if i != j:
+                    # 如果一个故事的标题出现在另一个故事的描述中,可能存在依赖
+                    if other_story.title in story.description:
+                        if other_story.id not in story.dependencies:
+                            story.dependencies.append(other_story.id)
+
+    def generate_story_map(self, user_stories: List[UserStory]) -> StoryMap:
+        """生成用户故事地图
+
+        Args:
+            user_stories: 用户故事列表
+
+        Returns:
+            用户故事地图
+        """
+        # 按用户类型分组
+        stories_by_user_type = {}
+        for story in user_stories:
+            if story.user_type not in stories_by_user_type:
+                stories_by_user_type[story.user_type] = []
+            stories_by_user_type[story.user_type].append(story)
+
+        # 为每个用户类型创建活动
+        activities = []
+
+        for user_type, stories in stories_by_user_type.items():
+            # 将故事按优先级和业务价值分组为活动
+            activity_groups = self._group_stories_into_activities(stories)
+
+            for group_name, group_stories in activity_groups.items():
+                self.activity_id_counter += 1
+                activity = Activity(
+                    id=f"ACT-{self.activity_id_counter:02d}",
+                    name=group_name,
+                    description=f"{user_type.value}的{group_name}相关活动",
+                    user_type=user_type,
+                    stories=group_stories
+                )
+                activities.append(activity)
+
+        # 生成可视化
+        visualization = self._generate_visualization(activities)
+
+        return StoryMap(
+            activities=activities,
+            total_stories=len(user_stories),
+            user_types=list(stories_by_user_type.keys()),
+            visualization=visualization
+        )
+
+    def _group_stories_into_activities(self, stories: List[UserStory]) -> Dict[str, List[UserStory]]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        将故事分组为活动
+        # 简化实现:基于标题中的关键词分组
+        activities = {}
+
+        for story in stories:
+            # 提取活动名称
+            activity_name = self._extract_activity_name(story.title)
+
+            if activity_name not in activities:
+                activities[activity_name] = []
+
+            activities[activity_name].append(story)
+
+        return activities
+
+    def _extract_activity_name(self, title: str) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        从标题提取活动名称
+        # 简化实现:提取关键动词
+        keywords = {
+            "用户": "用户管理",
+            "订单": "订单处理",
+            "商品": "商品管理",
+            "支付": "支付结算",
+            "登录": "身份认证",
+            "注册": "用户注册",
+            "搜索": "搜索功能",
+            "推荐": "推荐系统",
+            "分析": "数据分析",
+            "报表": "报表生成",
+        }
+
+        for keyword, activity in keywords.items():
+            if keyword in title:
+                return activity
+
+        return "核心功能"
+
+    def _generate_visualization(self, activities: List[Activity]) -> str:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        生成 ASCII 可视化
+        lines = []
+        lines.append("=" * 80)
+        lines.append("用户故事地图")
+        lines.append("=" * 80)
+
+        for activity in activities:
+            lines.append(f"\n[{activity.id}] {activity.name} ({activity.user_type.value})")
+            lines.append("-" * 80)
+
+            for story in activity.stories:
+                priority_icon = {
+                    Priority.CRITICAL: "🔴",
+                    Priority.HIGH: "🟠",
+                    Priority.MEDIUM: "🟡",
+                    Priority.LOW: "🟢",
+                }[story.priority]
+
+                lines.append(f"  {priority_icon} {story.id}: {story.title}")
+                lines.append(f"     价值: {story.business_value}/100 | 工时: {story.effort_estimate}h | 优先级: {story.priority.value}")
+
+                if story.dependencies:
+                    lines.append(f"     依赖: {', '.join(story.dependencies)}")
+
+        lines.append("\n" + "=" * 80)
+
+        return "\n".join(lines)
+
+    def prioritize_stories(self, story_map: StoryMap, release_count: int = 3) -> PrioritizedBacklog:
+        """基于地图的优先级排序和发布规划
+
+        Args:
+            story_map: 用户故事地图
+            release_count: 发布版本数量
+
+        Returns:
+            优先级排序的待办列表
+        """
+        # 收集所有故事
+        all_stories = []
+        for activity in story_map.activities:
+            all_stories.extend(activity.stories)
+
+        # 计算优先级分数:综合考虑业务价值,优先级,工时
+        scored_stories = []
+        for story in all_stories:
+            priority_weight = {
+                Priority.CRITICAL: 4,
+                Priority.HIGH: 3,
+                Priority.MEDIUM: 2,
+                Priority.LOW: 1,
+            }[story.priority]
+
+            # 优先级分数 = (业务价值 * 优先级权重) / 工时
+            # 目标:高价值,高优先级,低工时的故事分数最高
+            score = (story.business_value * priority_weight) / max(1, story.effort_estimate / 8)
+
+            scored_stories.append((story, score))
+
+        # 按分数排序(降序)
+        scored_stories.sort(key=lambda x: x[1], reverse=True)
+
+        # 分配到发布版本
+        releases = self._plan_releases(scored_stories, release_count)
+
+        total_effort = sum(release.total_effort for release in releases)
+
+        return PrioritizedBacklog(
+            releases=releases,
+            total_stories=len(all_stories),
+            total_effort=total_effort,
+            prioritization_method="价值驱动优先级排序 (业务价值 × 优先级权重 / 工时)"
+        )
+
+    def _plan_releases(self, scored_stories: List[Tuple[UserStory, float]], release_count: int) -> List[Release]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        规划发布版本
+        releases = []
+
+        # 考虑依赖关系的拓扑排序
+        sorted_stories = self._topological_sort(scored_stories)
+
+        # 分配故事到版本(简化实现:均分)
+        stories_per_release = len(sorted_stories) // release_count
+
+        for i in range(release_count):
+            version = f"v{i+1}.0"
+            start_idx = i * stories_per_release
+
+            if i == release_count - 1:
+                # 最后一个版本包含所有剩余故事
+                release_stories = [s for s, _ in sorted_stories[start_idx:]]
+            else:
+                release_stories = [s for s, _ in sorted_stories[start_idx:start_idx + stories_per_release]]
+
+            total_effort = sum(s.effort_estimate for s in release_stories)
+            total_value = sum(s.business_value for s in release_stories)
+            avg_score = sum(score for _, score in sorted_stories[start_idx:start_idx + len(release_stories)]) / max(1, len(release_stories))
+
+            release = Release(
+                version=version,
+                name=f"发布 {version}",
+                stories=release_stories,
+                total_effort=total_effort,
+                business_value=total_value,
+                priority_score=avg_score
+            )
+
+            releases.append(release)
+
+        return releases
+
+    def _topological_sort(self, scored_stories: List[Tuple[UserStory, float]]) -> List[Tuple[UserStory, float]]:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        拓扑排序(考虑依赖关系)
+        # 简化实现:保持原有分数排序,但确保依赖的故事排在前面
+        stories = [s for s, _ in scored_stories]
+        scores = {s.id: score for s, score in scored_stories}
+
+        # 构建依赖图
+        story_map = {s.id: s for s in stories}
+
+        # 使用 Kahn 算法进行拓扑排序
+        in_degree = {s.id: 0 for s in stories}
+
+        for story in stories:
+            for dep_id in story.dependencies:
+                if dep_id in in_degree:
+                    in_degree[story.id] += 1
+
+        # 队列:所有入度为 0 的节点
+        queue = [s for s in stories if in_degree[s.id] == 0]
+        result = []
+
+        while queue:
+            # 按分数排序,优先处理高分故事
+            queue.sort(key=lambda s: scores[s.id], reverse=True)
+            current = queue.pop(0)
+            result.append((current, scores[current.id]))
+
+            # 更新依赖此故事的其他故事
+            for story in stories:
+                if current.id in story.dependencies:
+                    in_degree[story.id] -= 1
+                    if in_degree[story.id] == 0 and story not in [s for s, _ in result]:
+                        queue.append(story)
+
+        # 如果有循环依赖,添加剩余故事
+        for story in stories:
+            if story not in [s for s, _ in result]:
+                result.append((story, scores[story.id]))
+
+        return result
+
+
+# ============================================================================
+# 测试代码
+# ============================================================================
+
+if __name__ == "__main__":
+    print("=" * 80)
+    print("用户故事地图测试")
+    print("=" * 80)
+
+    # 测试数据:模拟需求
+    requirements = [
+        {
+            "title": "用户注册功能",
+            "description": "用户可以通过邮箱注册账号,需要邮箱验证.响应时间应小于 2 秒.",
+            "priority": "高"
+        },
+        {
+            "title": "用户登录功能",
+            "description": "用户可以通过邮箱和密码登录,支持记住登录状态.需要用户注册功能.",
+            "priority": "关键"
+        },
+        {
+            "title": "商品搜索功能",
+            "description": "用户可以搜索商品,支持关键词,分类,价格区间筛选.需要复杂的算法.",
+            "priority": "高"
+        },
+        {
+            "title": "订单管理功能",
+            "description": "管理员可以查看和管理所有订单,包括订单状态更新,退款处理等.",
+            "priority": "中"
+        },
+        {
+            "title": "推荐系统",
+            "description": "系统自动根据用户行为推荐商品.需要集成第三方 AI 服务.",
+            "priority": "中"
+        },
+    ]
+
+    mapper = UserStoryMapper()
+
+    # 步骤 1:生成用户故事
+    print("\n步骤 1:从需求生成用户故事")
+    print("-" * 80)
+    user_stories = mapper.generate_stories_from_requirements(requirements)
+
+    for story in user_stories:
+        print(f"\n{story.id}: {story.title}")
+        print(f"  描述: {story.description}")
+        print(f"  用户类型: {story.user_type.value}")
+        print(f"  优先级: {story.priority.value}")
+        print(f"  业务价值: {story.business_value}/100")
+        print(f"  工时估算: {story.effort_estimate}h")
+        if story.dependencies:
+            print(f"  依赖: {', '.join(story.dependencies)}")
+        print(f"  验收标准:")
+        for criterion in story.acceptance_criteria:
+            print(f"    - {criterion}")
+
+    # 步骤 2:生成用户故事地图
+    print("\n\n步骤 2:生成用户故事地图")
+    print("-" * 80)
+    story_map = mapper.generate_story_map(user_stories)
+
+    print(story_map.visualization)
+
+    print(f"\n总故事数: {story_map.total_stories}")
+    print(f"用户类型数: {len(story_map.user_types)}")
+    print(f"活动数: {len(story_map.activities)}")
+
+    # 步骤 3:优先级排序和发布规划
+    print("\n\n步骤 3:优先级排序和发布规划")
+    print("-" * 80)
+    backlog = mapper.prioritize_stories(story_map, release_count=2)
+
+    print(f"\n排序方法: {backlog.prioritization_method}")
+    print(f"总故事数: {backlog.total_stories}")
+    print(f"总工时: {backlog.total_effort}h ({backlog.total_effort / 8:.1f} 天)")
+
+    for release in backlog.releases:
+        print(f"\n{release.version}: {release.name}")
+        print(f"  故事数: {len(release.stories)}")
+        print(f"  总工时: {release.total_effort}h ({release.total_effort / 8:.1f} 天)")
+        print(f"  业务价值: {release.business_value}")
+        print(f"  优先级分数: {release.priority_score:.2f}")
+        print(f"  包含故事:")
+
+        for story in release.stories:
+            print(f"    - {story.id}: {story.title} (优先级: {story.priority.value})")
+
+    print("\n" + "=" * 80)
+    print("测试完成")
+    print("=" * 80)
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

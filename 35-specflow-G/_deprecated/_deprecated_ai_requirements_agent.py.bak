@@ -1,0 +1,922 @@
+"""
+SpecFlow V3.0 - AI 驱动需求生成模块
+AI Requirements Agent - 自动化需求工程
+
+功能:
+- AI 驱动的需求自动生成（10倍生产率提升）
+- 智能需求分解为原子级组件
+- 动态上下文调整
+- 自动验证和迭代优化
+
+版本: 3.0.0
+日期: 2025-12-17
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional, Tuple
+from enum import Enum
+import re
+import json
+
+
+# ============ 枚举类型 ============
+
+class RequirementType(str, Enum):
+    """需求类型"""
+    FUNCTIONAL = "功能性需求"
+    NON_FUNCTIONAL = "非功能性需求"
+    BUSINESS_RULE = "业务规则"
+    CONSTRAINT = "约束条件"
+    ASSUMPTION = "假设条件"
+
+
+class ComplexityLevel(str, Enum):
+    """复杂度级别"""
+    SIMPLE = "简单"      # < 200 小时
+    MEDIUM = "中等"      # 200-1000 小时
+    COMPLEX = "复杂"     # > 1000 小时
+    VERY_COMPLEX = "极复杂"  # > 5000 小时
+
+
+class DomainCategory(str, Enum):
+    """领域分类"""
+    ECOMMERCE = "电商"
+    SAAS = "SaaS"
+    FINTECH = "金融科技"
+    EDUCATION = "在线教育"
+    HEALTHCARE = "医疗健康"
+    IOT = "物联网"
+    ENTERPRISE = "企业应用"
+    SOCIAL = "社交平台"
+    OTHER = "其他"
+
+
+# ============ 数据模型 ============
+
+@dataclass
+class ContextSignal:
+    """上下文信号（用于智能分析）"""
+    keyword: str                    # 关键词
+    category: str                   # 分类
+    weight: float                   # 权重（0-1）
+    implications: List[str] = field(default_factory=list)  # 隐含需求
+
+
+@dataclass
+class RequirementSeed:
+    """需求种子（AI 识别的原始需求片段）"""
+    text: str                       # 原始文本
+    requirement_type: RequirementType  # 需求类型
+    priority: str                   # 优先级（Critical/High/Medium/Low）
+    confidence: float               # 置信度（0-1）
+    context_signals: List[ContextSignal] = field(default_factory=list)
+
+
+@dataclass
+class DecomposedRequirement:
+    """分解后的需求"""
+    id: str                         # 需求 ID
+    title: str                      # 需求标题
+    description: str                # 详细描述
+    user_story: str                 # 用户故事格式
+    acceptance_criteria: List[str]  # 验收标准
+    dependencies: List[str] = field(default_factory=list)  # 依赖项
+    estimated_hours: int = 0        # 估算工时
+    atomic_components: List[str] = field(default_factory=list)  # 原子组件 ID
+
+
+@dataclass
+class AIAnalysisResult:
+    """AI 分析结果"""
+    domain: DomainCategory          # 领域分类
+    complexity: ComplexityLevel     # 复杂度
+    estimated_hours: int            # 总估算工时
+    requirement_seeds: List[RequirementSeed]  # 需求种子
+    context_signals: List[ContextSignal]  # 上下文信号
+    quality_score: float            # 需求质量评分（0-100）
+    confidence: float               # 整体置信度（0-1）
+    recommendations: List[str] = field(default_factory=list)  # AI 建议
+
+
+# ============ AI 需求生成代理 ============
+
+class AIRequirementsAgent:
+    """
+    AI 驱动的需求生成代理
+
+    核心功能：
+    1. 智能分析输入描述，识别关键信号
+    2. 自动分解为原子级需求
+    3. 生成用户故事和验收标准
+    4. 迭代优化和验证
+    """
+
+    # 领域关键词映射（用于智能识别）
+    DOMAIN_KEYWORDS = {
+        DomainCategory.ECOMMERCE: {
+            "keywords": ["电商", "商城", "购物", "订单", "库存", "支付", "物流", "供应商", "买家", "卖家"],
+            "components": ["商品管理", "订单系统", "支付集成", "库存同步", "用户系统", "购物车"],
+            "non_functional": ["高并发", "支付安全", "数据一致性", "分布式事务"]
+        },
+        DomainCategory.SAAS: {
+            "keywords": ["SaaS", "多租户", "订阅", "计费", "API", "集成", "工作空间", "权限"],
+            "components": ["多租户架构", "订阅管理", "API 网关", "权限系统", "计费引擎"],
+            "non_functional": ["数据隔离", "弹性扩展", "API 限流", "安全认证"]
+        },
+        DomainCategory.FINTECH: {
+            "keywords": ["金融", "支付", "账户", "交易", "风控", "合规", "KYC", "反洗钱"],
+            "components": ["账户系统", "交易引擎", "风控引擎", "合规检查", "审计日志"],
+            "non_functional": ["ACID 事务", "数据加密", "审计追踪", "灾难恢复"]
+        },
+        DomainCategory.EDUCATION: {
+            "keywords": ["教育", "课程", "学生", "教师", "考试", "作业", "学习", "培训"],
+            "components": ["课程管理", "用户管理", "考试系统", "作业批改", "学习追踪"],
+            "non_functional": ["视频流畅", "并发考试", "数据分析", "个性化推荐"]
+        }
+    }
+
+    # 复杂度评估规则
+    COMPLEXITY_RULES = {
+        # 工时范围 -> 复杂度
+        (0, 200): ComplexityLevel.SIMPLE,
+        (200, 1000): ComplexityLevel.MEDIUM,
+        (1000, 5000): ComplexityLevel.COMPLEX,
+        (5000, float('inf')): ComplexityLevel.VERY_COMPLEX
+    }
+
+    # 上下文信号模式（正则表达式）
+    CONTEXT_PATTERNS = {
+        "高并发": (r"(高并发|大流量|10万.*日活|百万.*用户)", "性能", 0.9),
+        "AI 功能": (r"(AI|机器学习|推荐|智能|算法)", "AI/ML", 0.8),
+        "多租户": (r"(多租户|SaaS|租户隔离)", "架构", 0.9),
+        "实时": (r"(实时|即时|秒级|毫秒)", "性能", 0.85),
+        "安全": (r"(安全|加密|认证|授权|GDPR|合规)", "安全", 0.9),
+        "大数据": (r"(大数据|数据分析|报表|BI|数据仓库)", "数据", 0.8),
+        "移动端": (r"(移动|APP|iOS|Android|小程序)", "平台", 0.7),
+        "第三方集成": (r"(集成|第三方|API|对接|同步)", "集成", 0.75)
+    }
+
+    def __init__(self):
+        self.analysis_cache: Dict[str, AIAnalysisResult] = {}
+
+    # ============ 核心功能：智能分析 ============
+
+    def analyze_description(self, description: str,
+                          budget: Optional[int] = None,
+                          timeline_months: Optional[int] = None) -> AIAnalysisResult:
+        """
+        AI 驱动的描述分析
+
+        Args:
+            description: 项目描述
+            budget: 预算（万元）
+            timeline_months: 时间线（月）
+
+        Returns:
+            AIAnalysisResult: 分析结果
+        """
+        # 检测领域
+        domain = self._detect_domain(description)
+
+        # 提取上下文信号
+        context_signals = self._extract_context_signals(description)
+
+        # 估算复杂度和工时
+        complexity, estimated_hours = self._estimate_complexity(
+            description, budget, timeline_months, context_signals
+        )
+
+        # 提取需求种子
+        requirement_seeds = self._extract_requirement_seeds(
+            description, domain, context_signals
+        )
+
+        # 生成 AI 建议
+        recommendations = self._generate_recommendations(
+            domain, complexity, context_signals
+        )
+
+        # 计算质量评分和置信度
+        quality_score = self._calculate_quality_score(requirement_seeds, context_signals)
+        confidence = self._calculate_confidence(requirement_seeds, domain, complexity)
+
+        result = AIAnalysisResult(
+            domain=domain,
+            complexity=complexity,
+            estimated_hours=estimated_hours,
+            requirement_seeds=requirement_seeds,
+            context_signals=context_signals,
+            quality_score=quality_score,
+            confidence=confidence
+        )
+
+        # 缓存结果
+        self.analysis_cache[description[:100]] = result
+
+        return result
+
+    def _detect_domain(self, description: str) -> DomainCategory:
+        """检测领域分类"""
+        scores: Dict[DomainCategory, int] = {}
+
+        for domain, config in self.DOMAIN_KEYWORDS.items():
+            score = sum(1 for kw in config["keywords"] if kw in description)
+            scores[domain] = score
+
+        # 返回得分最高的领域
+        if scores:
+            best_domain = max(scores, key=scores.get)
+            if scores[best_domain] > 0:
+                return best_domain
+
+        return DomainCategory.OTHER
+
+    def _extract_context_signals(self, description: str) -> List[ContextSignal]:
+        """提取上下文信号"""
+        signals = []
+
+        for keyword, (pattern, category, weight) in self.CONTEXT_PATTERNS.items():
+            if re.search(pattern, description):
+                # 根据信号生成隐含需求
+                implications = self._get_implications(keyword, category)
+
+                signals.append(ContextSignal(
+                    keyword=keyword,
+                    category=category,
+                    weight=weight,
+                    implications=implications
+                ))
+
+        return signals
+
+    def _get_implications(self, keyword: str, category: str) -> List[str]:
+        """获取信号的隐含需求"""
+        implications_map = {
+            "高并发": [
+                "需要负载均衡",
+                "需要缓存策略（Redis）",
+                "需要数据库读写分离",
+                "需要异步处理（消息队列）",
+                "需要性能监控"
+            ],
+            "AI 功能": [
+                "需要模型训练/推理基础设施",
+                "需要数据收集和标注",
+                "需要 A/B 测试框架",
+                "需要模型版本管理"
+            ],
+            "多租户": [
+                "需要租户数据隔离",
+                "需要租户级配置管理",
+                "需要租户级权限控制",
+                "需要跨租户数据禁止"
+            ],
+            "实时": [
+                "需要 WebSocket 或 SSE",
+                "需要消息推送服务",
+                "需要低延迟网络架构",
+                "需要实时监控"
+            ],
+            "安全": [
+                "需要加密传输（HTTPS/TLS）",
+                "需要身份认证（OAuth2/JWT）",
+                "需要访问控制（RBAC）",
+                "需要安全审计日志",
+                "需要数据加密存储"
+            ]
+        }
+
+        return implications_map.get(keyword, [f"需要考虑{category}相关需求"])
+
+    def _estimate_complexity(self, description: str,
+                           budget: Optional[int],
+                           timeline_months: Optional[int],
+                           signals: List[ContextSignal]) -> Tuple[ComplexityLevel, int]:
+        """估算复杂度和工时"""
+        # 基础工时估算
+        base_hours = 0
+
+        # 根据时间线估算
+        if timeline_months:
+            # 假设 1 个开发者，每月 160 小时
+            base_hours = timeline_months * 160
+
+        # 根据预算估算（假设人天成本 1000 元，每天 8 小时）
+        if budget and base_hours == 0:
+            base_hours = (budget * 10000) / 1000 * 8
+
+        # 根据上下文信号调整
+        signal_multiplier = 1.0
+        for signal in signals:
+            # 高权重信号增加复杂度
+            if signal.weight > 0.8:
+                signal_multiplier += 0.2
+
+        estimated_hours = int(base_hours * signal_multiplier)
+
+        # 如果没有预算和时间线，根据描述长度粗略估算
+        if estimated_hours == 0:
+            estimated_hours = max(200, len(description) * 5)
+
+        # 确定复杂度级别
+        complexity = ComplexityLevel.SIMPLE
+        for (min_hours, max_hours), level in self.COMPLEXITY_RULES.items():
+            if min_hours <= estimated_hours < max_hours:
+                complexity = level
+                break
+
+        return complexity, estimated_hours
+
+    def _extract_requirement_seeds(self, description: str,
+                                  domain: DomainCategory,
+                                  signals: List[ContextSignal]) -> List[RequirementSeed]:
+        """提取需求种子"""
+        seeds = []
+
+        # 1. 从描述中提取显式需求
+        # 按句子分割
+        sentences = re.split(r'[。！？;；\n]', description)
+        sentences = [s.strip() for s in sentences if s.strip()]
+
+        for sentence in sentences:
+            if self._is_requirement_sentence(sentence):
+                req_type = self._classify_requirement(sentence)
+                priority = self._estimate_priority(sentence, signals)
+
+                seeds.append(RequirementSeed(
+                    text=sentence,
+                    requirement_type=req_type,
+                    priority=priority,
+                    confidence=0.8,
+                    context_signals=[]
+                ))
+
+        # 2. 从上下文信号中提取隐含需求
+        for signal in signals:
+            for implication in signal.implications:
+                seeds.append(RequirementSeed(
+                    text=implication,
+                    requirement_type=RequirementType.NON_FUNCTIONAL,
+                    priority="High" if signal.weight > 0.85 else "Medium",
+                    confidence=signal.weight,
+                    context_signals=[signal]
+                ))
+
+        # 3. 根据领域添加标准需求
+        domain_requirements = self._get_domain_requirements(domain)
+        for req_text in domain_requirements:
+            seeds.append(RequirementSeed(
+                text=req_text,
+                requirement_type=RequirementType.FUNCTIONAL,
+                priority="Medium",
+                confidence=0.7,
+                context_signals=[]
+            ))
+
+        return seeds
+
+    def _is_requirement_sentence(self, sentence: str) -> bool:
+        """判断句子是否为需求描述"""
+        requirement_indicators = [
+            "支持", "需要", "实现", "提供", "包含", "具备",
+            "允许", "管理", "处理", "集成", "对接"
+        ]
+        return any(ind in sentence for ind in requirement_indicators)
+
+    def _classify_requirement(self, text: str) -> RequirementType:
+        """分类需求类型"""
+        if any(kw in text for kw in ["性能", "并发", "响应时间", "可用性", "扩展"]):
+            return RequirementType.NON_FUNCTIONAL
+        elif any(kw in text for kw in ["必须", "不能", "只能", "规则"]):
+            return RequirementType.BUSINESS_RULE
+        elif any(kw in text for kw in ["假设", "前提", "基于"]):
+            return RequirementType.ASSUMPTION
+        elif any(kw in text for kw in ["预算", "时间", "技术栈", "限制"]):
+            return RequirementType.CONSTRAINT
+        else:
+            return RequirementType.FUNCTIONAL
+
+    def _estimate_priority(self, text: str, signals: List[ContextSignal]) -> str:
+        """估算优先级"""
+        # 关键词匹配
+        if any(kw in text for kw in ["核心", "关键", "必须", "Critical"]):
+            return "Critical"
+        elif any(kw in text for kw in ["重要", "主要", "High"]):
+            return "High"
+        elif any(kw in text for kw in ["次要", "Low"]):
+            return "Low"
+
+        # 根据上下文信号权重判断
+        for signal in signals:
+            if signal.keyword in text and signal.weight > 0.85:
+                return "High"
+
+        return "Medium"
+
+    def _get_domain_requirements(self, domain: DomainCategory) -> List[str]:
+        """获取领域标准需求"""
+        domain_reqs = {
+            DomainCategory.ECOMMERCE: [
+                "用户注册和登录功能",
+                "商品浏览和搜索功能",
+                "购物车管理",
+                "订单创建和支付",
+                "订单状态跟踪"
+            ],
+            DomainCategory.SAAS: [
+                "租户注册和管理",
+                "用户权限管理（RBAC）",
+                "API 认证和授权",
+                "数据导入/导出功能"
+            ],
+            DomainCategory.FINTECH: [
+                "用户 KYC 验证",
+                "交易记录和审计",
+                "风险控制规则",
+                "合规性检查"
+            ]
+        }
+
+        return domain_reqs.get(domain, [])
+
+    def _generate_recommendations(self, domain: DomainCategory,
+                                 complexity: ComplexityLevel,
+                                 signals: List[ContextSignal]) -> List[str]:
+        """生成 AI 建议"""
+        recommendations = []
+
+        # 根据复杂度建议
+        if complexity in [ComplexityLevel.COMPLEX, ComplexityLevel.VERY_COMPLEX]:
+            recommendations.append("建议采用微服务架构以应对系统复杂度")
+            recommendations.append("建议分阶段实施，先完成 MVP 核心功能")
+            recommendations.append("建议加强团队协作和代码审查流程")
+
+        # 根据信号建议
+        signal_categories = {s.category for s in signals}
+
+        if "性能" in signal_categories:
+            recommendations.append("建议从项目初期就进行性能设计和压力测试")
+            recommendations.append("建议引入 APM 工具进行性能监控")
+
+        if "安全" in signal_categories:
+            recommendations.append("建议引入安全专家进行安全评审")
+            recommendations.append("建议进行定期的安全渗透测试")
+
+        if "AI/ML" in signal_categories:
+            recommendations.append("建议建立 ML 模型训练和部署流水线")
+            recommendations.append("建议收集和标注高质量训练数据")
+
+        # 根据领域建议
+        if domain == DomainCategory.ECOMMERCE:
+            recommendations.append("建议集成主流支付平台（支付宝、微信支付）")
+            recommendations.append("建议实现库存预警和自动补货机制")
+
+        if domain == DomainCategory.SAAS:
+            recommendations.append("建议实现完善的租户配额和计费系统")
+            recommendations.append("建议提供丰富的 API 供第三方集成")
+
+        return recommendations
+
+    # ============ 核心功能：需求分解 ============
+
+    def decompose_requirements(self, seeds: List[RequirementSeed]) -> List[DecomposedRequirement]:
+        """
+        将需求种子分解为结构化需求
+
+        Args:
+            seeds: 需求种子列表
+
+        Returns:
+            List[DecomposedRequirement]: 分解后的需求列表
+        """
+        decomposed = []
+
+        for idx, seed in enumerate(seeds):
+            req_id = f"REQ-{idx+1:03d}"
+
+            # 生成用户故事
+            user_story = self._generate_user_story(seed)
+
+            # 生成验收标准
+            acceptance_criteria = self._generate_acceptance_criteria(seed)
+
+            # 估算工时
+            estimated_hours = self._estimate_requirement_hours(seed)
+
+            decomposed.append(DecomposedRequirement(
+                id=req_id,
+                title=self._extract_title(seed.text),
+                description=seed.text,
+                user_story=user_story,
+                acceptance_criteria=acceptance_criteria,
+                dependencies=[],
+                estimated_hours=estimated_hours,
+                atomic_components=[]
+            ))
+
+        # 分析依赖关系
+        self._analyze_dependencies(decomposed)
+
+        return decomposed
+
+    def _generate_user_story(self, seed: RequirementSeed) -> str:
+        """生成用户故事（As a... I want... So that...）"""
+        # 简单的模板匹配
+        text = seed.text
+
+        # 尝试提取角色
+        role = "用户"
+        if "管理员" in text or "运营" in text:
+            role = "管理员"
+        elif "买家" in text or "客户" in text:
+            role = "买家"
+        elif "卖家" in text or "供应商" in text:
+            role = "卖家"
+
+        # 提取功能
+        functionality = text
+
+        # 生成价值
+        value = "提升用户体验"
+        if "效率" in text:
+            value = "提升工作效率"
+        elif "安全" in text:
+            value = "保障数据安全"
+        elif "性能" in text:
+            value = "提升系统性能"
+
+        return f"作为{role}，我希望{functionality}，以便{value}"
+
+    def _generate_acceptance_criteria(self, seed: RequirementSeed) -> List[str]:
+        """生成验收标准"""
+        criteria = []
+
+        text = seed.text
+
+        # 基本验收标准
+        criteria.append(f"功能实现符合需求描述：{text[:50]}...")
+        criteria.append("通过所有单元测试")
+        criteria.append("通过代码审查")
+
+        # 根据需求类型添加特定标准
+        if seed.requirement_type == RequirementType.NON_FUNCTIONAL:
+            if "性能" in text or "并发" in text:
+                criteria.append("通过性能测试（符合性能指标）")
+            if "安全" in text:
+                criteria.append("通过安全扫描（无高危漏洞）")
+
+        if seed.requirement_type == RequirementType.FUNCTIONAL:
+            criteria.append("通过 BDD 场景测试")
+            criteria.append("UI/API 符合设计规范")
+
+        return criteria
+
+    def _estimate_requirement_hours(self, seed: RequirementSeed) -> int:
+        """估算单个需求的工时"""
+        # 基础工时
+        base_hours = 8  # 1 人天
+
+        # 根据优先级调整
+        priority_multiplier = {
+            "Critical": 1.5,
+            "High": 1.2,
+            "Medium": 1.0,
+            "Low": 0.8
+        }
+
+        # 根据置信度调整（置信度低的需求可能需要更多澄清时间）
+        confidence_multiplier = 2.0 - seed.confidence
+
+        hours = int(base_hours * priority_multiplier.get(seed.priority, 1.0) * confidence_multiplier)
+
+        return max(4, hours)  # 最少 4 小时
+
+    def _extract_title(self, text: str) -> str:
+        """提取需求标题"""
+        # 取前 30 个字符作为标题
+        title = text[:30].strip()
+        if len(text) > 30:
+            title += "..."
+        return title
+
+    def _analyze_dependencies(self, requirements: List[DecomposedRequirement]):
+        """分析需求之间的依赖关系"""
+        # 简单的依赖分析：基础设施 -> 核心功能 -> 高级功能
+        infrastructure_keywords = ["架构", "数据库", "缓存", "消息队列", "认证"]
+        core_keywords = ["用户", "登录", "注册", "基础"]
+
+        infra_reqs = []
+        core_reqs = []
+        advanced_reqs = []
+
+        for req in requirements:
+            text = req.description
+            if any(kw in text for kw in infrastructure_keywords):
+                infra_reqs.append(req.id)
+            elif any(kw in text for kw in core_keywords):
+                core_reqs.append(req.id)
+            else:
+                advanced_reqs.append(req.id)
+
+        # 设置依赖
+        for req in requirements:
+            if req.id in core_reqs:
+                req.dependencies = infra_reqs.copy()
+            elif req.id in advanced_reqs:
+                req.dependencies = infra_reqs + core_reqs
+
+    # ============ 核心功能：验证和迭代 ============
+
+    def validate_and_iterate(self, requirements: List[DecomposedRequirement]) -> Dict[str, Any]:
+        """
+        验证需求并提供迭代建议
+
+        Args:
+            requirements: 需求列表
+
+        Returns:
+            Dict: 验证结果和建议
+        """
+        validation_result = {
+            "is_valid": True,
+            "issues": [],
+            "warnings": [],
+            "suggestions": [],
+            "quality_score": 0.0
+        }
+
+        # 1. 完整性检查
+        completeness_issues = self._check_completeness(requirements)
+        validation_result["issues"].extend(completeness_issues)
+
+        # 2. 一致性检查
+        consistency_issues = self._check_consistency(requirements)
+        validation_result["issues"].extend(consistency_issues)
+
+        # 3. 可行性检查
+        feasibility_warnings = self._check_feasibility(requirements)
+        validation_result["warnings"].extend(feasibility_warnings)
+
+        # 4. 优化建议
+        suggestions = self._generate_optimization_suggestions(requirements)
+        validation_result["suggestions"].extend(suggestions)
+
+        # 5. 质量评分
+        validation_result["quality_score"] = self._calculate_quality_score(requirements)
+
+        validation_result["is_valid"] = len(validation_result["issues"]) == 0
+
+        return validation_result
+
+    def _check_completeness(self, requirements: List[DecomposedRequirement]) -> List[str]:
+        """检查需求完整性"""
+        issues = []
+
+        for req in requirements:
+            if not req.title:
+                issues.append(f"{req.id}: 缺少标题")
+            if not req.user_story:
+                issues.append(f"{req.id}: 缺少用户故事")
+            if not req.acceptance_criteria:
+                issues.append(f"{req.id}: 缺少验收标准")
+            if req.estimated_hours == 0:
+                issues.append(f"{req.id}: 缺少工时估算")
+
+        return issues
+
+    def _check_consistency(self, requirements: List[DecomposedRequirement]) -> List[str]:
+        """检查需求一致性"""
+        issues = []
+
+        # 检查重复需求
+        titles = [req.title for req in requirements]
+        duplicates = [title for title in titles if titles.count(title) > 1]
+
+        if duplicates:
+            issues.append(f"发现重复需求：{', '.join(set(duplicates))}")
+
+        # 检查循环依赖
+        for req in requirements:
+            if self._has_circular_dependency(req, requirements):
+                issues.append(f"{req.id}: 存在循环依赖")
+
+        return issues
+
+    def _has_circular_dependency(self, req: DecomposedRequirement,
+                                all_reqs: List[DecomposedRequirement],
+                                visited: Optional[set] = None) -> bool:
+        """检查循环依赖"""
+        if visited is None:
+            visited = set()
+
+        if req.id in visited:
+            return True
+
+        visited.add(req.id)
+
+        for dep_id in req.dependencies:
+            dep_req = next((r for r in all_reqs if r.id == dep_id), None)
+            if dep_req and self._has_circular_dependency(dep_req, all_reqs, visited.copy()):
+                return True
+
+        return False
+
+    def _check_feasibility(self, requirements: List[DecomposedRequirement]) -> List[str]:
+        """检查需求可行性"""
+        warnings = []
+
+        # 检查工时总和是否合理
+        total_hours = sum(req.estimated_hours for req in requirements)
+
+        if total_hours > 10000:
+            warnings.append(f"总工时过高（{total_hours} 小时），建议分阶段实施")
+
+        # 检查单个需求工时是否过大
+        for req in requirements:
+            if req.estimated_hours > 200:
+                warnings.append(f"{req.id}: 工时过大（{req.estimated_hours} 小时），建议进一步分解")
+
+        return warnings
+
+    def _generate_optimization_suggestions(self, requirements: List[DecomposedRequirement]) -> List[str]:
+        """生成优化建议"""
+        suggestions = []
+
+        # 建议合并相似需求
+        similar_pairs = self._find_similar_requirements(requirements)
+        if similar_pairs:
+            suggestions.append(f"发现 {len(similar_pairs)} 对相似需求，建议考虑合并")
+
+        # 建议优先级排序
+        high_priority_count = sum(1 for req in requirements if "Critical" in req.user_story or "High" in req.user_story)
+        if high_priority_count > len(requirements) * 0.7:
+            suggestions.append("高优先级需求过多，建议重新评估优先级")
+
+        # 建议补充非功能性需求
+        functional_count = sum(1 for req in requirements if "功能" in req.description or "实现" in req.description)
+        if functional_count > len(requirements) * 0.8:
+            suggestions.append("建议补充更多非功能性需求（性能、安全、可用性等）")
+
+        return suggestions
+
+    def _find_similar_requirements(self, requirements: List[DecomposedRequirement]) -> List[Tuple[str, str]]:
+        """找到相似需求"""
+        similar_pairs = []
+
+        for i, req1 in enumerate(requirements):
+            for req2 in requirements[i+1:]:
+                # 简单的相似度计算：标题词重叠
+                words1 = set(req1.title.split())
+                words2 = set(req2.title.split())
+
+                if words1 & words2:  # 有交集
+                    overlap = len(words1 & words2) / max(len(words1), len(words2))
+                    if overlap > 0.5:
+                        similar_pairs.append((req1.id, req2.id))
+
+        return similar_pairs
+
+    def _calculate_quality_score(self, requirements: List[DecomposedRequirement]) -> float:
+        """计算需求质量评分（0-100）"""
+        score = 100.0
+
+        # 完整性（40分）
+        completeness_score = 40.0
+        for req in requirements:
+            if not req.title:
+                completeness_score -= 5
+            if not req.user_story:
+                completeness_score -= 5
+            if len(req.acceptance_criteria) < 3:
+                completeness_score -= 2
+
+        # 一致性（30分）
+        consistency_score = 30.0
+        issues = self._check_consistency(requirements)
+        consistency_score -= len(issues) * 10
+
+        # 可行性（30分）
+        feasibility_score = 30.0
+        warnings = self._check_feasibility(requirements)
+        feasibility_score -= len(warnings) * 5
+
+        total_score = max(0, completeness_score + consistency_score + feasibility_score)
+
+        return round(total_score, 1)
+
+    def _calculate_quality_score(self, seeds: List, signals: List) -> float:
+        """计算需求质量评分（0-100）"""
+        score = 50.0  # 基础分
+
+        # 需求种子数量加分
+        score += min(len(seeds) * 5, 20)  # 最多20分
+
+        # 上下文信号加分
+        score += min(len(signals) * 3, 15)  # 最多15分
+
+        # 需求种子置信度加分
+        if seeds:
+            avg_confidence = sum(s.confidence for s in seeds) / len(seeds)
+            score += avg_confidence * 15  # 最多15分
+
+        return round(min(score, 100.0), 1)
+
+    def _calculate_confidence(self, seeds: List, domain, complexity) -> float:
+        """计算整体置信度（0-1）"""
+        confidence = 0.5  # 基础置信度
+
+        # 需求数量影响
+        if len(seeds) >= 3:
+            confidence += 0.2
+        elif len(seeds) >= 1:
+            confidence += 0.1
+
+        # 领域明确性影响
+        if domain != DomainCategory.OTHER:
+            confidence += 0.15
+
+        # 复杂度影响（中等复杂度置信度最高）
+        if complexity == ComplexityLevel.MEDIUM:
+            confidence += 0.15
+        elif complexity == ComplexityLevel.SIMPLE:
+            confidence += 0.1
+
+        return round(min(confidence, 1.0), 2)
+
+
+# ============ 辅助函数 ============
+
+def create_ai_agent() -> AIRequirementsAgent:
+    """创建 AI 需求代理实例"""
+    return AIRequirementsAgent()
+
+
+# ============ 测试代码 ============
+
+if __name__ == "__main__":
+    # 测试 AI 需求生成
+    agent = create_ai_agent()
+
+    test_description = """
+    构建一个 B2B 电商平台，支持多租户架构、AI 推荐、实时库存同步。
+    需要支持 500 个供应商和 10,000 个买家。
+    预算 120 万，18 个月完成。
+    要求高并发、安全可靠、可扩展。
+    """
+
+    print("=" * 80)
+    print("AI 需求分析测试")
+    print("=" * 80)
+
+    # 1. 分析描述
+    analysis = agent.analyze_description(test_description, budget=120, timeline_months=18)
+
+    print(f"\n领域: {analysis.domain.value}")
+    print(f"复杂度: {analysis.complexity.value}")
+    print(f"估算工时: {analysis.estimated_hours} 小时")
+    print(f"\n识别到 {len(analysis.context_signals)} 个上下文信号:")
+    for signal in analysis.context_signals:
+        print(f"  - {signal.keyword} ({signal.category}, 权重: {signal.weight})")
+
+    print(f"\n提取到 {len(analysis.requirement_seeds)} 个需求种子")
+
+    print(f"\nAI 建议:")
+    for rec in analysis.recommendations:
+        print(f"  - {rec}")
+
+    # 2. 分解需求
+    print("\n" + "=" * 80)
+    print("需求分解测试")
+    print("=" * 80)
+
+    decomposed = agent.decompose_requirements(analysis.requirement_seeds[:5])  # 只测试前 5 个
+
+    for req in decomposed:
+        print(f"\n{req.id}: {req.title}")
+        print(f"  用户故事: {req.user_story}")
+        print(f"  估算工时: {req.estimated_hours} 小时")
+        print(f"  验收标准: {len(req.acceptance_criteria)} 条")
+
+    # 3. 验证需求
+    print("\n" + "=" * 80)
+    print("需求验证测试")
+    print("=" * 80)
+
+    validation = agent.validate_and_iterate(decomposed)
+
+    print(f"\n验证结果: {'通过' if validation['is_valid'] else '失败'}")
+    print(f"质量评分: {validation['quality_score']}/100")
+
+    if validation['issues']:
+        print(f"\n发现 {len(validation['issues'])} 个问题:")
+        for issue in validation['issues']:
+            print(f"  - {issue}")
+
+    if validation['suggestions']:
+        print(f"\n优化建议:")
+        for suggestion in validation['suggestions']:
+            print(f"  - {suggestion}")
+
+    print("\n" + "=" * 80)
+    print("测试完成")
+    print("=" * 80)

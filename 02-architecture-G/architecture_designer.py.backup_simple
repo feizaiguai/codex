@@ -1,0 +1,335 @@
+"""
+02-architecture 架构设计器
+主程序入口，整合所有模块
+
+输入：DESIGN_DRAFT.md（来自01-spec-explorer）
+输出：ARCHITECTURE.md（输出给35-specflow）
+"""
+from typing import Dict, List, Optional, Any, Tuple, Union, Callable
+
+import sys
+import os
+from datetime import datetime
+from pathlib import Path
+
+# 添加模块路径
+sys.path.insert(0, str(Path(__file__).parent))
+
+from core.models import ArchitectureDesign
+from parsers.design_draft_parser import parse_design_draft
+from parsers.json_loader import load_json
+from analyzers.scale_estimator import ScaleEstimator
+from analyzers.tech_recommender import TechStackRecommender
+from analyzers.pattern_selector import PatternSelector
+from generators.adr_generator import ADRGenerator
+from generators.architecture_doc import ArchitectureDocGenerator
+from generators.json_exporter import generate_json, save_json, merge_json_models
+
+
+class ArchitectureDesigner:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    架构设计器 - 主控制器
+    
+    Args:
+        TODO: 添加参数说明
+    
+    Returns:
+        TODO: 添加返回值说明
+    """
+
+    def __init__(self) -> None:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        初始化设计器
+        
+        Args:
+            TODO: 添加参数说明
+        
+        Returns:
+            TODO: 添加返回值说明
+        """
+        self.scale_estimator = ScaleEstimator()
+        self.tech_recommender = TechStackRecommender()
+        self.pattern_selector = PatternSelector()
+        self.adr_generator = ADRGenerator()
+        self.doc_generator = ArchitectureDocGenerator()
+
+    def design(self, input_file: str, output_file: str) -> ArchitectureDesign:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        执行完整的架构设计流程
+
+        Args:
+            input_file: DESIGN_DRAFT.md文件路径
+            output_file: ARCHITECTURE.md输出路径
+
+        Returns:
+            ArchitectureDesign对象
+
+        Raises:
+            FileNotFoundError: 输入文件不存在
+            ValueError: 解析或设计过程出错
+        """
+        print(f"[02-architecture] 开始架构设计...")
+        print(f"输入文件: {input_file}")
+        print(f"输出文件: {output_file}")
+
+        # 步骤1: 解析设计草稿（自动检测JSON或Markdown）
+        print("\n[1/6] 解析输入文件...")
+        try:
+            # 检测文件类型
+            input_path = Path(input_file)
+            if input_path.suffix.lower() == '.json':
+                print(f"  检测到JSON格式，使用JSON加载器...")
+                draft = load_json(input_file)
+            else:
+                print(f"  检测到Markdown格式，使用Markdown解析器...")
+                draft = parse_design_draft(input_file)
+
+            print(f"✓ 解析完成: {draft.project_name}")
+            print(f"  - {len(draft.entities)}个实体")
+            print(f"  - {len(draft.features)}个功能")
+            print(f"  - {len(draft.contexts)}个上下文")
+        except Exception as e:
+            print(f"✗ 解析失败: {e}")
+            raise
+
+        # 步骤2: 规模评估
+        print("\n[2/6] 评估系统规模...")
+        try:
+            scale_assessment = self.scale_estimator.estimate(draft)
+            print(f"✓ 规模评估完成: {scale_assessment.scale.value}")
+            print(f"  - 评分: {scale_assessment.score:.1f}/50")
+            print(f"  - 复杂度: {scale_assessment.complexity_level}")
+        except Exception as e:
+            print(f"✗ 规模评估失败: {e}")
+            raise
+
+        # 步骤3: 技术栈推荐
+        print("\n[3/6] 推荐技术栈...")
+        try:
+            tech_stack = self.tech_recommender.recommend(draft, scale_assessment)
+            print(f"✓ 技术栈推荐完成:")
+            print(f"  - 后端: {tech_stack.backend_language.recommendation}")
+            print(f"  - 数据库: {tech_stack.database.recommendation}")
+            print(f"  - 缓存: {tech_stack.cache.recommendation}")
+            print(f"  - API: {tech_stack.api_style.recommendation}")
+        except Exception as e:
+            print(f"✗ 技术栈推荐失败: {e}")
+            raise
+
+        # 步骤4: 架构模式选择
+        print("\n[4/6] 选择架构模式...")
+        try:
+            pattern_selection = self.pattern_selector.select(draft, scale_assessment)
+            print(f"✓ 架构模式选择完成: {pattern_selection.primary_pattern.value}")
+            if pattern_selection.supporting_patterns:
+                print(f"  - 支持模式: {', '.join([p.value for p in pattern_selection.supporting_patterns])}")
+        except Exception as e:
+            print(f"✗ 架构模式选择失败: {e}")
+            raise
+
+        # 步骤5: 生成ADR
+        print("\n[5/6] 生成架构决策记录...")
+        try:
+            adrs = self.adr_generator.generate(
+                draft, scale_assessment, tech_stack, pattern_selection
+            )
+            print(f"✓ ADR生成完成: {len(adrs)}个决策记录")
+        except Exception as e:
+            print(f"✗ ADR生成失败: {e}")
+            raise
+
+        # 步骤6: 生成架构文档
+        print("\n[6/6] 生成架构文档...")
+        try:
+            # 构建ArchitectureDesign对象
+            architecture = ArchitectureDesign(
+                project_name=draft.project_name,
+                version="1.0.0",
+                date=datetime.now().strftime("%Y-%m-%d"),
+                scale_assessment=scale_assessment,
+                tech_stack=tech_stack,
+                pattern_selection=pattern_selection,
+                adrs=adrs
+            )
+
+            # 验证完整性
+            architecture.validate()
+
+            # 生成Markdown文档
+            markdown_content = self.doc_generator.generate(
+                draft.project_name, draft, architecture
+            )
+
+            # 写入Markdown文件
+            output_path = Path(output_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(markdown_content)
+
+            # 生成并保存JSON文件（新增）
+            json_output_path = output_path.with_suffix('.json')
+            json_data = generate_json(draft, architecture)
+
+            # 如果输入是JSON，尝试合并spec_model和arch_model
+            if input_path.suffix.lower() == '.json':
+                json_data = merge_json_models(input_file, json_data)
+
+            save_json(json_data, str(json_output_path))
+
+            print(f"✓ 架构文档生成完成")
+            print(f"\n架构设计完成！")
+            print(f"Markdown输出: {output_file}")
+            print(f"JSON输出: {json_output_path}")
+            print(f"文档大小: {len(markdown_content)} 字符")
+
+            return architecture
+
+        except Exception as e:
+            print(f"✗ 文档生成失败: {e}")
+            raise
+
+    def design_quick(self, input_file: str) -> dict:
+        """
+        
+        
+        Args:
+            参数待文档化
+        
+        Returns:
+            返回值待文档化
+        """
+        快速设计模式（不生成完整文档，仅返回核心结果）
+
+        Args:
+            input_file: 输入文件路径（DESIGN_DRAFT.md或spec_model.json）
+
+        Returns:
+            包含核心设计结果的字典
+        """
+        # 自动检测文件类型
+        input_path = Path(input_file)
+        if input_path.suffix.lower() == '.json':
+            draft = load_json(input_file)
+        else:
+            draft = parse_design_draft(input_file)
+
+        scale_assessment = self.scale_estimator.estimate(draft)
+        tech_stack = self.tech_recommender.recommend(draft, scale_assessment)
+        pattern_selection = self.pattern_selector.select(draft, scale_assessment)
+
+        return {
+            "project_name": draft.project_name,
+            "scale": scale_assessment.scale.value,
+            "score": scale_assessment.score,
+            "backend": tech_stack.backend_language.recommendation,
+            "database": tech_stack.database.recommendation,
+            "pattern": pattern_selection.primary_pattern.value
+        }
+
+
+def main() -> Any:
+    """
+    命令行入口
+
+    Args:
+        无命令行参数（使用argparse处理）
+
+    Returns:
+        int: 退出码（0表示成功）
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='02-architecture: 架构设计器',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  # 使用Markdown输入
+  python architecture_designer.py -i ../01-spec-explorer/DESIGN_DRAFT.md -o ARCHITECTURE.md
+
+  # 使用JSON输入（推荐，更可靠）
+  python architecture_designer.py -i ../01-spec-explorer/DESIGN_DRAFT.json -o ARCHITECTURE.md
+
+  # 快速模式
+  python architecture_designer.py -i ../01-spec-explorer/DESIGN_DRAFT.json -o ARCHITECTURE.md --quick
+
+输入: DESIGN_DRAFT.md或DESIGN_DRAFT.json（来自01-spec-explorer）
+输出: ARCHITECTURE.md（输出给35-specflow）
+        """
+    )
+
+    parser.add_argument(
+        '-i', '--input',
+        required=True,
+        help='输入文件路径（DESIGN_DRAFT.md或DESIGN_DRAFT.json）'
+    )
+
+    parser.add_argument(
+        '-o', '--output',
+        default='ARCHITECTURE.md',
+        help='输出文件路径（默认：ARCHITECTURE.md）'
+    )
+
+    parser.add_argument(
+        '--quick',
+        action='store_true',
+        help='快速模式（仅输出核心结果，不生成完整文档）'
+    )
+
+    args = parser.parse_args()
+
+    try:
+        designer = ArchitectureDesigner()
+
+        if args.quick:
+            result = designer.design_quick(args.input)
+            print("\n=== 快速设计结果 ===")
+            for key, value in result.items():
+                print(f"{key}: {value}")
+        else:
+            architecture = designer.design(args.input, args.output)
+
+            # 输出性能统计
+            print(f"\n=== 性能统计 ===")
+            print(f"系统规模: {architecture.scale_assessment.scale.value}")
+            print(f"规模评分: {architecture.scale_assessment.score:.1f}/50")
+            print(f"技术栈评分: {architecture.tech_stack.total_score:.1f}/10")
+            print(f"ADR数量: {len(architecture.adrs)}")
+
+    except FileNotFoundError as e:
+        print(f"\n错误: 文件不存在 - {e}")
+        sys.exit(1)
+    except ValueError as e:
+        print(f"\n错误: 数据验证失败 - {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n错误: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

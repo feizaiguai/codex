@@ -1,0 +1,596 @@
+"""
+UltraThink Data Models
+复杂任务规格文档编写工具 - 数据模型
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional, Tuple, Union, Callable
+from enum import Enum
+
+
+import logging
+
+# ============ Enums ============
+
+class Phase(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    6D Specification Phases
+    DISCOVER = "discover"
+    DEFINE = "define"
+    DESIGN = "design"
+    DECOMPOSE = "decompose"
+    DECLARE = "declare"
+    DOCUMENT = "document"
+
+
+class DepthLevel(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Analysis depth levels
+    QUICK = "quick"           # 30-60s, 5-10 pages
+    STANDARD = "standard"     # 90-180s, 15-30 pages
+    COMPREHENSIVE = "comprehensive"  # 180-300s, 40-60 pages
+
+
+class OutputFormat(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Output format options
+    MARKDOWN = "markdown"
+    JSON = "json"
+    BOTH = "both"
+
+
+class QualityGrade(str, Enum):
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Quality grade levels
+    A_PLUS = "A+"
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+
+
+# ============ Input Models ============
+
+@dataclass
+class UltraThinkInput:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Input specification for UltraThink
+
+    # Required
+    task: str
+
+    # Optional - Context
+    domain: Optional[str] = None
+    stakeholders: List[str] = field(default_factory=list)
+    constraints: List[str] = field(default_factory=list)
+    existing_systems: List[str] = field(default_factory=list)
+
+    # Optional - Control
+    depth: DepthLevel = DepthLevel.STANDARD
+    phases: List[Phase] = field(default_factory=lambda: list(Phase))
+    output_format: OutputFormat = OutputFormat.MARKDOWN
+
+    # Optional - Advanced
+    focus_areas: List[str] = field(default_factory=list)
+    custom_templates: Dict[str, str] = field(default_factory=dict)
+    enable_research: bool = False
+
+
+# ============ Phase Output Models ============
+
+@dataclass
+class Stakeholder:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Stakeholder information
+    name: str
+    role: str
+    interest: str
+    influence: str  # High/Medium/Low
+    concerns: List[str] = field(default_factory=list)
+
+
+@dataclass
+class BusinessGoal:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Business goal specification
+    goal: str
+    priority: str  # Critical/High/Medium/Low
+    success_metric: str
+    target: str
+    timeline: str
+
+
+@dataclass
+class Constraint:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Project constraint
+    category: str  # Budget/Timeline/Technology/Regulatory
+    description: str
+    impact: str  # High/Medium/Low
+    mitigation: Optional[str] = None
+
+
+@dataclass
+class BusinessContext:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Phase 1: Business Context Output
+    stakeholders: List[Stakeholder] = field(default_factory=list)
+    business_goals: List[BusinessGoal] = field(default_factory=list)
+    constraints: List[Constraint] = field(default_factory=list)
+    assumptions: List[str] = field(default_factory=list)
+    success_criteria: List[str] = field(default_factory=list)
+
+
+@dataclass
+class FunctionalRequirement:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Functional requirement specification
+    id: str  # FR-001
+    title: str
+    description: str
+    priority: str  # Must Have/Should Have/Could Have/Won't Have (MoSCoW)
+    user_story: Optional[str] = None
+    acceptance_criteria: List[str] = field(default_factory=list)
+    dependencies: List[str] = field(default_factory=list)
+
+
+@dataclass
+class NonFunctionalRequirement:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Non-functional requirement (performance, security, etc.)
+    id: str  # NFR-001
+    category: str  # Performance/Security/Scalability/Usability/Reliability
+    requirement: str
+    metric: str
+    target: str
+    measurement: str
+
+
+@dataclass
+class BDDScenario:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    BDD (Behavior-Driven Development) scenario
+    feature: str
+    scenario: str
+    given: List[str] = field(default_factory=list)
+    when: List[str] = field(default_factory=list)
+    then: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
+
+
+@dataclass
+class APIContract:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    API contract specification
+    endpoint: str
+    method: str  # GET/POST/PUT/DELETE/PATCH
+    description: str
+    request_schema: Dict[str, Any] = field(default_factory=dict)
+    response_schema: Dict[str, Any] = field(default_factory=dict)
+    authentication: Optional[str] = None
+    rate_limit: Optional[str] = None
+
+
+@dataclass
+class Requirements:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Phase 2: Requirements Output
+    functional: List[FunctionalRequirement] = field(default_factory=list)
+    non_functional: List[NonFunctionalRequirement] = field(default_factory=list)
+    bdd_scenarios: List[BDDScenario] = field(default_factory=list)
+    api_contracts: List[APIContract] = field(default_factory=list)
+    glossary: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class Entity:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    DDD Entity
+    name: str
+    attributes: List[Dict[str, str]] = field(default_factory=list)
+    behaviors: List[str] = field(default_factory=list)
+    relationships: List[str] = field(default_factory=list)
+
+
+@dataclass
+class BoundedContext:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    DDD Bounded Context
+    name: str
+    description: str
+    entities: List[Entity] = field(default_factory=list)
+    aggregates: List[str] = field(default_factory=list)
+    ubiquitous_language: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class DomainModel:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    DDD Domain Model
+    bounded_contexts: List[BoundedContext] = field(default_factory=list)
+    context_map: str = ""  # Mermaid diagram
+    entities: List[Entity] = field(default_factory=list)
+
+
+@dataclass
+class TechStackChoice:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Technology stack choice
+    layer: str  # Frontend/Backend/Database/Infrastructure/DevOps
+    technology: str
+    justification: str
+    alternatives_considered: List[str] = field(default_factory=list)
+    risks: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ADR:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Architecture Decision Record
+    id: str  # ADR-001
+    title: str
+    status: str  # Proposed/Accepted/Deprecated/Superseded
+    context: str
+    decision: str
+    consequences: List[str] = field(default_factory=list)
+    alternatives: List[str] = field(default_factory=list)
+
+
+@dataclass
+class Risk:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Risk assessment
+    id: str
+    category: str  # Technical/Business/Resource/Schedule/Regulatory
+    description: str
+    probability: str  # High/Medium/Low
+    impact: str  # High/Medium/Low
+    severity: str  # Critical/High/Medium/Low
+    mitigation: str
+    contingency: str
+
+
+@dataclass
+class Design:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Phase 3: Design Output
+    domain_model: DomainModel = field(default_factory=DomainModel)
+    architecture_pattern: str = ""  # Microservices/Monolith/Serverless/Event-Driven
+    architecture_diagram: str = ""  # Mermaid diagram
+    tech_stack: List[TechStackChoice] = field(default_factory=list)
+    adrs: List[ADR] = field(default_factory=list)
+    risks: List[Risk] = field(default_factory=list)
+
+
+@dataclass
+class WBSNode:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Work Breakdown Structure Node
+    id: str  # 1.2.3
+    title: str
+    description: str
+    level: int  # 1, 2, 3, etc.
+    estimated_hours: float
+    parent_id: Optional[str] = None
+    children: List[str] = field(default_factory=list)
+    assignee: Optional[str] = None
+    dependencies: List[str] = field(default_factory=list)
+
+
+@dataclass
+class PERTEstimate:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    PERT (Program Evaluation Review Technique) Estimate
+    task_id: str
+    task_name: str
+    optimistic: float  # hours
+    most_likely: float
+    pessimistic: float
+    pert: float  # (O + 4M + P) / 6
+    variance: float  # ((P - O) / 6) ^ 2
+
+
+@dataclass
+class Milestone:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Project milestone
+    id: str
+    name: str
+    description: str
+    target_date: str
+    deliverables: List[str] = field(default_factory=list)
+    criteria: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ImplementationPlan:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Phase 4: Implementation Plan Output
+    wbs: List[WBSNode] = field(default_factory=list)
+    pert_estimates: List[PERTEstimate] = field(default_factory=list)
+    critical_path: List[str] = field(default_factory=list)
+    milestones: List[Milestone] = field(default_factory=list)
+    total_estimated_hours: float = 0.0
+    total_estimated_weeks: float = 0.0
+    team_size_recommended: int = 0
+    resource_allocation: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class TestSpec:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Test specification (TDD)
+    id: str
+    type: str  # Unit/Integration/E2E
+    feature: str
+    description: str
+    given: str
+    when: str
+    then: str
+    priority: str
+
+
+@dataclass
+class PerformanceBenchmark:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Performance benchmark
+    metric: str  # Response Time/Throughput/Latency/etc.
+    target: str
+    measurement_method: str
+    acceptance_criteria: str
+
+
+@dataclass
+class TestStrategy:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Phase 5: Test Strategy Output
+    test_pyramid: Dict[str, Any] = field(default_factory=dict)  # {unit: 70%, integration: 20%, e2e: 10%}
+    test_specs: List[TestSpec] = field(default_factory=list)
+    performance_benchmarks: List[PerformanceBenchmark] = field(default_factory=list)
+    security_requirements: List[str] = field(default_factory=list)
+    test_coverage_target: int = 80  # %
+
+
+# ============ Validation Models ============
+
+@dataclass
+class Conflict:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Detected conflict between specifications
+    id: str
+    type: str  # Requirement/Design/Resource/Timeline
+    description: str
+    severity: str  # Critical/High/Medium/Low
+    affected_items: List[str] = field(default_factory=list)
+    recommendation: str = ""
+
+
+@dataclass
+class Recommendation:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Actionable recommendation
+    category: str  # Architecture/Planning/Testing/Process
+    priority: str  # Critical/High/Medium/Low
+    recommendation: str
+    rationale: str
+    impact: str
+
+
+# ============ Output Models ============
+
+@dataclass
+class QualityMetrics:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Quality assessment metrics
+    completeness_score: float  # 0-100
+    consistency_score: float   # 0-100
+    feasibility_score: float   # 0-100
+    overall_grade: QualityGrade = QualityGrade.B
+
+    completeness_breakdown: Dict[str, float] = field(default_factory=dict)
+    consistency_issues: List[str] = field(default_factory=list)
+    feasibility_factors: Dict[str, float] = field(default_factory=dict)
+    missing_items: List[str] = field(default_factory=list)
+
+
+@dataclass
+class UltraThinkOutput:
+    """
+    
+    
+    Attributes:
+        属性待文档化
+    """
+    Complete UltraThink output
+
+    # Metadata
+    version: str = "1.0.0"
+    generated_at: str = ""
+    task_summary: str = ""
+    execution_time_seconds: float = 0.0
+
+    # Phase Outputs
+    business_context: BusinessContext = field(default_factory=BusinessContext)
+    requirements: Requirements = field(default_factory=Requirements)
+    design: Design = field(default_factory=Design)
+    implementation_plan: ImplementationPlan = field(default_factory=ImplementationPlan)
+    test_strategy: TestStrategy = field(default_factory=TestStrategy)
+
+    # Quality Metrics
+    quality_metrics: QualityMetrics = field(default_factory=QualityMetrics)
+
+    # Validation
+    conflicts: List[Conflict] = field(default_factory=list)
+    risks: List[Risk] = field(default_factory=list)
+    recommendations: List[Recommendation] = field(default_factory=list)
+
+    # Documents
+    markdown_spec: str = ""
+    json_spec: Optional[Dict[str, Any]] = None
+    diagrams: Dict[str, str] = field(default_factory=dict)
+
+    # Success flag
+    success: bool = True
+    error_message: str = ""
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

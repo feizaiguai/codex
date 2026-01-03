@@ -1,0 +1,25 @@
+"""32-codex 命令行接口"""
+import argparse
+from engine import Codex, Task, TaskType
+
+def main():
+    parser = argparse.ArgumentParser(description='32-codex: 全能型AI助手')
+    parser.add_argument('task', help='任务描述')
+    parser.add_argument('--type', choices=[t.value for t in TaskType], default='code_generation')
+    args = parser.parse_args()
+
+    codex = Codex()
+    task = Task(
+        description=args.task,
+        task_type=TaskType(args.type),
+        context={},
+        constraints=[]
+    )
+
+    solution = codex.solve(task)
+    print(f"方法: {solution.approach}")
+    print(f"实现:\n{solution.implementation}")
+    print(f"说明: {solution.explanation}")
+
+if __name__ == '__main__':
+    main()

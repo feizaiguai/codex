@@ -1,0 +1,68 @@
+# 01-spec-explorer 配置文件示例
+# 复制此文件为 config.yaml 并修改相应配置
+
+# 项目基本信息
+project:
+  name: "默认项目名称"
+  version: "1.0.0"
+  domain: "未指定"  # 电商、教育、社交、企业应用、金融科技、物联网等
+
+# 默认回答（用于非交互模式或快速填充）
+defaults:
+  # 需求分析相关
+  core_problem: "解决用户的核心痛点"
+  target_users: "目标用户群体"
+  value_proposition: "提升效率，降低成本"
+  technical_challenges: "高并发、数据一致性、性能优化"
+  mvp_scope: "核心功能优先，快速迭代"
+  
+  # Impact Mapping 相关
+  business_goal: "提升业务价值"
+  key_roles: ["用户", "管理员", "运营人员"]
+  expected_impacts: ["提高效率", "降低成本", "提升体验"]
+  
+  # Domain Modeling 相关
+  bounded_contexts: 2         # 默认限界上下文数量
+  min_entities: 3             # 最少实体数量
+  max_entities: 10            # 最多实体数量
+
+# Impact Mapping 配置
+impact_mapping:
+  auto_generate: false        # 是否自动生成（基于任务描述）
+  min_actors: 2               # 最少参与者数量
+  max_actors: 5               # 最多参与者数量
+
+# Flow Modeling 配置
+flow_modeling:
+  generate_sequence_diagram: true    # 生成序列图描述
+  generate_state_machine: true       # 生成状态机描述
+  max_flows: 5                       # 最多流程数量
+
+# BDD/ATDD 配置
+bdd:
+  min_scenarios: 5            # 最少场景数量
+  max_scenarios: 20           # 最多场景数量
+  include_edge_cases: true    # 包含边界情况
+
+# 输出配置
+output:
+  file_path: "./DESIGN_DRAFT.md"    # 输出文件路径
+  overwrite: true                   # 是否覆盖已存在文件
+  include_timestamp: false          # 文件名是否包含时间戳
+
+# 模板配置
+template:
+  use_custom: false           # 是否使用自定义模板
+  custom_path: ""             # 自定义模板路径
+
+# 交互模式配置
+interaction:
+  mode: "interactive"         # interactive（交互式） / auto（自动模式）
+  show_examples: true         # 显示示例答案
+  allow_skip: false           # 允许跳过问题
+
+# 高级配置
+advanced:
+  verbose: false              # 详细输出模式
+  debug: false                # 调试模式
+  language: "zh-CN"           # 语言：zh-CN（中文）/ en-US（英文）

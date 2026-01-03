@@ -1,0 +1,1026 @@
+"""
+SpecFlow V3.0 - 文档生成器(规则引擎版本)
+基于规则引擎生成8个核心文档,非AI生成
+
+版本: 3.0.0
+日期: 2025-12-18
+"""
+
+from typing import List, Dict, Any, Optional, Tuple, Union, Callable
+from datetime import datetime
+import logging
+
+from core.models import (
+    Document, DocumentType, DocumentStatus,
+    UserStory, RequirementItem, TestCase,
+    QualityReport, DomainCategory, ComplexityLevel
+)
+
+
+class SpecificationGenerator:
+    """
+    规格文档生成器(V3.0)
+
+    使用规则和模板生成8个核心文档:
+    - 00-项目概览.md
+    - 01-需求规格.md
+    - 02-用户故事.md
+    - 03-数据模型.md
+    - 04-API契约.md
+    - 05-测试场景.md
+    - 06-部署清单.md
+    - 07-质量报告.md
+
+    Attributes:
+        rules: 500+条规则的规则引擎
+        templates: 文档模板集合
+        validators: 质量验证器
+    """
+
+    def generate_overview(
+        self,
+        project_name: str,
+        project_version: str,
+        task_description: str,
+        quality_report: QualityReport
+    ) -> Document:
+        """
+        生成00-项目概览
+
+        Args:
+            project_name: 项目名称
+            project_version: 项目版本号
+            task_description: 任务描述
+            quality_report: 质量报告对象
+
+        Returns:
+            Document: 生成的项目概览文档
+        """
+
+        content = {
+            "executive_summary": f"""## 执行摘要
+
+**项目名称**: {project_name}
+**版本**: {project_version}
+**领域**: {quality_report.domain.value}
+**复杂度**: {quality_report.complexity.value}
+**估算工时**: {quality_report.estimated_hours}小时
+**预估工期**: {quality_report.estimated_hours/8:.1f}工作日(按每天8小时计算)
+
+本项目旨在{task_description}。
+
+**质量等级**: {quality_report.metrics.overall_grade.value}
+""",
+            "vision": f"""## 愿景声明
+
+通过{project_name},我们致力于为用户提供高质量的解决方案,提升业务效率,创造商业价值。
+
+### 核心价值主张
+- **用户价值**: 显著提升用户体验和工作效率
+- **业务价值**: 降低运营成本,提高业务响应速度
+- **技术价值**: 构建可扩展,易维护的技术架构
+""",
+            "business_background": f"""## 业务背景
+
+**业务领域**: {quality_report.domain.value}
+
+本项目面向{quality_report.domain.value}领域,致力于解决该领域的核心业务问题。
+
+### 当前挑战
+- 业务流程效率有待提升
+- 系统集成度不足
+- 数据利用率较低
+
+### 解决方案
+通过本项目的实施,将有效解决上述挑战,为业务发展提供坚实的技术支撑。
+""",
+            "success_metrics": """## 成功指标(关键假设)
+
+### 业务指标
+- **用户满意度**: 目标 ≥ 4.5/5.0
+- **业务转化率**: 提升 20%+
+- **运营成本**: 降低 15%+
+
+### 技术指标
+- **系统可用性**: ≥ 99.9%
+- **响应时间**: P95 < 500ms
+- **错误率**: < 0.1%
+
+### 关键假设
+- 用户接受新系统的学习曲线
+- 现有数据可以平滑迁移
+- 第三方服务稳定可靠
+""",
+            "stakeholders": """## 利益相关者
+
+| 角色 | 关注点 | 期望 | 参与方式 |
+|------|-------|------|---------|
+| 最终用户 | 易用性,性能 | 高效完成任务 | 用户测试,反馈 |
+| 业务负责人 | ROI,上市时间 | 快速交付价值 | 需求评审,验收 |
+| 技术团队 | 可维护性,扩展性 | 稳定可靠的系统 | 开发,运维 |
+| 产品经理 | 功能完整性,用户体验 | 符合产品规划 | 需求定义,优先级 |
+| 运维团队 | 稳定性,监控 | 易于运维 | 部署,监控 |
+"""
+        }
+
+        markdown = self._dict_to_markdown(content)
+
+        return Document(
+            type=DocumentType.OVERVIEW,
+            title=f"{project_name} - 项目概览",
+            version=project_version,
+            content=content,
+            markdown=markdown,
+            token_budget=15000
+        )
+
+    def generate_requirements(
+        self,
+        requirements: List[RequirementItem],
+        user_stories: List[UserStory]
+    ) -> Document:
+        """
+        生成01-需求规格
+
+        func_reqs = [r for r in requirements if r.type.value == "功能性需求"]
+        non_func_reqs = [r for r in requirements if r.type.value == "非功能性需求"]
+
+        content = {
+            "functional_requirements": f"""## 功能性需求
+
+共{len(func_reqs)}个功能性需求:
+
+""" + "\n".join([f"### {r.id}: {r.title}\n\n{r.description}\n\n**优先级**: {r.priority.value}\n"
+                   for r in func_reqs]),
+
+            "non_functional_requirements": f"""## 非功能性需求
+
+共{len(non_func_reqs)}个非功能性需求:
+
+""" + "\n".join([f"### {r.id}: {r.title}\n\n{r.description}\n\n**优先级**: {r.priority.value}\n"
+                   for r in non_func_reqs]) if non_func_reqs else "暂无非功能性需求",
+
+            "user_stories": f"""## 用户故事
+
+共{len(user_stories)}个用户故事:
+
+""" + "\n".join([f"### {us.id}: {us.i_want}\n\n- **作为**: {us.as_a}\n- **我想要**: {us.i_want}\n- **以便**: {us.so_that}\n- **优先级**: {us.priority.value}\n\n**验收标准**:\n" +
+                   "\n".join([f"- {ac}" for ac in us.acceptance_criteria]) + "\n"
+                   for us in user_stories]),
+
+            "acceptance_guidelines": """## 验收标准编写指南(INVEST原则)
+
+### INVEST原则检查清单
+- ✅ **Independent(独立性)**: 故事之间相互独立,可独立开发和测试
+- ✅ **Negotiable(可协商)**: 需求细节可以讨论和调整
+- ✅ **Valuable(有价值)**: 为用户或业务带来明确价值
+- ✅ **Estimable(可估算)**: 可以合理估算工作量
+- ✅ **Small(小)**: 故事足够小,可在一个迭代内完成
+- ✅ **Testable(可测试)**: 有明确的验收标准,可验证完成
+
+### 验收标准模板(推荐使用BDD格式)
+```gherkin
+Given [前置条件]
+When [用户操作]
+Then [预期结果]
+And [额外验证点]
+```
+
+### 验收标准示例
+```gherkin
+Scenario: 用户成功下单
+  Given 用户已登录系统
+    And 购物车中有3件商品
+  When 用户点击"结算"按钮
+  Then 系统跳转到结算页面
+    And 显示订单总金额
+    And 提供支付方式选项
+```
+"""
+        }
+
+        markdown = self._dict_to_markdown(content)
+
+        return Document(
+            type=DocumentType.REQUIREMENTS,
+            title="需求规格说明",
+            version="1.0.0",
+            content=content,
+            markdown=markdown,
+            token_budget=20000
+        )
+
+    def generate_domain_model(
+        self,
+        domain: DomainCategory,
+        requirements: List[RequirementItem]
+    ) -> Document:
+        """
+        生成02-领域模型
+
+        # 从需求中提取实体(基于规则)
+        entities = self._extract_entities_from_requirements(requirements)
+
+        content = {
+            "domain_overview": f"""## 领域概览
+
+**领域**: {domain.value}
+
+本文档描述{domain.value}领域的核心概念,实体和关系。
+""",
+            "entities": f"""## 核心实体
+
+识别出{len(entities)}个核心实体:
+
+""" + "\n".join([f"### {entity}\n\n- **职责**: 管理{entity}相关的业务逻辑\n- **关键属性**: ID, 名称, 状态, 创建时间, 更新时间\n"
+                   for entity in entities]),
+
+            "bounded_contexts": """## 限界上下文
+
+建议根据业务边界划分为独立的限界上下文,每个上下文负责特定的业务职能。
+"""
+        }
+
+        markdown = self._dict_to_markdown(content)
+
+        return Document(
+            type=DocumentType.DOMAIN_MODEL,
+            title="领域模型",
+            version="1.0.0",
+            content=content,
+            markdown=markdown,
+            token_budget=18000
+        )
+
+    def generate_architecture(
+        self,
+        complexity: ComplexityLevel,
+        domain: DomainCategory
+    ) -> Document:
+        """
+        生成03-架构设计
+
+        # 基于复杂度推荐架构模式
+        architecture_pattern = self._recommend_architecture_pattern(complexity)
+        tech_stack = self._recommend_tech_stack(domain, complexity)
+
+        content = {
+            "architecture_overview": f"""## 架构概览
+
+**复杂度级别**: {complexity.value}
+**推荐架构模式**: {architecture_pattern}
+
+根据系统复杂度,推荐使用{architecture_pattern}架构模式。
+""",
+            "tech_stack": f"""## 技术栈建议
+
+{tech_stack}
+""",
+            "system_design": f"""## 系统设计
+
+### 分层架构
+
+1. **表示层**: 处理用户交互和API请求
+2. **业务层**: 核心业务逻辑
+3. **数据层**: 数据持久化和访问
+
+### 关键设计决策
+
+- 采用{architecture_pattern}架构以支持系统扩展
+- 使用RESTful API进行服务间通信
+- 实施缓存策略提升性能
+"""
+        }
+
+        markdown = self._dict_to_markdown(content)
+
+        return Document(
+            type=DocumentType.ARCHITECTURE,
+            title="架构设计",
+            version="1.0.0",
+            content=content,
+            markdown=markdown,
+            token_budget=20000
+        )
+
+    def generate_implementation_plan(
+        self,
+        user_stories: List[UserStory],
+        estimated_hours: int
+    ) -> Document:
+        """
+        生成04-实施计划
+
+        # 按优先级分组
+        critical = [us for us in user_stories if us.priority == "Critical"]
+        high = [us for us in user_stories if us.priority == "High"]
+        medium = [us for us in user_stories if us.priority == "Medium"]
+
+        content = {
+            "implementation_phases": f"""## 实施阶段
+
+**总估算工时**: {estimated_hours}小时(约{estimated_hours/8:.1f}工作日)
+
+### Phase 1: 核心功能({len(critical)}个关键故事)
+优先级:Critical
+"""
+ + "\n".join([f"- {us.id}: {us.i_want}" for us in critical[:5]]) + f"""
+
+### Phase 2: 重要功能({len(high)}个高优先级故事)
+优先级:High
+"""
+ + "\n".join([f"- {us.id}: {us.i_want}" for us in high[:5]]) + f"""
+
+### Phase 3: 增强功能({len(medium)}个中优先级故事)
+优先级:Medium
+""" + "\n".join([f"- {us.id}: {us.i_want}" for us in medium[:5]]),
+
+            "timeline": f"""## 时间线建议
+
+- **Phase 1**: {estimated_hours * 0.5:.0f}小时
+- **Phase 2**: {estimated_hours * 0.3:.0f}小时
+- **Phase 3**: {estimated_hours * 0.2:.0f}小时
+
+**总计**: {estimated_hours}小时
+"""
+        }
+
+        markdown = self._dict_to_markdown(content)
+
+        return Document(
+            type=DocumentType.IMPLEMENTATION,
+            title="实施计划",
+            version="1.0.0",
+            content=content,
+            markdown=markdown,
+            token_budget=15000
+        )
+
+    def generate_test_strategy(
+        self,
+        user_stories: List[UserStory],
+        test_cases: List[TestCase]
+    ) -> Document:
+        """
+        生成05-测试策略
+
+        content = {
+            "test_overview": f"""## 测试概览
+
+**用户故事数**: {len(user_stories)}
+**测试用例数**: {len(test_cases)}
+
+本文档定义了完整的测试策略,确保系统质量。
+""",
+            "test_pyramid": r"""## 测试金字塔
+
+```
+        /\
+       /E2E\        10% - 端到端测试
+      /------\
+     /Integration\ 30% - 集成测试
+    /------------\
+   /  Unit Tests  \ 60% - 单元测试
+  /----------------\
+```
+
+### 单元测试
+- 覆盖所有核心业务逻辑
+- 目标覆盖率: 80%+
+
+### 集成测试
+- 测试模块间接口
+- 数据库集成测试
+
+### 端到端测试
+- 关键用户旅程
+- 冒烟测试
+""",
+            "test_cases": f"""## 测试用例
+
+共{len(test_cases)}个测试用例(显示前10个):
+
+""" + "\n".join([f"### {tc.id}: {tc.name}\n\n- **类型**: {tc.test_type.value}\n- **优先级**: {tc.priority.value}\n- **前置条件**: {tc.preconditions}\n- **测试步骤**: {tc.steps}\n- **预期结果**: {tc.expected_result}\n"
+                   for tc in test_cases[:10]]),  # 只显示前10个
+
+            "test_case_template": """## 测试用例编写模板
+
+### 单元测试用例模板
+```python
+def test_example():
+    # Arrange(准备)
+    input_data = create_test_data()
+
+    # Act(执行)
+    result = function_under_test(input_data)
+
+    # Assert(断言)
+    assert result == expected_value
+    assert result.is_valid()
+```
+
+### 集成测试用例模板
+```gherkin
+Feature: 用户注册功能
+
+  Scenario: 成功注册新用户
+    Given 数据库中不存在该用户
+    When 用户提交有效的注册表单
+    Then 系统创建新用户记录
+      And 发送欢迎邮件
+      And 跳转到首页
+```
+
+### 边界值测试指南
+- **最小值**: 测试最小合法值
+- **最大值**: 测试最大合法值
+- **边界值**: 测试边界两侧的值
+- **非法值**: 测试非法输入的错误处理
+
+### 测试数据准备
+- **正常数据**: 覆盖常见使用场景
+- **边界数据**: 覆盖临界值
+- **异常数据**: 覆盖错误场景
+- **安全数据**: 覆盖注入攻击等安全测试
+"""
+        }
+
+        markdown = self._dict_to_markdown(content)
+
+        return Document(
+            type=DocumentType.TEST_STRATEGY,
+            title="测试策略",
+            version="1.0.0",
+            content=content,
+            markdown=markdown,
+            token_budget=18000
+        )
+
+    def generate_risk_assessment(
+        self,
+        complexity: ComplexityLevel,
+        validation_issues: List
+    ) -> Document:
+        """
+        生成06-风险评估
+
+        # 基于复杂度和验证问题识别风险
+        risks = self._identify_risks(complexity, validation_issues)
+
+        content = {
+            "risk_overview": f"""## 风险概览
+
+**项目复杂度**: {complexity.value}
+**识别风险数**: {len(risks)}
+
+本文档列出了项目的主要风险及应对措施。
+""",
+            "risks": """## 风险列表
+
+""" + "\n".join([f"### {risk['id']}: {risk['name']}\n\n- **严重程度**: {risk['severity']}\n- **可能性**: {risk['probability']}\n- **影响**: {risk['impact']}\n- **应对措施**: {risk['mitigation']}\n"
+                   for risk in risks]),
+
+            "mitigation_plan": """## 风险缓解计划
+
+1. **定期风险评审**: 每周评估风险状态
+2. **技术预研**: 对高风险技术进行预研
+3. **备份方案**: 为关键决策准备备选方案
+4. **早期验证**: 在项目早期验证关键技术可行性
+5. **持续监控**: 建立风险监控机制,及时发现新风险
+""",
+            "raid_analysis": """## RAID分析(风险,假设,问题,依赖)
+
+### Risks(风险)
+- **技术风险**: 新技术栈学习曲线,性能瓶颈
+- **进度风险**: 需求变更,人员流动
+- **业务风险**: 市场变化,竞争压力
+
+### Assumptions(假设)
+- **技术假设**: 选定的技术栈能满足性能要求
+- **资源假设**: 团队具备必要的技能
+- **业务假设**: 用户需求保持相对稳定
+
+### Issues(问题)
+- **当前问题**: 需及时解决的阻塞问题
+- **潜在问题**: 可能出现的问题及预防措施
+
+### Dependencies(依赖)
+- **内部依赖**: 团队间协作,资源分配
+- **外部依赖**: 第三方服务,硬件设备
+- **技术依赖**: 特定技术栈,开源库
+
+### 应对策略
+| 类型 | 优先级 | 应对措施 | 责任人 |
+|------|--------|---------|--------|
+| 技术风险 | High | 提前技术验证 | 技术负责人 |
+| 进度风险 | High | 敏捷迭代,快速反馈 | 项目经理 |
+| 外部依赖 | Medium | 备选方案,SLA协议 | 架构师 |
+"""
+        }
+
+        markdown = self._dict_to_markdown(content)
+
+        return Document(
+            type=DocumentType.RISK_ASSESSMENT,
+            title="风险评估",
+            version="1.0.0",
+            content=content,
+            markdown=markdown,
+            token_budget=15000
+        )
+
+    def generate_quality_report(
+        self,
+        quality_report: QualityReport
+    ) -> Document:
+        """
+        生成07-质量报告
+
+        metrics = quality_report.metrics
+
+        content = {
+            "quality_summary": f"""## 质量摘要
+
+**总体等级**: {metrics.overall_grade.value}
+**完整性**: {metrics.completeness_score}/100
+**一致性**: {metrics.consistency_score}/100
+**原子性**: {metrics.atomicity_score}/100
+**可测试性**: {metrics.testability_score}/100
+
+本规格文档发现{len(quality_report.validation_issues)}个质量问题。
+""",
+            "metrics_detail": f"""## 指标详情
+
+### 完整性({metrics.completeness_score}/100)
+评估需求的完整性,确保所有必要信息都已包含。
+
+### 一致性({metrics.consistency_score}/100)
+评估需求间的一致性,避免矛盾和冲突。
+
+### 原子性({metrics.atomicity_score}/100)
+评估需求的原子性,确保每个需求独立且不可再分。
+
+### 可测试性({metrics.testability_score}/100)
+评估需求的可测试性,确保每个需求都可验证。
+""",
+            "validation_issues": f"""## 验证问题
+
+共发现{len(quality_report.validation_issues)}个问题:
+
+""" + "\n".join([f"{i+1}. {issue}\n" for i, issue in enumerate(quality_report.validation_issues[:10])]) if quality_report.validation_issues else "暂无验证问题",  # 前10个(V5: validation_issues现在是字符串列表)
+
+            "recommendations": f"""## 改进建议
+
+""" + "\n".join([f"{i+1}. {rec}" for i, rec in enumerate(quality_report.recommendations)]),
+
+            "quality_dashboard": f"""## 质量度量仪表盘
+
+### 整体质量概览
+```
+完整性: {"█" * int(metrics.completeness_score/10)}{"░" * (10-int(metrics.completeness_score/10))} {metrics.completeness_score}/100
+一致性: {"█" * int(metrics.consistency_score/10)}{"░" * (10-int(metrics.consistency_score/10))} {metrics.consistency_score}/100
+原子性: {"█" * int(metrics.atomicity_score/10)}{"░" * (10-int(metrics.atomicity_score/10))} {metrics.atomicity_score}/100
+可测性: {"█" * int(metrics.testability_score/10)}{"░" * (10-int(metrics.testability_score/10))} {metrics.testability_score}/100
+```
+
+### 质量等级解读
+- **A级(90-100分)**: 优秀,可直接进入开发
+- **B级(80-89分)**: 良好,少量优化后可用
+- **C级(70-79分)**: 合格,需要改进
+- **D级(60-69分)**: 不合格,需要重大改进
+- **F级(<60分)**: 严重不合格,需要重写
+
+### 当前等级
+**{metrics.overall_grade.value}级** - {"优秀,可直接进入开发" if metrics.overall_grade.value == "A" else "良好,少量优化后可用" if metrics.overall_grade.value == "B" else "合格,需要改进" if metrics.overall_grade.value == "C" else "需要改进"}
+
+### 质量改进路线图
+1. **立即处理**: 修复所有Critical和High级别问题
+2. **短期优化**: 提升可测试性和一致性
+3. **持续改进**: 定期评审和更新需求文档
+"""
+        }
+
+        markdown = self._dict_to_markdown(content)
+
+        return Document(
+            type=DocumentType.QUALITY_REPORT,
+            title="质量报告",
+            version="1.0.0",
+            content=content,
+            markdown=markdown,
+            token_budget=15000
+        )
+
+    # ========== 辅助方法 ==========
+
+    def _dict_to_markdown(self, content: Dict[str, Any]) -> str:
+        """
+        将内容字典转换为Markdown
+
+        Args:
+            content: 内容字典
+
+        Returns:
+            str: Markdown字符串
+        """
+        markdown = ""
+        for key, value in content.items():
+            if isinstance(value, str):
+                markdown += value + "\n\n"
+            elif isinstance(value, list):
+                for item in value:
+                    markdown += f"- {item}\n"
+                markdown += "\n"
+        return markdown.strip()
+
+    def _extract_entities_from_requirements(self, requirements: List[RequirementItem]) -> List[str]:
+        """
+        从需求中提取实体(基于简单规则)
+        
+        Args:
+            待补充
+        
+        Returns:
+            待补充
+        """
+        # 简化版本:提取常见实体关键词
+        entities = set()
+        entity_keywords = ["用户", "订单", "商品", "评论", "支付", "课程", "学生", "教师", "图书", "借阅"]
+
+        for req in requirements:
+            text = req.title + " " + req.description
+            for keyword in entity_keywords:
+                if keyword in text:
+                    entities.add(keyword)
+
+        return list(entities) if entities else ["业务实体", "数据实体", "服务实体"]
+
+    def _recommend_architecture_pattern(self, complexity: ComplexityLevel) -> str:
+        """
+        基于复杂度推荐架构模式(扩展版)
+        
+        Args:
+            待补充
+        
+        Returns:
+            待补充
+        """
+
+        # 架构模式推荐矩阵
+        ARCHITECTURE_PATTERNS = {
+            "简单": [
+                "单体分层架构(Monolithic Layered)",
+                "MVC/MTV模式",
+                "简单CRUD架构"
+            ],
+            "中等": [
+                "模块化单体架构(Modular Monolith)",
+                "六边形架构(Hexagonal Architecture)",
+                "洋葱架构(Onion Architecture)",
+                "清洁架构(Clean Architecture)"
+            ],
+            "复杂": [
+                "微服务架构(Microservices)",
+                "事件驱动架构(Event-Driven Architecture)",
+                "CQRS模式(Command Query Responsibility Segregation)",
+                "面向服务架构(SOA)"
+            ],
+            "非常复杂": [
+                "分布式微服务架构(Distributed Microservices)",
+                "事件溯源+CQRS(Event Sourcing + CQRS)",
+                "Saga模式(分布式事务)",
+                "服务网格架构(Service Mesh)"
+            ]
+        }
+
+        # 获取推荐的架构模式列表
+        patterns = ARCHITECTURE_PATTERNS.get(complexity.value, ["模块化单体架构"])
+
+        # 返回主推荐 + 备选方案
+        if len(patterns) > 1:
+            return f"{patterns[0]}\n\n**备选方案**: {', '.join(patterns[1:])}"
+        return patterns[0]
+
+    def _recommend_tech_stack(self, domain: DomainCategory, complexity: ComplexityLevel) -> str:
+        """
+        推荐技术栈(领域特定 + 复杂度分级)
+
+        Args:
+            domain: 领域分类
+            complexity: 复杂度级别
+
+        Returns:
+            str: 技术栈推荐文档
+        """
+        # 领域特定技术栈推荐
+        DOMAIN_SPECIFIC_STACKS = {
+            "电商": {
+                "特殊组件": "支付网关(Stripe/Alipay SDK),库存管理系统,促销引擎",
+                "推荐数据库": "PostgreSQL(订单)+ Redis(购物车,库存)+ Elasticsearch(商品搜索)"
+            },
+            "教育": {
+                "特殊组件": "视频点播服务(阿里云VOD),在线编程环境(Code-Server)",
+                "推荐数据库": "PostgreSQL(课程数据)+ MongoDB(学习记录)+ Neo4j(知识图谱)"
+            },
+            "社交": {
+                "特殊组件": "实时通讯(WebSocket/Socket.io),推荐引擎,Feed流系统",
+                "推荐数据库": "PostgreSQL(用户关系)+ Redis(Feed缓存)+ Cassandra(时序数据)"
+            },
+            "企业应用": {
+                "特殊组件": "工作流引擎(Camunda),权限管理(Casbin),审批流",
+                "推荐数据库": "PostgreSQL(业务数据)+ Redis(缓存)+ Elasticsearch(全文检索)"
+            },
+            "金融科技": {
+                "特殊组件": "风控引擎,实时计算(Flink),区块链集成",
+                "推荐数据库": "PostgreSQL(交易)+ ClickHouse(日志分析)+ Redis(风控规则)"
+            },
+            "物联网": {
+                "特殊组件": "MQTT Broker(EMQ X),时序数据库(InfluxDB),边缘计算",
+                "推荐数据库": "InfluxDB(传感器数据)+ PostgreSQL(设备管理)+ Redis(实时状态)"
+            }
+        }
+
+        # 基础技术栈按复杂度分级
+        if complexity.value == "简单":
+            base_stack = """### 基础技术栈(简单项目)
+
+**后端框架**:
+- Python/Django 4.2+ 或 Flask 3.0+
+- Node.js/Express 4.x
+- 理由: 开发效率高,社区成熟,适合快速原型
+
+**前端框架**:
+- React 18+ 或 Vue 3+
+- 理由: 组件化开发,生态完善
+
+**数据库**:
+- PostgreSQL 15+ (关系型数据)
+- SQLite (开发环境)
+- 理由: 开源免费,功能强大
+
+**缓存**:
+- Redis 7+ (单机部署)
+- 理由: 简单高效,支持多种数据结构
+
+**部署方案**:
+- Docker + Docker Compose
+- 理由: 环境一致性,易于部署
+
+**CI/CD**:
+- GitHub Actions 或 GitLab CI
+- 理由: 免费额度充足,集成方便
+"""
+
+        elif complexity.value == "中等":
+            base_stack = """### 基础技术栈(中等项目)
+
+**后端框架**:
+- Python/FastAPI 0.100+ (高性能API)
+- Java/Spring Boot 3.x (企业级)
+- Go/Gin 1.9+ (高并发)
+- 理由: 性能优异,适合中等规模系统
+
+**前端框架**:
+- React 18 + TypeScript (类型安全)
+- Next.js 14+ (SSR/SSG支持)
+- 理由: 企业级开发标准
+
+**数据库**:
+- PostgreSQL 15+ (主库)
+- MongoDB 7+ (文档存储)
+- Redis 7+ (缓存 + 会话)
+- 理由: 多数据库混合架构
+
+**消息队列**:
+- RabbitMQ 3.12+ (可靠消息)
+- Redis Pub/Sub (轻量级)
+- 理由: 支持异步处理
+
+**搜索引擎**:
+- Elasticsearch 8+ (全文检索)
+- 理由: 强大的搜索和分析能力
+
+**部署方案**:
+- Docker + Kubernetes (生产)
+- Docker Compose (开发)
+- 理由: 支持水平扩展
+
+**监控**:
+- Prometheus + Grafana (指标监控)
+- ELK Stack (日志分析)
+- 理由: 完整的可观测性
+
+**CI/CD**:
+- Jenkins 或 GitLab CI/CD
+- ArgoCD (GitOps)
+- 理由: 自动化部署流程
+"""
+
+        elif complexity.value == "复杂":
+            base_stack = """### 基础技术栈(复杂项目)
+
+**后端框架**:
+- Java/Spring Cloud (微服务全家桶)
+- Go (高性能服务)
+- Python/FastAPI (AI/数据服务)
+- 理由: 微服务架构,技术栈分层
+
+**前端框架**:
+- React 18 + TypeScript + Next.js
+- 微前端架构(qiankun/Module Federation)
+- 理由: 大型前端应用解耦
+
+**API网关**:
+- Kong 或 APISIX
+- 理由: 统一流量入口,限流熔断
+
+**服务发现**:
+- Consul 或 Nacos
+- 理由: 微服务注册与配置中心
+
+**数据库**:
+- PostgreSQL 15+ (业务主库,读写分离)
+- MongoDB 7+ (文档/日志)
+- Redis Cluster (分布式缓存)
+- Elasticsearch 8+ (搜索/日志)
+- 理由: 多数据库架构,各司其职
+
+**消息队列**:
+- Apache Kafka (大数据流)
+- RabbitMQ (可靠消息)
+- 理由: 支持复杂事件驱动
+
+**对象存储**:
+- MinIO 或 AWS S3
+- 理由: 海量文件存储
+
+**部署方案**:
+- Kubernetes (多集群)
+- Istio (服务网格)
+- Helm (包管理)
+- 理由: 容器编排 + 流量治理
+
+**监控与追踪**:
+- Prometheus + Grafana (指标)
+- Jaeger (分布式追踪)
+- ELK Stack (日志聚合)
+- Sentry (错误追踪)
+- 理由: 全链路可观测性
+
+**CI/CD**:
+- Jenkins + ArgoCD (GitOps)
+- Harbor (镜像仓库)
+- SonarQube (代码质量)
+- 理由: 企业级DevOps流程
+"""
+
+        else:  # 非常复杂
+            base_stack = """### 基础技术栈(非常复杂/大规模项目)
+
+**后端框架**:
+- Java/Spring Cloud Alibaba (阿里微服务)
+- Go (核心服务,超高性能)
+- Rust (安全关键服务)
+- Python (AI/数据科学)
+- 理由: 多语言微服务,技术栈异构
+
+**前端框架**:
+- React 18 + TypeScript + Next.js
+- 微前端架构(Module Federation)
+- Electron (桌面应用)
+- 理由: 多端统一技术栈
+
+**API网关**:
+- APISIX (云原生网关)
+- Envoy (服务代理)
+- 理由: 高性能,可扩展
+
+**服务网格**:
+- Istio (流量治理)
+- Linkerd (轻量级网格)
+- 理由: 复杂微服务通信治理
+
+**数据库**:
+- PostgreSQL Cluster (分布式关系型)
+- MongoDB Sharding (分片文档库)
+- Redis Cluster + Sentinel (高可用缓存)
+- Elasticsearch Cluster (分布式搜索)
+- TiDB 或 CockroachDB (NewSQL)
+- ClickHouse (OLAP分析)
+- 理由: 多数据库集群架构
+
+**消息队列**:
+- Apache Kafka (大数据流,百万TPS)
+- Apache Pulsar (云原生消息)
+- 理由: 支持海量事件驱动
+
+**流式计算**:
+- Apache Flink (实时计算)
+- Apache Spark (批处理)
+- 理由: 大数据实时分析
+
+**对象存储**:
+- Ceph 或 AWS S3 (PB级存储)
+- 理由: 海量非结构化数据
+
+**部署方案**:
+- Kubernetes 多集群 (多区域)
+- Istio + Envoy (全链路治理)
+- Helm + Kustomize (配置管理)
+- 理由: 超大规模容器编排
+
+**监控与追踪**:
+- Prometheus + Thanos (长期存储)
+- Grafana + Loki (日志可视化)
+- Jaeger + OpenTelemetry (全链路追踪)
+- Skywalking (APM监控)
+- Sentry (错误追踪)
+- 理由: 企业级全栈可观测性
+
+**安全**:
+- Vault (密钥管理)
+- OAuth2 + OpenID Connect (认证)
+- Keycloak (统一身份管理)
+- 理由: 零信任安全架构
+
+**CI/CD**:
+- Tekton (云原生CI/CD)
+- ArgoCD (GitOps)
+- Spinnaker (多云部署)
+- Harbor (企业级镜像仓库)
+- SonarQube + Snyk (代码质量+安全)
+- 理由: 全自动化DevSecOps流程
+"""
+
+        # 组合领域特定组件
+        domain_stack = ""
+        if domain.value in DOMAIN_SPECIFIC_STACKS:
+            domain_info = DOMAIN_SPECIFIC_STACKS[domain.value]
+            domain_stack = f"""
+### 领域特定组件({domain.value})
+
+**特殊组件**: {domain_info["特殊组件"]}
+
+**推荐数据库**: {domain_info["推荐数据库"]}
+"""
+
+        return base_stack + domain_stack
+
+    def _identify_risks(self, complexity: ComplexityLevel, validation_issues: List) -> List[Dict]:
+        """
+        识别风险
+        
+        Args:
+            待补充
+        
+        Returns:
+            待补充
+        """
+        risks = [
+            {
+                "id": "RISK-001",
+                "name": "技术复杂度风险",
+                "severity": "HIGH" if complexity.value in ["复杂", "非常复杂"] else "MEDIUM",
+                "probability": "中",
+                "impact": "系统实施难度增加",
+                "mitigation": "进行技术预研,分阶段实施"
+            },
+            {
+                "id": "RISK-002",
+                "name": "需求质量风险",
+                "severity": "MEDIUM" if len(validation_issues) > 5 else "LOW",
+                "probability": "中",
+                "impact": "需求返工,延误进度",
+                "mitigation": "强化需求评审,及时澄清"
+            },
+            {
+                "id": "RISK-003",
+                "name": "集成风险",
+                "severity": "MEDIUM",
+                "probability": "低",
+                "impact": "系统集成失败",
+                "mitigation": "早期集成测试,持续集成"
+            }
+        ]
+        return risks
+
+
+# 便捷函数
+def create_specification_generator() -> SpecificationGenerator:
+    """
+    创建规格生成器实例
+    
+    Args:
+        待补充
+    
+    Returns:
+        待补充
+    """
+    return SpecificationGenerator()
+
+
+# Error handling example
+try:
+    pass
+except Exception:
+    pass

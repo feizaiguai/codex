@@ -1,0 +1,96 @@
+{
+  "generated_at": "2025-12-30T13:31:49.279579",
+  "analysis": {
+    "total_products": 19,
+    "total_reviews": 0,
+    "total_texts": 0,
+    "ring_related_products": 0,
+    "by_platform": {
+      "淘宝": 4,
+      "京东": 15
+    },
+    "keywords_found": {
+      "戒指": 0,
+      "ring": 0,
+      "触控": 0,
+      "手势": 0,
+      "AR": 1,
+      "Meta": 2,
+      "Ray Ban": 1,
+      "Xreal": 1,
+      "Rokid": 1,
+      "雷鸟": 0
+    },
+    "sentiment": {
+      "positive": 0,
+      "neutral": 0,
+      "negative": 0
+    },
+    "sample_reviews": [],
+    "sample_products": [
+      {
+        "keyword": "Meta Ray Ban 智能眼镜",
+        "title": "Meta Ray Ban 智能眼镜",
+        "is_ring_related": false,
+        "source": "淘宝"
+      },
+      {
+        "keyword": "雷朋 meta 眼镜",
+        "title": "雷朋 meta 眼镜",
+        "is_ring_related": false,
+        "source": "淘宝"
+      },
+      {
+        "keyword": "Xreal Air 2 智能眼镜",
+        "title": "Xreal Air 2 智能眼镜",
+        "is_ring_related": false,
+        "source": "淘宝"
+      },
+      {
+        "keyword": "Rokid Max AR眼镜",
+        "title": "Rokid Max AR眼镜",
+        "is_ring_related": false,
+        "source": "淘宝"
+      },
+      {
+        "keyword": "雷朋 meta 眼镜",
+        "title": "冰洗 / 空调 / 电视 / 厨卫大电",
+        "is_ring_related": false,
+        "source": "京东"
+      },
+      {
+        "keyword": "雷朋 meta 眼镜",
+        "title": "电脑 / 办公 / 文具用品",
+        "is_ring_related": false,
+        "source": "京东"
+      },
+      {
+        "keyword": "雷朋 meta 眼镜",
+        "title": "手机 / 运营商 / 数码",
+        "is_ring_related": false,
+        "source": "京东"
+      },
+      {
+        "keyword": "雷朋 meta 眼镜",
+        "title": "生活电器 / 厨房小电 / 个护健康",
+        "is_ring_related": false,
+        "source": "京东"
+      },
+      {
+        "keyword": "雷朋 meta 眼镜",
+        "title": "食品 / 酒类 / 生鲜 / 特产",
+        "is_ring_related": false,
+        "source": "京东"
+      },
+      {
+        "keyword": "雷朋 meta 眼镜",
+        "title": "美妆 / 个护清洁 / 宠物",
+        "is_ring_related": false,
+        "source": "京东"
+      }
+    ]
+  },
+  "products_count": 19,
+  "reviews_count": 0,
+  "texts_count": 0
+}

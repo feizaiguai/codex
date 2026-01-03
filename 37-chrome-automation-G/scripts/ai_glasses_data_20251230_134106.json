@@ -1,0 +1,57 @@
+{
+  "generated_at": "2025-12-30T13:41:06.745997",
+  "analysis": {
+    "total_products": 3,
+    "total_feedbacks": 0,
+    "total_specs": 0,
+    "ring_related": 0,
+    "by_platform": {
+      "淘宝": 3,
+      "京东": 0
+    },
+    "keywords_stats": {
+      "戒指": 0,
+      "ring": 0,
+      "触控": 0,
+      "手势": 0,
+      "AR": 1,
+      "Xreal": 1,
+      "Rokid": 0,
+      "雷鸟": 0,
+      "Meta": 0,
+      "智能": 1
+    },
+    "feedback_categories": {
+      "positive": 0,
+      "negative": 0,
+      "neutral": 0,
+      "quality": 0,
+      "comfort": 0,
+      "battery": 0,
+      "connection": 0,
+      "price": 0
+    }
+  },
+  "products": [
+    {
+      "platform": "淘宝",
+      "keyword": "智能眼镜",
+      "title": "智能眼镜",
+      "is_ring_related": false
+    },
+    {
+      "platform": "淘宝",
+      "keyword": "AR眼镜",
+      "title": "AR眼镜",
+      "is_ring_related": false
+    },
+    {
+      "platform": "淘宝",
+      "keyword": "Xreal 眼镜",
+      "title": "Xreal 眼镜",
+      "is_ring_related": false
+    }
+  ],
+  "feedbacks": [],
+  "specs": []
+}

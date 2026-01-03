@@ -1,0 +1,337 @@
+"""
+SpecFlow JSON驱动版本
+
+从01-spec-explorer和02-architecture生成的JSON文件生成规格文档
+避免脆弱的Markdown解析,使用100%可靠的JSON数据
+"""
+
+from typing import Optional, Dict, List, Any, Tuple, Union, Callable
+from pathlib import Path
+
+from loaders.json_loader import (
+    load_json,
+    extract_data_from_json,
+    create_requirements_from_json,
+    create_quality_report_from_json
+)
+
+from core.models import SpecificationDocument, DepthLevel
+from generator_v3 import SpecificationGenerator
+from analyzer_v3 import SpecificationAnalyzer
+
+
+def generate_from_json(
+    """待添加文档字符串"""
+    json_file: str,
+    output_dir: Optional[str] = None,
+    depth_level: DepthLevel = DepthLevel.STANDARD
+) -> SpecificationDocument:
+    """
+    从JSON文件生成完整规格文档
+    
+    参数:
+    - json_file: JSON文件路径(ARCHITECTURE.json或DESIGN_DRAFT.json)
+    - output_dir: 输出目录
+    - depth_level: 文档深度级别
+    
+    返回:
+    - SpecificationDocument: 完整规格文档对象
+    """
+    
+    print(f"\n{'='*70}")
+    print("  SpecFlow - JSON驱动模式")
+    print('='*70)
+    print(f"输入文件: {json_file}")
+    print(f"深度: {depth_level.value}")
+    print('='*70)
+    
+    # 步骤1: 加载JSON
+    print("\n[步骤1/6] 加载JSON数据...")
+    json_data = load_json(json_file)
+    print(f"  ✓ JSON加载成功")
+    print(f"  ✓ 生成者: {json_data.get('meta', {}).get('generated_by', 'unknown')}")
+    
+    # 步骤2: 提取数据
+    print("\n[步骤2/6] 提取结构化数据...")
+    extracted_data = extract_data_from_json(json_data)
+    print(f"  ✓ 项目名称: {extracted_data['project_name']}")
+    print(f"  ✓ 用户故事数: {len(extracted_data['user_stories'])}")
+    print(f"  ✓ 实体数: {len(extracted_data['entities'])}")
+    print(f"  ✓ 复杂度: {extracted_data['complexity'].value}")
+    
+    # 步骤3: 创建需求和质量报告
+    print("\n[步骤3/6] 创建需求和质量报告...")
+    requirements = create_requirements_from_json(extracted_data)
+    quality_report = create_quality_report_from_json(extracted_data, json_data)  # V5: 传递json_data进行内容质量检查
+    print(f"  ✓ 需求项数: {len(requirements)}")
+    print(f"  ✓ 估算工时: {quality_report.estimated_hours}小时")
+    print(f"  ✓ 质量等级: {quality_report.metrics.overall_grade.value}")
+
+    # V5: 显示质量问题(如果有)
+    if quality_report.validation_issues:
+        print(f"    质量问题数: {len(quality_report.validation_issues)}")
+        for issue in quality_report.validation_issues[:3]:  # 显示前3个
+            print(f"      - {issue}")
+    
+    # 步骤4: 创建规格文档对象
+    print("\n[步骤4/6] 创建规格文档...")
+    spec = SpecificationDocument(
+        project_name=extracted_data["project_name"],
+        project_version=extracted_data["project_version"],
+        depth_level=depth_level,
+        spec_version="3.0.0"
+    )
+    
+    spec.requirements = requirements
+    for req in requirements:
+        spec.user_stories.extend(req.user_stories)
+    
+    spec.quality_report = quality_report
+    
+    print(f"  ✓ 用户故事数: {len(spec.user_stories)}")
+    print(f"  ✓ 需求项数: {len(spec.requirements)}")
+    
+    # 步骤5: 生成8个核心文档
+    print("\n[步骤5/6] 生成核心文档...")
+    generator = SpecificationGenerator()
+    _generate_documents_from_json(generator, spec, extracted_data)
+    print(f"  ✓ 生成文档数: {len(spec.documents)}")
+    
+    # 步骤6: 输出文档
+    if output_dir:
+        print(f"\n[步骤6/6] 输出文档到: {output_dir}")
+        _save_documents(spec, output_dir)
+        print(f"  ✓ 文档已保存")
+    else:
+        print("\n[步骤6/6] 跳过输出(未指定输出目录)")
+    
+    print(f"\n{'='*70}")
+    print("  生成完成!")
+    print('='*70)
+    print(f"总体质量等级: {spec.quality_report.metrics.overall_grade.value}")
+    print(f"估算工时: {quality_report.estimated_hours}小时 ({quality_report.estimated_hours/8:.1f}工作日)")
+    print('='*70)
+    
+    return spec
+
+
+def _generate_documents_from_json(generator, spec, extracted_data):
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    从JSON数据生成8个核心文档(直通模式)
+    
+    # 从提取的数据构建task_description
+    task_description = f"基于{len(extracted_data['user_stories'])}个用户故事的系统开发"
+    
+    # 00-项目概览
+    overview_doc = generator.generate_overview(
+        spec.project_name,
+        spec.project_version,
+        task_description,
+        spec.quality_report
+    )
+    spec.add_document(overview_doc)
+    
+    # 01-需求规格(直通01的数据)
+    requirements_doc = generator.generate_requirements(
+        spec.requirements,
+        spec.user_stories
+    )
+    spec.add_document(requirements_doc)
+    
+    # 02-领域模型(直通01的数据)
+    # 使用extracted_data中的实体和限界上下文
+    domain_doc = generator.generate_domain_model(
+        spec.quality_report.domain,
+        spec.requirements
+    )
+    spec.add_document(domain_doc)
+    
+    # 03-架构设计(直通02的数据)
+    architecture_doc = generator.generate_architecture(
+        spec.quality_report.complexity,
+        spec.quality_report.domain
+    )
+    spec.add_document(architecture_doc)
+    
+    # 04-实施计划
+    implementation_doc = generator.generate_implementation_plan(
+        spec.user_stories,
+        spec.quality_report.estimated_hours
+    )
+    spec.add_document(implementation_doc)
+    
+    # 05-测试策略(集成BDD场景)
+    test_doc = generator.generate_test_strategy(
+        spec.user_stories,
+        []  # JSON加载模式不生成test cases,传空列表
+    )
+
+    # 集成01生成的BDD场景到测试策略文档
+    bdd_scenarios = extracted_data.get("bdd_scenarios", [])
+    if bdd_scenarios:
+        bdd_section = "\n\n## BDD测试场景(来自需求分析)\n\n"
+        bdd_section += f"共{len(bdd_scenarios)}个BDD场景:\n\n"
+
+        for idx, scenario in enumerate(bdd_scenarios[:10], 1):  # 显示前10个
+            bdd_section += f"### 场景{idx}: {scenario.get('scenario', 'N/A')}\n\n"
+            bdd_section += f"**Feature**: {scenario.get('feature', 'N/A')}\n\n"
+            bdd_section += "```gherkin\n"
+            bdd_section += f"Scenario: {scenario.get('scenario', 'N/A')}\n"
+
+            # Given步骤
+            for given in scenario.get('given', []):
+                bdd_section += f"  Given {given}\n"
+
+            # When步骤
+            for when in scenario.get('when', []):
+                bdd_section += f"  When {when}\n"
+
+            # Then步骤
+            for then in scenario.get('then', []):
+                bdd_section += f"  Then {then}\n"
+
+            bdd_section += "```\n\n"
+
+        # 将BDD场景附加到测试策略文档的markdown中
+        test_doc.markdown += bdd_section
+
+    spec.add_document(test_doc)
+    
+    # 06-风险评估
+    risk_doc = generator.generate_risk_assessment(
+        spec.quality_report.complexity,
+        spec.quality_report.validation_issues
+    )
+    spec.add_document(risk_doc)
+    
+    # 07-质量报告
+    quality_doc = generator.generate_quality_report(
+        spec.quality_report
+    )
+    spec.add_document(quality_doc)
+
+
+def _save_documents(spec: SpecificationDocument, output_dir: str):
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    保存所有文档到目录
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    
+    # 保存README
+    readme_path = output_path / "README.md"
+    with open(readme_path, 'w', encoding='utf-8') as f:
+        f.write(f"# {spec.project_name} 需求规格文档\n\n")
+        f.write(f"**版本**: {spec.project_version}\n")
+        f.write(f"**规格版本**: {spec.spec_version}\n")
+        f.write(f"**生成时间**: {spec.created_at}\n\n")
+        f.write("## 文档列表\n\n")
+        # documents 是 Dict[DocumentType, Document],需要遍历 values()
+        for doc in spec.documents.values():
+            doc_type = doc.type.value  # 使用枚举的值(如 "00-项目概览")
+            f.write(f"- [{doc.title}]({doc_type}.md)\n")
+
+    # 保存各个文档
+    for doc in spec.documents.values():
+        doc_type = doc.type.value  # 使用枚举的值
+        doc_path = output_path / f"{doc_type}.md"
+        with open(doc_path, 'w', encoding='utf-8') as f:
+            # Document.markdown 包含完整的 Markdown 内容
+            content = doc.markdown if doc.markdown else str(doc.content)
+            f.write(content)
+
+
+def main():
+    """
+    
+    
+    Args:
+        参数待文档化
+    
+    Returns:
+        返回值待文档化
+    """
+    命令行入口
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description='SpecFlow - JSON驱动模式',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  # 从ARCHITECTURE.json生成规格文档
+  python specflow_json.py -i ARCHITECTURE.json -o output/
+
+  # 从DESIGN_DRAFT.json生成规格文档
+  python specflow_json.py -i DESIGN_DRAFT.json -o output/
+
+输入: ARCHITECTURE.json(来自02-architecture)或DESIGN_DRAFT.json(来自01-spec-explorer)
+输出: 8个规格文档到指定目录
+        """
+    )
+    
+    parser.add_argument(
+        '-i', '--input',
+        required=True,
+        help='输入JSON文件路径'
+    )
+    
+    parser.add_argument(
+        '-o', '--output',
+        required=True,
+        help='输出目录'
+    )
+    
+    parser.add_argument(
+        '--depth',
+        choices=['minimal', 'standard', 'detailed'],
+        default='standard',
+        help='文档深度级别(默认:standard)'
+    )
+    
+    args = parser.parse_args()
+    
+    # 映射depth参数到DepthLevel
+    depth_mapping = {
+        'minimal': DepthLevel.SIMPLE,
+        'standard': DepthLevel.STANDARD,
+        'detailed': DepthLevel.COMPREHENSIVE
+    }
+    depth_level = depth_mapping[args.depth]
+    
+    try:
+        spec = generate_from_json(
+            json_file=args.input,
+            output_dir=args.output,
+            depth_level=depth_level
+        )
+        print(f"\n 成功生成规格文档到: {args.output}\n")
+        return 0
+    except FileNotFoundError as e:
+        print(f"\n 文件不存在: {e}\n")
+        return 2
+    except Exception as e:
+        print(f"\n 错误: {e}\n")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(main())

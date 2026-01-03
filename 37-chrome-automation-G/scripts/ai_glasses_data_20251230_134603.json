@@ -1,0 +1,81 @@
+{
+  "generated_at": "2025-12-30T13:46:03.427180",
+  "analysis": {
+    "total_products": 7,
+    "total_feedbacks": 0,
+    "total_specs": 0,
+    "ring_related": 0,
+    "by_platform": {
+      "淘宝": 7,
+      "京东": 0
+    },
+    "keywords_stats": {
+      "戒指": 0,
+      "ring": 0,
+      "触控": 0,
+      "手势": 0,
+      "AR": 4,
+      "Xreal": 0,
+      "Rokid": 3,
+      "雷鸟": 0,
+      "Meta": 0,
+      "智能": 7
+    },
+    "feedback_categories": {
+      "positive": 0,
+      "negative": 0,
+      "neutral": 0,
+      "quality": 0,
+      "comfort": 0,
+      "battery": 0,
+      "connection": 0,
+      "price": 0
+    }
+  },
+  "products": [
+    {
+      "platform": "淘宝",
+      "keyword": "智能眼镜",
+      "title": "【新品】INMO GO3 AI眼镜双目显示智能AR眼镜实时对话翻译提词黑科技可换电池无限续航拍照拍摄识别AR识人\n智能眼镜热销\n榜·第2名\n接入AI大模型\nINMO\n体育锻炼\n¥\n2999\n券后价\n500+人付款\n广东\n深圳\n30天价保\n退货宝\n包邮\nINMO旗舰店",
+      "is_ring_related": false
+    },
+    {
+      "platform": "淘宝",
+      "keyword": "智能眼镜",
+      "title": "【新品】INMO GO3 AI眼镜双目显示智能AR眼镜实时对话翻译提词黑科技可换电池无限续航拍照拍摄识别AR识人\n智能眼镜热销\n榜·第2名\n接入AI大模型\nINMO\n体育锻炼\n¥\n2999\n券后价\n500+人付款\n广东\n深圳\n30天价保\n退货宝\n包邮\nINMO旗舰店",
+      "is_ring_related": false
+    },
+    {
+      "platform": "淘宝",
+      "keyword": "智能眼镜",
+      "title": "【新品上市 年货礼物】夸克AI眼镜S1智能眼镜双目显示超级夜景导航翻译提词千问AI对话助手运动相机拍照\n接入AI大模型\n夸克\n体育锻炼\n¥\n3999\n券后价\n9000+人付款\n安徽\n芜湖\n30天价保\n退货宝\n夸克智能设备旗舰店",
+      "is_ring_related": false
+    },
+    {
+      "platform": "淘宝",
+      "keyword": "智能眼镜",
+      "title": "【新品上市 年货礼物】夸克AI眼镜S1智能眼镜双目显示超级夜景导航翻译提词千问AI对话助手运动相机拍照\n接入AI大模型\n夸克\n体育锻炼\n¥\n3999\n券后价\n9000+人付款\n安徽\n芜湖\n30天价保\n退货宝\n夸克智能设备旗舰店",
+      "is_ring_related": false
+    },
+    {
+      "platform": "淘宝",
+      "keyword": "智能眼镜",
+      "title": "0-600度近视调节RokidARLite乐奇智能AR眼镜max2若琪air3d观影游戏手\nAR眼镜热销\n榜·第9名\n¥\n3099\n券后价\n2000+人付款\n浙江\n杭州\n3期\n退货宝\n包邮\n9年老店\nrokid旗舰店",
+      "is_ring_related": false
+    },
+    {
+      "platform": "淘宝",
+      "keyword": "智能眼镜",
+      "title": "0-600度近视调节RokidARLite乐奇智能AR眼镜max2若琪air3d观影游戏手\nAR眼镜热销\n榜·第9名\n¥\n3099\n券后价\n2000+人付款\n浙江\n杭州\n3期\n退货宝\n包邮\n9年老店\nrokid旗舰店",
+      "is_ring_related": false
+    },
+    {
+      "platform": "淘宝",
+      "keyword": "智能眼镜",
+      "title": "新年限定礼盒RokidGlasses乐奇Ai眼镜智能拍照拍摄导航实时面对面翻译\n接入AI大模型\nRokid\n体育锻炼\n¥\n3299\n券后价\n7000+人付款\n浙江\n杭州\n退货宝\n包邮\n对公支付\n9年老店\nrokid旗舰店",
+      "is_ring_related": false
+    }
+  ],
+  "feedbacks": [],
+  "specs": []
+}

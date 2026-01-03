@@ -1,0 +1,54 @@
+"""
+27-explainability-analyzer 命令行接口
+"""
+
+import argparse
+import json
+import sys
+from engine import ExplainabilityAnalyzer
+
+
+def main():
+    parser = argparse.ArgumentParser(description='27-explainability-analyzer: AI可解释性分析')
+
+    parser.add_argument('--model', required=True, help='模型名称')
+    parser.add_argument('--predictions', required=True, help='预测结果文件(JSON)')
+    parser.add_argument('--features', required=True, help='特征数据文件(JSON)')
+    parser.add_argument('--compliance', default='GDPR', choices=['GDPR', 'EU AI Act'], help='合规标准')
+    parser.add_argument('--output', '-o', help='输出文件')
+    parser.add_argument('--json', action='store_true', help='JSON输出')
+
+    args = parser.parse_args()
+
+    # 加载数据
+    with open(args.predictions, 'r') as f:
+        predictions = json.load(f)
+    with open(args.features, 'r') as f:
+        features = json.load(f)
+
+    # 分析
+    analyzer = ExplainabilityAnalyzer()
+    report = analyzer.analyze(args.model, predictions, features)
+
+    # 输出
+    if args.json:
+        output = {
+            'model': report.model_name,
+            'score': report.interpretability_score,
+            'features': [vars(f) for f in report.feature_importances],
+            'biases': [vars(b) for b in report.bias_results],
+            'compliance': vars(report.compliance)
+        }
+        result = json.dumps(output, indent=2, ensure_ascii=False, default=str)
+    else:
+        result = analyzer.generate_report(report)
+
+    if args.output:
+        with open(args.output, 'w', encoding='utf-8') as f:
+            f.write(result)
+    else:
+        print(result)
+
+
+if __name__ == '__main__':
+    main()

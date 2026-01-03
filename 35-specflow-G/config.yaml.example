@@ -1,0 +1,61 @@
+# 35-specflow 配置文件示例
+# 复制此文件为 config.yaml 并修改相应配置
+
+# 项目信息
+project:
+  name: "默认项目名称"
+  version: "1.0.0"
+  domain: "企业应用"  # 可选: 电商、教育、社交、企业应用、金融科技、物联网
+
+# 默认值配置（用于减少交互式提问）
+defaults:
+  complexity: "中等"  # 可选: 简单、中等、复杂、非常复杂
+  quality_threshold:
+    completeness: 60
+    consistency: 80
+    atomicity: 50
+    testability: 70
+
+# 模板配置
+templates:
+  use_custom: false
+  template_dir: "./templates"
+  style_file: "./templates/document_style.yaml"
+
+# 文档生成配置
+documents:
+  generate_overview: true
+  generate_requirements: true
+  generate_domain_model: true
+  generate_architecture: true
+  generate_implementation: true
+  generate_test_strategy: true
+  generate_risk_assessment: true
+  generate_quality_report: true
+
+# 验证规则配置
+validation:
+  enable_invest_check: true
+  enable_5w1h_check: true
+  enable_quantifiable_check: true
+  strict_mode: false
+
+# 输出配置
+output:
+  directory: "./output"
+  format: "markdown"
+  single_file: false
+  include_timestamp: true
+
+# 批量处理配置
+batch:
+  enabled: false
+  input_file: "./tasks.txt"
+  output_pattern: "./output/{timestamp}_{task_id}/"
+
+# 高级配置
+advanced:
+  max_user_stories: 20
+  max_test_cases: 50
+  enable_progress_bar: true
+  verbose: false

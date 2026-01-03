@@ -1,0 +1,603 @@
+"""
+SpecFlow V3.0 - 多模态处理模块
+Multimodal Processor - 文本 + 图像 + 音频输入支持
+
+功能:
+- 文本输入处理（自然语言需求描述）
+- 图像输入处理（UI 原型图、流程图、架构图）
+- 混合输入分析（文本 + 图像融合）
+- 多模态特征提取和关联
+
+版本: 3.0.0
+日期: 2025-12-17
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional, Tuple
+from enum import Enum
+import os
+import re
+import json
+
+
+# ============ 枚举类型 ============
+
+class InputMode(str, Enum):
+    """输入模式"""
+    TEXT_ONLY = "纯文本"
+    IMAGE_ONLY = "纯图像"
+    MULTIMODAL = "多模态"
+
+
+class ImageType(str, Enum):
+    """图像类型"""
+    UI_MOCKUP = "UI 原型图"
+    FLOWCHART = "流程图"
+    ARCHITECTURE_DIAGRAM = "架构图"
+    ER_DIAGRAM = "ER 图"
+    WIREFRAME = "线框图"
+    SCREENSHOT = "截图"
+    MINDMAP = "思维导图"
+    OTHER = "其他"
+
+
+class ModalityWeight(str, Enum):
+    """模态权重"""
+    TEXT_DOMINANT = "文本主导"      # 文本 80%，图像 20%
+    IMAGE_DOMINANT = "图像主导"     # 文本 20%，图像 80%
+    BALANCED = "均衡"              # 文本 50%，图像 50%
+
+
+# ============ 数据模型 ============
+
+@dataclass
+class ImageMetadata:
+    """图像元数据"""
+    file_path: str                  # 文件路径
+    file_name: str                  # 文件名
+    file_size: int                  # 文件大小（字节）
+    image_type: ImageType           # 图像类型
+    detected_elements: List[str] = field(default_factory=list)  # 检测到的元素
+    confidence: float = 0.0         # 识别置信度
+
+
+@dataclass
+class TextFeature:
+    """文本特征"""
+    raw_text: str                   # 原始文本
+    entities: List[str]             # 实体（如：用户、订单、商品）
+    actions: List[str]              # 动作（如：创建、查询、更新）
+    constraints: List[str]          # 约束（如：预算、时间）
+    sentiment: str = "neutral"      # 情感（positive/neutral/negative）
+
+
+@dataclass
+class ImageFeature:
+    """图像特征"""
+    metadata: ImageMetadata         # 图像元数据
+    components: List[str]           # 检测到的组件（按钮、表单、图表等）
+    layout: str                     # 布局信息
+    annotations: List[str] = field(default_factory=list)  # 注释
+
+
+@dataclass
+class MultimodalFeature:
+    """多模态特征"""
+    text_feature: Optional[TextFeature] = None
+    image_features: List[ImageFeature] = field(default_factory=list)
+    correlations: List[Tuple[str, str]] = field(default_factory=list)  # (文本元素, 图像元素) 关联
+    modality_weight: ModalityWeight = ModalityWeight.BALANCED
+
+
+@dataclass
+class MultimodalAnalysisResult:
+    """多模态分析结果"""
+    input_mode: InputMode           # 输入模式
+    features: MultimodalFeature     # 提取的特征
+    inferred_requirements: List[str]  # 推断的需求
+    ui_components: List[Dict[str, str]] = field(default_factory=list)  # UI 组件列表
+    user_flows: List[List[str]] = field(default_factory=list)  # 用户流程
+    technical_constraints: List[str] = field(default_factory=list)  # 技术约束
+    recommendations: List[str] = field(default_factory=list)  # 建议
+
+
+# ============ 多模态处理器 ============
+
+class MultimodalProcessor:
+    """
+    多模态输入处理器
+
+    核心功能：
+    1. 处理文本输入（自然语言需求）
+    2. 处理图像输入（UI 原型、流程图等）
+    3. 融合多模态输入，提取综合特征
+    4. 生成增强的需求分析结果
+    """
+
+    # 实体关键词（用于文本分析）
+    ENTITY_KEYWORDS = {
+        "用户": ["用户", "会员", "客户", "买家", "卖家", "访客"],
+        "订单": ["订单", "交易", "购物车"],
+        "商品": ["商品", "产品", "货物", "物品"],
+        "支付": ["支付", "付款", "结算", "账单"],
+        "评论": ["评论", "评价", "反馈", "留言"],
+        "系统": ["系统", "平台", "应用", "服务"]
+    }
+
+    # 动作关键词
+    ACTION_KEYWORDS = [
+        "创建", "新增", "添加",
+        "查询", "查看", "获取", "读取",
+        "更新", "修改", "编辑",
+        "删除", "移除",
+        "搜索", "筛选", "排序",
+        "导入", "导出", "同步",
+        "发送", "接收", "推送"
+    ]
+
+    # UI 组件关键词（基于文件名或文本）
+    UI_COMPONENT_KEYWORDS = {
+        "button": "按钮",
+        "form": "表单",
+        "table": "表格",
+        "modal": "弹窗",
+        "dropdown": "下拉菜单",
+        "checkbox": "复选框",
+        "radio": "单选按钮",
+        "input": "输入框",
+        "navbar": "导航栏",
+        "sidebar": "侧边栏",
+        "card": "卡片",
+        "list": "列表",
+        "chart": "图表",
+        "timeline": "时间线"
+    }
+
+    def __init__(self):
+        self.analysis_cache: Dict[str, MultimodalAnalysisResult] = {}
+
+    # ============ 核心功能：多模态输入分析 ============
+
+    def analyze_multimodal_input(self,
+                                 text: Optional[str] = None,
+                                 image_paths: Optional[List[str]] = None) -> MultimodalAnalysisResult:
+        """
+        多模态输入分析
+
+        Args:
+            text: 文本描述（可选）
+            image_paths: 图像文件路径列表（可选）
+
+        Returns:
+            MultimodalAnalysisResult: 分析结果
+        """
+        # 确定输入模式
+        input_mode = self._determine_input_mode(text, image_paths)
+
+        # 提取多模态特征
+        features = self._extract_multimodal_features(text, image_paths)
+
+        # 推断需求
+        inferred_requirements = self._infer_requirements(features, input_mode)
+
+        # 提取 UI 组件（如果有图像）
+        ui_components = self._extract_ui_components(features)
+
+        # 推断用户流程
+        user_flows = self._infer_user_flows(features)
+
+        # 提取技术约束
+        technical_constraints = self._extract_technical_constraints(features)
+
+        # 生成建议
+        recommendations = self._generate_recommendations(input_mode, features)
+
+        result = MultimodalAnalysisResult(
+            input_mode=input_mode,
+            features=features,
+            inferred_requirements=inferred_requirements,
+            ui_components=ui_components,
+            user_flows=user_flows,
+            technical_constraints=technical_constraints,
+            recommendations=recommendations
+        )
+
+        return result
+
+    def _determine_input_mode(self, text: Optional[str],
+                             image_paths: Optional[List[str]]) -> InputMode:
+        """确定输入模式"""
+        has_text = text and text.strip()
+        has_images = image_paths and len(image_paths) > 0
+
+        if has_text and has_images:
+            return InputMode.MULTIMODAL
+        elif has_text:
+            return InputMode.TEXT_ONLY
+        elif has_images:
+            return InputMode.IMAGE_ONLY
+        else:
+            return InputMode.TEXT_ONLY  # 默认
+
+    def _extract_multimodal_features(self, text: Optional[str],
+                                    image_paths: Optional[List[str]]) -> MultimodalFeature:
+        """提取多模态特征"""
+        text_feature = None
+        image_features = []
+
+        # 提取文本特征
+        if text and text.strip():
+            text_feature = self._extract_text_features(text)
+
+        # 提取图像特征
+        if image_paths:
+            for path in image_paths:
+                if os.path.exists(path):
+                    image_feature = self._extract_image_features(path)
+                    image_features.append(image_feature)
+
+        # 关联文本和图像特征
+        correlations = self._correlate_features(text_feature, image_features)
+
+        # 确定模态权重
+        modality_weight = self._determine_modality_weight(text_feature, image_features)
+
+        return MultimodalFeature(
+            text_feature=text_feature,
+            image_features=image_features,
+            correlations=correlations,
+            modality_weight=modality_weight
+        )
+
+    def _extract_text_features(self, text: str) -> TextFeature:
+        """提取文本特征"""
+        # 提取实体
+        entities = []
+        for entity_type, keywords in self.ENTITY_KEYWORDS.items():
+            if any(kw in text for kw in keywords):
+                entities.append(entity_type)
+
+        # 提取动作
+        actions = [action for action in self.ACTION_KEYWORDS if action in text]
+
+        # 提取约束
+        constraints = []
+        # 预算约束
+        if re.search(r'预算.*?(\d+).*?(万|元)', text):
+            match = re.search(r'预算.*?(\d+).*?(万|元)', text)
+            constraints.append(f"预算约束: {match.group(1)}{match.group(2)}")
+
+        # 时间约束
+        if re.search(r'(\d+).*?(月|天|周)', text):
+            match = re.search(r'(\d+).*?(月|天|周)', text)
+            constraints.append(f"时间约束: {match.group(1)}{match.group(2)}")
+
+        # 技术约束
+        tech_keywords = ["React", "Vue", "Angular", "Python", "Java", "Go", "微服务", "单体"]
+        for tech in tech_keywords:
+            if tech in text:
+                constraints.append(f"技术约束: {tech}")
+
+        # 情感分析（简单版）
+        sentiment = "neutral"
+        if any(kw in text for kw in ["急", "紧急", "快速", "尽快"]):
+            sentiment = "urgent"
+        elif any(kw in text for kw in ["希望", "期望", "最好"]):
+            sentiment = "positive"
+
+        return TextFeature(
+            raw_text=text,
+            entities=entities,
+            actions=actions,
+            constraints=constraints,
+            sentiment=sentiment
+        )
+
+    def _extract_image_features(self, image_path: str) -> ImageFeature:
+        """
+        提取图像特征
+
+        注意：这是一个简化版本，基于文件名和元数据
+        TODO: 集成图像识别 API（如 GPT-4 Vision、Claude Vision）进行真实图像分析
+        """
+        file_name = os.path.basename(image_path)
+        file_size = os.path.getsize(image_path)
+
+        # 根据文件名推断图像类型
+        image_type = self._detect_image_type(file_name)
+
+        # 简单的组件检测（基于文件名）
+        detected_components = []
+        for comp_keyword, comp_name in self.UI_COMPONENT_KEYWORDS.items():
+            if comp_keyword.lower() in file_name.lower():
+                detected_components.append(comp_name)
+
+        # 创建元数据
+        metadata = ImageMetadata(
+            file_path=image_path,
+            file_name=file_name,
+            file_size=file_size,
+            image_type=image_type,
+            detected_elements=detected_components,
+            confidence=0.6  # 基于文件名的检测置信度较低
+        )
+
+        # TODO: 使用图像识别提取真实的组件和布局
+        components = detected_components if detected_components else ["未识别组件（需要图像识别）"]
+
+        layout = "未知布局（需要图像识别）"
+
+        return ImageFeature(
+            metadata=metadata,
+            components=components,
+            layout=layout,
+            annotations=[]
+        )
+
+    def _detect_image_type(self, file_name: str) -> ImageType:
+        """根据文件名检测图像类型"""
+        name_lower = file_name.lower()
+
+        type_keywords = {
+            ImageType.UI_MOCKUP: ["mockup", "ui", "界面", "原型"],
+            ImageType.FLOWCHART: ["flow", "流程", "流程图"],
+            ImageType.ARCHITECTURE_DIAGRAM: ["architecture", "arch", "架构", "架构图"],
+            ImageType.ER_DIAGRAM: ["er", "erd", "entity", "数据模型"],
+            ImageType.WIREFRAME: ["wireframe", "线框"],
+            ImageType.SCREENSHOT: ["screenshot", "screen", "截图"],
+            ImageType.MINDMAP: ["mindmap", "思维导图"]
+        }
+
+        for img_type, keywords in type_keywords.items():
+            if any(kw in name_lower for kw in keywords):
+                return img_type
+
+        return ImageType.OTHER
+
+    def _correlate_features(self, text_feature: Optional[TextFeature],
+                           image_features: List[ImageFeature]) -> List[Tuple[str, str]]:
+        """关联文本和图像特征"""
+        correlations = []
+
+        if not text_feature or not image_features:
+            return correlations
+
+        # 关联实体和图像组件
+        for entity in text_feature.entities:
+            for img_feature in image_features:
+                for component in img_feature.components:
+                    # 简单的关键词匹配
+                    if entity in component or component in entity:
+                        correlations.append((f"文本实体: {entity}", f"图像组件: {component}"))
+
+        # 关联动作和图像类型
+        for action in text_feature.actions:
+            for img_feature in image_features:
+                if img_feature.metadata.image_type == ImageType.FLOWCHART:
+                    correlations.append((f"文本动作: {action}", f"流程图可能展示此操作"))
+
+        return correlations
+
+    def _determine_modality_weight(self, text_feature: Optional[TextFeature],
+                                  image_features: List[ImageFeature]) -> ModalityWeight:
+        """确定模态权重"""
+        has_rich_text = text_feature and len(text_feature.raw_text) > 100
+        has_images = image_features and len(image_features) > 0
+
+        if has_rich_text and not has_images:
+            return ModalityWeight.TEXT_DOMINANT
+        elif not has_rich_text and has_images:
+            return ModalityWeight.IMAGE_DOMINANT
+        elif has_rich_text and has_images:
+            return ModalityWeight.BALANCED
+        else:
+            return ModalityWeight.TEXT_DOMINANT
+
+    def _infer_requirements(self, features: MultimodalFeature,
+                          input_mode: InputMode) -> List[str]:
+        """推断需求"""
+        requirements = []
+
+        # 从文本推断
+        if features.text_feature:
+            tf = features.text_feature
+
+            # 基于实体和动作组合推断需求
+            for entity in tf.entities:
+                for action in tf.actions:
+                    requirements.append(f"{action}{entity}功能")
+
+            # 基于约束推断需求
+            for constraint in tf.constraints:
+                if "预算" in constraint:
+                    requirements.append("需要成本控制和预算管理")
+                if "时间" in constraint:
+                    requirements.append("需要项目进度管理和监控")
+
+        # 从图像推断
+        for img_feature in features.image_features:
+            img_type = img_feature.metadata.image_type
+
+            if img_type == ImageType.UI_MOCKUP:
+                requirements.append("需要实现 UI 界面设计")
+                # 基于检测到的组件推断需求
+                for component in img_feature.components:
+                    requirements.append(f"需要{component}组件")
+
+            elif img_type == ImageType.FLOWCHART:
+                requirements.append("需要实现业务流程逻辑")
+
+            elif img_type == ImageType.ARCHITECTURE_DIAGRAM:
+                requirements.append("需要按照架构图实现系统架构")
+
+            elif img_type == ImageType.ER_DIAGRAM:
+                requirements.append("需要实现数据模型和数据库设计")
+
+        # 去重
+        requirements = list(set(requirements))
+
+        return requirements
+
+    def _extract_ui_components(self, features: MultimodalFeature) -> List[Dict[str, str]]:
+        """提取 UI 组件"""
+        ui_components = []
+
+        for img_feature in features.image_features:
+            for component in img_feature.components:
+                ui_components.append({
+                    "name": component,
+                    "source": img_feature.metadata.file_name,
+                    "type": img_feature.metadata.image_type.value
+                })
+
+        return ui_components
+
+    def _infer_user_flows(self, features: MultimodalFeature) -> List[List[str]]:
+        """推断用户流程"""
+        user_flows = []
+
+        # 基于动作序列推断流程
+        if features.text_feature and features.text_feature.actions:
+            actions = features.text_feature.actions
+            if len(actions) >= 2:
+                user_flows.append(actions)
+
+        # 基于流程图推断
+        for img_feature in features.image_features:
+            if img_feature.metadata.image_type == ImageType.FLOWCHART:
+                # TODO: 从流程图中提取真实流程
+                user_flows.append(["开始", "执行操作", "结束"])
+
+        return user_flows
+
+    def _extract_technical_constraints(self, features: MultimodalFeature) -> List[str]:
+        """提取技术约束"""
+        constraints = []
+
+        if features.text_feature:
+            constraints.extend(features.text_feature.constraints)
+
+        # 从图像类型推断约束
+        for img_feature in features.image_features:
+            if img_feature.metadata.image_type == ImageType.ARCHITECTURE_DIAGRAM:
+                constraints.append("需要遵循架构图的技术栈和组件划分")
+
+        return constraints
+
+    def _generate_recommendations(self, input_mode: InputMode,
+                                 features: MultimodalFeature) -> List[str]:
+        """生成建议"""
+        recommendations = []
+
+        if input_mode == InputMode.TEXT_ONLY:
+            recommendations.append("建议提供 UI 原型图或流程图，以便更准确地理解需求")
+
+        if input_mode == InputMode.IMAGE_ONLY:
+            recommendations.append("建议补充文字说明，详细描述业务目标和约束条件")
+
+        if input_mode == InputMode.MULTIMODAL:
+            recommendations.append("多模态输入很好！文本和图像相结合可以更全面地描述需求")
+
+        # 根据模态权重给建议
+        if features.modality_weight == ModalityWeight.IMAGE_DOMINANT:
+            recommendations.append("建议补充更多文字说明，以便理解业务逻辑和非功能性需求")
+
+        # 图像质量建议
+        for img_feature in features.image_features:
+            if img_feature.metadata.confidence < 0.7:
+                recommendations.append(f"图像 {img_feature.metadata.file_name} 的识别置信度较低，建议提供更清晰的图像或补充文字说明")
+
+        return recommendations
+
+
+# ============ 辅助函数 ============
+
+def create_multimodal_processor() -> MultimodalProcessor:
+    """创建多模态处理器实例"""
+    return MultimodalProcessor()
+
+
+# ============ 测试代码 ============
+
+if __name__ == "__main__":
+    # 测试多模态处理
+    processor = create_multimodal_processor()
+
+    print("=" * 80)
+    print("多模态输入处理测试")
+    print("=" * 80)
+
+    # 测试 1: 纯文本输入
+    print("\n测试 1: 纯文本输入")
+    print("-" * 80)
+
+    text_only = """
+    构建一个电商平台，需要用户注册、登录、商品浏览、购物车、订单管理功能。
+    预算 50 万，3 个月完成。技术栈使用 React + Node.js。
+    """
+
+    result1 = processor.analyze_multimodal_input(text=text_only)
+
+    print(f"输入模式: {result1.input_mode.value}")
+    print(f"模态权重: {result1.features.modality_weight.value}")
+    print(f"\n提取的文本特征:")
+    if result1.features.text_feature:
+        print(f"  实体: {', '.join(result1.features.text_feature.entities)}")
+        print(f"  动作: {', '.join(result1.features.text_feature.actions)}")
+        print(f"  约束: {', '.join(result1.features.text_feature.constraints)}")
+
+    print(f"\n推断的需求 ({len(result1.inferred_requirements)} 个):")
+    for req in result1.inferred_requirements[:5]:
+        print(f"  - {req}")
+
+    print(f"\n建议:")
+    for rec in result1.recommendations:
+        print(f"  - {rec}")
+
+    # 测试 2: 多模态输入（文本 + 模拟图像）
+    print("\n\n测试 2: 多模态输入（文本 + 图像）")
+    print("-" * 80)
+
+    # 创建一个模拟图像文件（仅用于测试）
+    test_image_path = "test_ui_mockup_login.png"
+    if not os.path.exists(test_image_path):
+        with open(test_image_path, "w") as f:
+            f.write("# 模拟图像文件\n")
+
+    multimodal_text = "用户需要一个登录界面，包含邮箱输入框、密码输入框和登录按钮"
+
+    result2 = processor.analyze_multimodal_input(
+        text=multimodal_text,
+        image_paths=[test_image_path]
+    )
+
+    print(f"输入模式: {result2.input_mode.value}")
+    print(f"模态权重: {result2.features.modality_weight.value}")
+
+    print(f"\n图像特征:")
+    for img_feat in result2.features.image_features:
+        print(f"  文件: {img_feat.metadata.file_name}")
+        print(f"  类型: {img_feat.metadata.image_type.value}")
+        print(f"  检测到的组件: {', '.join(img_feat.components)}")
+
+    print(f"\n文本-图像关联:")
+    for text_elem, img_elem in result2.features.correlations:
+        print(f"  {text_elem} <-> {img_elem}")
+
+    print(f"\nUI 组件 ({len(result2.ui_components)} 个):")
+    for comp in result2.ui_components:
+        print(f"  - {comp['name']} (来源: {comp['source']})")
+
+    print(f"\n推断的需求:")
+    for req in result2.inferred_requirements:
+        print(f"  - {req}")
+
+    # 清理测试文件
+    if os.path.exists(test_image_path):
+        os.remove(test_image_path)
+
+    print("\n" + "=" * 80)
+    print("测试完成")
+    print("=" * 80)
+    print("\n注意: 当前版本基于文件名和元数据进行简单分析")
+    print("TODO: 集成图像识别 API（GPT-4 Vision、Claude Vision）进行真实图像分析")

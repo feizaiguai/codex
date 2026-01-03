@@ -1,0 +1,17 @@
+{
+  "Perplexity": {
+    "status": "✅ WORKING",
+    "model": "sonar",
+    "response": "**Python async refers to asynchronous programming using the `async` and `await` keywords, primarily through the `asyncio` library, to enable concurrent execution of tasks—especially I/O-bound operations—without blocking the main thread or requiring multiple threads/proces"
+  },
+  "Gemini": {
+    "status": "❌ FAILED",
+    "error": "All endpoint/model combinations failed"
+  },
+  "You.com": {
+    "status": "✅ WORKING",
+    "endpoint": "https://api.you.com/v1/search",
+    "method": "GET",
+    "response": "{'results': {'web': [{'url': 'https://docs.python.org/3/library/asyncio.html', 'title': 'asyncio — Asynchronous I/O', 'description': 'Hello World!: asyncio is a library to write concurrent code using "
+  }
+}

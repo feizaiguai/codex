@@ -1,0 +1,683 @@
+"""
+SpecFlow V3.0 - 核心数据模型
+在 V2.0 基础上新增 V3.0 专用模型
+版本: 3.0.0
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional
+from enum import Enum
+from datetime import datetime
+
+# 继承 V2 模型
+from models_v2 import (
+    DocumentType, DocumentStatus, DepthLevel, QualityGrade,
+    BoundedContext, Aggregate, ArchitectureDecisionRecord,
+    TechStack, TestPyramid, TestStrategy, Risk, Milestone,
+    WorkBreakdownStructure, Document, QualityMetrics
+)
+
+from atomic_component import (
+    AtomicComponent, UserStory, Feature,
+    Priority, Severity, ComponentCategory
+)
+
+
+# ============ V3.0 新增枚举类型 ============
+
+class InputMode(str, Enum):
+    """输入模式（V3.0 多模态）"""
+    TEXT_ONLY = "纯文本"
+    IMAGE_ONLY = "纯图像"
+    MULTIMODAL = "多模态"
+
+
+class ImageType(str, Enum):
+    """图像类型"""
+    UI_MOCKUP = "UI 原型图"
+    FLOWCHART = "流程图"
+    ARCHITECTURE_DIAGRAM = "架构图"
+    ER_DIAGRAM = "ER 图"
+    WIREFRAME = "线框图"
+    SCREENSHOT = "屏幕截图"
+    OTHER = "其他"
+
+
+class DomainCategory(str, Enum):
+    """领域分类（AI 需求生成）"""
+    ECOMMERCE = "电商"
+    SAAS = "SaaS"
+    FINTECH = "金融科技"
+    HEALTHCARE = "医疗健康"
+    EDUCATION = "在线教育"
+    SOCIAL = "社交网络"
+    ENTERPRISE = "企业管理"
+    IOT = "物联网"
+    AI_ML = "AI/ML"
+    OTHER = "其他"
+
+
+class ComplexityLevel(str, Enum):
+    """复杂度级别（AI 估算）"""
+    SIMPLE = "简单"
+    MEDIUM = "中等"
+    COMPLEX = "复杂"
+    VERY_COMPLEX = "极复杂"
+
+
+class TestabilityLevel(str, Enum):
+    """可测试性级别（Shift-Left）"""
+    EXCELLENT = "优秀"
+    GOOD = "良好"
+    FAIR = "一般"
+    POOR = "较差"
+    VERY_POOR = "很差"
+
+
+class ConflictType(str, Enum):
+    """需求冲突类型"""
+    FUNCTIONAL = "功能冲突"
+    PERFORMANCE = "性能冲突"
+    PRIORITY = "优先级冲突"
+    RESOURCE = "资源冲突"
+    TECHNICAL = "技术冲突"
+    BUSINESS = "业务冲突"
+
+
+class ValidationStatus(str, Enum):
+    """验证状态（Shift-Left 测试）"""
+    PASSED = "通过"
+    FAILED = "失败"
+    WARNING = "警告"
+    SKIPPED = "跳过"
+
+
+class ChaosType(str, Enum):
+    """混沌工程场景类型"""
+    NETWORK_FAILURE = "网络故障"
+    SERVICE_FAILURE = "服务故障"
+    RESOURCE_EXHAUSTION = "资源耗尽"
+    DATA_CORRUPTION = "数据损坏"
+    LATENCY_INJECTION = "延迟注入"
+    SECURITY_BREACH = "安全违规"
+
+
+class UserTypeEnum(str, Enum):
+    """用户类型枚举（用户故事地图）"""
+    PRIMARY = "主要用户"
+    SECONDARY = "次要用户"
+    ADMIN = "管理员"
+    SYSTEM = "系统用户"
+
+
+class TestType(str, Enum):
+    """测试类型"""
+    UNIT = "单元测试"
+    INTEGRATION = "集成测试"
+    E2E = "端到端测试"
+    PERFORMANCE = "性能测试"
+    SECURITY = "安全测试"
+
+
+class ContextSignalType(str, Enum):
+    """上下文信号类型"""
+    HIGH_CONCURRENCY = "高并发"
+    AI_FEATURES = "AI 功能"
+    MULTI_TENANT = "多租户"
+    REALTIME = "实时性"
+    SECURITY = "安全性"
+    BIG_DATA = "大数据"
+    MOBILE = "移动端"
+    THIRD_PARTY = "第三方集成"
+
+
+# ============ V3.0 AI 需求生成模型 ============
+
+@dataclass
+class RequirementSeed:
+    """需求种子（AI 提取的初始需求）"""
+    id: str
+    title: str
+    description: str
+    source: str  # 从哪段文本提取
+    confidence: float  # AI 置信度（0-1）
+    priority: Priority
+    tags: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ContextSignal:
+    """上下文信号（AI 识别的关键信息）"""
+    signal_type: str  # 高并发 / AI 功能 / 多租户 / 实时 / 安全 / 第三方集成
+    description: str
+    impact: str  # 对架构的影响
+    recommendations: List[str]  # 建议
+
+
+@dataclass
+class AIAnalysisResult:
+    """AI 分析结果"""
+    domain: DomainCategory
+    complexity: ComplexityLevel
+    estimated_hours: int  # 估算总工时
+    context_signals: List[ContextSignal]
+    requirement_seeds: List[RequirementSeed]
+    quality_score: float  # 需求质量评分（0-100）
+    confidence: float  # 整体置信度（0-1）
+
+
+@dataclass
+class DecomposedRequirement:
+    """分解后的需求（AI 生成）"""
+    id: str
+    title: str
+    description: str
+    user_stories: List[UserStory]
+    atomic_components: List[AtomicComponent]
+    estimated_hours: int
+    priority: Priority
+    dependencies: List[str] = field(default_factory=list)
+
+
+# ============ V3.0 Shift-Left 测试模型 ============
+
+@dataclass
+class TestabilityIssue:
+    """可测试性问题"""
+    issue_id: str  # TEST-001
+    requirement_id: str  # 关联的需求 ID
+    issue_type: str  # 模糊词汇 / 缺少验收标准 / 不可观测 / 外部依赖 / 时间依赖
+    description: str  # 问题描述
+    suggestion: str  # 改进建议
+    severity: Severity  # 严重程度
+
+
+@dataclass
+class BDDScenario:
+    """BDD 场景（Given-When-Then）"""
+    scenario_id: str  # BDD-001
+    title: str
+    requirement_id: str  # 关联的需求 ID
+    given: List[str]  # 前置条件
+    when: str  # 动作
+    then: List[str]  # 预期结果
+    tags: List[str] = field(default_factory=list)
+
+
+@dataclass
+class ChaosScenario:
+    """混沌工程场景"""
+    scenario_id: str  # CHAOS-001
+    title: str
+    failure_type: str  # 网络延迟 / 服务宕机 / 数据库故障 / 第三方超时
+    description: str  # 场景描述
+    expected_behavior: str  # 预期系统行为
+    resilience_requirements: List[str]  # 韧性需求
+
+
+@dataclass
+class TestCase:
+    """测试用例"""
+    test_id: str  # TC-001
+    title: str
+    requirement_id: str
+    type: str  # 单元测试 / 集成测试 / E2E 测试
+    description: str
+    preconditions: List[str]
+    steps: List[str]
+    expected_results: List[str]
+    estimated_hours: int
+
+
+@dataclass
+class ValidationReport:
+    """验证报告（Shift-Left）"""
+    report_id: str  # VAL-001
+    timestamp: str
+    overall_status: str  # 通过 / 失败 / 警告
+    testability_score: float  # 可测试性评分（0-100）
+    testability_level: TestabilityLevel
+    issues: List[TestabilityIssue]
+    bdd_scenarios: List[BDDScenario]
+    test_cases: List[TestCase]
+    chaos_scenarios: List[ChaosScenario]
+    recommendations: List[str]
+    estimated_test_hours: int  # 测试工时估算
+
+
+# ============ V3.0 多模态输入模型 ============
+
+@dataclass
+class TextFeature:
+    """文本特征"""
+    entities: List[str]  # 提取的实体：用户、订单、商品
+    actions: List[str]  # 提取的动作：创建、查询、更新
+    constraints: List[str]  # 提取的约束：性能、安全、合规
+
+
+@dataclass
+class ImageFeature:
+    """图像特征"""
+    file_path: str
+    image_type: ImageType
+    detected_components: List[str]  # 检测到的 UI 组件
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class MultimodalAnalysisResult:
+    """多模态分析结果"""
+    input_mode: InputMode
+    modality_weights: Dict[str, float]  # {\"text\": 0.6, \"image\": 0.4}
+    text_features: Optional[TextFeature] = None
+    image_features: List[ImageFeature] = field(default_factory=list)
+    correlations: List[tuple] = field(default_factory=list)  # 文本和图像之间的关联
+    inferred_requirements: List[str] = field(default_factory=list)  # 推断的需求
+    ui_components: List[Dict[str, Any]] = field(default_factory=list)
+    user_flows: List[List[str]] = field(default_factory=list)
+    technical_constraints: List[str] = field(default_factory=list)
+    recommendations: List[str] = field(default_factory=list)
+
+
+# ============ V3.0 用户故事地图模型 ============
+
+@dataclass
+class UserType:
+    """用户类型"""
+    type_id: str  # UT-001
+    name: str  # 普通用户 / 管理员 / 系统
+    description: str
+    goals: List[str]  # 用户目标
+    pain_points: List[str]  # 痛点
+
+
+@dataclass
+class Activity:
+    """用户活动（用户旅程中的高层次活动）"""
+    activity_id: str  # ACT-001
+    name: str  # 用户注册
+    description: str
+    user_type: str  # 关联的用户类型
+    user_stories: List[UserStory]
+    priority: Priority
+
+
+@dataclass
+class StoryMap:
+    """用户故事地图"""
+    map_id: str  # MAP-001
+    title: str
+    activities: List[Activity]
+    total_stories: int
+    user_types: List[UserType]
+    visualization: str  # ASCII 可视化
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+
+
+@dataclass
+class Release:
+    """发布计划"""
+    release_id: str  # REL-001
+    version: str  # v1.0
+    name: str  # MVP
+    user_stories: List[UserStory]
+    features: List[Feature]
+    total_effort: int  # 总工时
+    business_value: int  # 总业务价值
+    priority_score: float  # 优先级分数
+    target_date: Optional[str] = None
+
+
+@dataclass
+class PrioritizedBacklog:
+    """优先级排序的待办列表"""
+    backlog_id: str  # BACKLOG-001
+    releases: List[Release]
+    total_stories: int
+    total_effort: int
+    prioritization_method: str  # 优先级排序方法
+
+
+# ============ V3.0 冲突检测模型 ============
+
+@dataclass
+class RequirementConflict:
+    """需求冲突"""
+    conflict_id: str  # CONF-001
+    conflict_type: ConflictType
+    requirement_1: str  # 需求 1 的 ID
+    requirement_2: str  # 需求 2 的 ID
+    description: str  # 冲突描述
+    severity: Severity  # 严重程度
+    resolution_suggestions: List[str]  # 解决建议
+    detected_by: str  # AI / Human
+
+
+@dataclass
+class DependencyGraph:
+    """依赖关系图"""
+    nodes: List[str]  # 需求 ID 列表
+    edges: List[tuple]  # (from_id, to_id) 依赖关系
+    cycles: List[List[str]]  # 循环依赖
+
+
+@dataclass
+class ImpactAnalysis:
+    """影响范围分析"""
+    changed_requirement: str  # 变更的需求 ID
+    direct_impacts: List[str]  # 直接影响的需求 ID
+    indirect_impacts: List[str]  # 间接影响的需求 ID
+    affected_components: List[str]  # 受影响的组件
+    estimated_rework_hours: int  # 估算返工工时
+
+
+@dataclass
+class ConflictReport:
+    """冲突检测报告"""
+    report_id: str  # CONF-REPORT-001
+    timestamp: str
+    total_requirements: int
+    conflicts: List[RequirementConflict]
+    conflict_rate: float  # 冲突率（%）
+    dependency_graph: DependencyGraph
+    recommendations: List[str]
+
+
+# ============ V3.0 完整规格文档模型 ============
+
+@dataclass
+class SpecificationV3:
+    """
+    V3.0 完整规格文档
+    整合所有 V3.0 功能的顶层模型
+    """
+    # 基础信息
+    project_name: str
+    version: str = "3.0.0"
+    depth_level: DepthLevel = DepthLevel.STANDARD
+
+    # V2.0 核心数据（8个文档）
+    documents: List[Document] = field(default_factory=list)
+
+    # V3.0 新增数据
+    ai_analysis: Optional[AIAnalysisResult] = None
+    multimodal_analysis: Optional[MultimodalAnalysisResult] = None
+    validation_report: Optional[ValidationReport] = None
+    story_map: Optional[StoryMap] = None
+    prioritized_backlog: Optional[PrioritizedBacklog] = None
+    conflict_report: Optional[ConflictReport] = None
+
+    # 质量指标
+    quality_metrics: Optional[QualityMetrics] = None
+
+    # 元数据
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def to_summary(self) -> Dict[str, Any]:
+        """生成摘要"""
+        return {
+            "project_name": self.project_name,
+            "version": self.version,
+            "depth_level": self.depth_level.value,
+            "documents_count": len(self.documents),
+            "has_ai_analysis": self.ai_analysis is not None,
+            "has_multimodal_analysis": self.multimodal_analysis is not None,
+            "has_validation_report": self.validation_report is not None,
+            "has_story_map": self.story_map is not None,
+            "has_conflict_report": self.conflict_report is not None,
+            "quality_grade": self.quality_metrics.overall_grade.value if self.quality_metrics else "N/A",
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }
+
+
+# ============ V3.0 配置模型 ============
+
+@dataclass
+class V3Config:
+    """V3.0 配置"""
+    # AI 需求生成配置
+    enable_ai_requirements: bool = True
+    ai_confidence_threshold: float = 0.7  # AI 置信度阈值
+
+    # Shift-Left 测试配置
+    enable_shift_left: bool = True
+    testability_threshold: float = 60.0  # 可测试性阈值
+
+    # 多模态输入配置
+    enable_multimodal: bool = True
+    supported_image_types: List[ImageType] = field(
+        default_factory=lambda: [
+            ImageType.UI_MOCKUP,
+            ImageType.FLOWCHART,
+            ImageType.ARCHITECTURE_DIAGRAM,
+            ImageType.ER_DIAGRAM,
+            ImageType.WIREFRAME
+        ]
+    )
+
+    # 用户故事地图配置
+    enable_story_mapping: bool = True
+    default_release_count: int = 3
+
+    # 冲突检测配置
+    enable_conflict_detection: bool = True
+    conflict_severity_threshold: Severity = Severity.MEDIUM
+
+    # V2 兼容模式
+    v2_compatibility_mode: bool = True
+
+
+# ============ 工具函数 ============
+
+def create_v3_specification(
+    project_name: str,
+    depth_level: DepthLevel = DepthLevel.STANDARD
+) -> SpecificationV3:
+    """创建 V3.0 规格文档实例"""
+    return SpecificationV3(
+        project_name=project_name,
+        version="3.0.0",
+        depth_level=depth_level,
+        documents=[],
+        quality_metrics=QualityMetrics(
+            completeness_score=0.0,
+            consistency_score=0.0,
+            atomicity_score=0.0,
+            feasibility_score=0.0,
+            overall_grade=QualityGrade.F
+        )
+    )
+
+
+def merge_v2_documents_to_v3(
+    v2_documents: List[Document],
+    v3_spec: SpecificationV3
+) -> SpecificationV3:
+    """将 V2 文档合并到 V3 规格"""
+    v3_spec.documents = v2_documents
+    v3_spec.updated_at = datetime.now().isoformat()
+    return v3_spec
+
+
+# ============ 测试代码 ============
+
+if __name__ == "__main__":
+    print("=" * 80)
+    print("SpecFlow V3.0 数据模型测试")
+    print("=" * 80)
+
+    # 测试 1：创建 V3 规格
+    print("\n测试 1：创建 V3.0 规格文档")
+    print("-" * 80)
+
+    spec = create_v3_specification(
+        project_name="测试项目",
+        depth_level=DepthLevel.COMPREHENSIVE
+    )
+
+    print(f"项目名称: {spec.project_name}")
+    print(f"版本: {spec.version}")
+    print(f"深度级别: {spec.depth_level.value}")
+    print(f"创建时间: {spec.created_at}")
+
+    # 测试 2：AI 分析结果
+    print("\n\n测试 2：AI 分析结果")
+    print("-" * 80)
+
+    ai_result = AIAnalysisResult(
+        domain=DomainCategory.ECOMMERCE,
+        complexity=ComplexityLevel.VERY_COMPLEX,
+        estimated_hours=5000,
+        context_signals=[
+            ContextSignal(
+                signal_type="高并发",
+                description="需要支持大量并发用户",
+                impact="需要设计分布式架构",
+                recommendations=["使用负载均衡", "缓存策略", "数据库分片"]
+            )
+        ],
+        requirement_seeds=[
+            RequirementSeed(
+                id="SEED-001",
+                title="用户注册",
+                description="用户可以注册账号",
+                source="原始需求描述",
+                confidence=0.95,
+                priority=Priority.HIGH
+            )
+        ],
+        quality_score=85.0,
+        confidence=0.9
+    )
+
+    spec.ai_analysis = ai_result
+
+    print(f"领域: {ai_result.domain.value}")
+    print(f"复杂度: {ai_result.complexity.value}")
+    print(f"估算工时: {ai_result.estimated_hours}h")
+    print(f"上下文信号数: {len(ai_result.context_signals)}")
+    print(f"需求种子数: {len(ai_result.requirement_seeds)}")
+    print(f"质量评分: {ai_result.quality_score}/100")
+    print(f"置信度: {ai_result.confidence}")
+
+    # 测试 3：Shift-Left 验证报告
+    print("\n\n测试 3：Shift-Left 验证报告")
+    print("-" * 80)
+
+    validation = ValidationReport(
+        report_id="VAL-001",
+        timestamp=datetime.now().isoformat(),
+        overall_status="警告",
+        testability_score=75.0,
+        testability_level=TestabilityLevel.GOOD,
+        issues=[
+            TestabilityIssue(
+                issue_id="TEST-001",
+                requirement_id="REQ-001",
+                issue_type="模糊词汇",
+                description="使用了模糊词汇'快速'",
+                suggestion="改为具体的响应时间要求，如'< 200ms'",
+                severity=Severity.MEDIUM
+            )
+        ],
+        bdd_scenarios=[
+            BDDScenario(
+                scenario_id="BDD-001",
+                title="用户成功注册",
+                requirement_id="REQ-001",
+                given=["用户访问注册页面", "用户输入有效邮箱"],
+                when="用户点击注册按钮",
+                then=["系统发送验证邮件", "用户收到确认消息"]
+            )
+        ],
+        test_cases=[],
+        chaos_scenarios=[],
+        recommendations=["修复模糊词汇问题"],
+        estimated_test_hours=40
+    )
+
+    spec.validation_report = validation
+
+    print(f"报告 ID: {validation.report_id}")
+    print(f"整体状态: {validation.overall_status}")
+    print(f"可测试性评分: {validation.testability_score}/100")
+    print(f"可测试性级别: {validation.testability_level.value}")
+    print(f"发现问题数: {len(validation.issues)}")
+    print(f"BDD 场景数: {len(validation.bdd_scenarios)}")
+    print(f"估算测试工时: {validation.estimated_test_hours}h")
+
+    # 测试 4：用户故事地图
+    print("\n\n测试 4：用户故事地图")
+    print("-" * 80)
+
+    story_map = StoryMap(
+        map_id="MAP-001",
+        title="电商平台用户故事地图",
+        activities=[
+            Activity(
+                activity_id="ACT-001",
+                name="用户注册",
+                description="用户注册流程",
+                user_type="普通用户",
+                user_stories=[
+                    UserStory(
+                        id="US-001",
+                        title="用户注册",
+                        as_a="普通用户",
+                        i_want="注册账号",
+                        so_that="可以使用系统",
+                        acceptance_criteria=["注册成功后收到确认邮件"],
+                        components=[],
+                        priority=Priority.HIGH
+                    )
+                ],
+                priority=Priority.HIGH
+            )
+        ],
+        total_stories=1,
+        user_types=[
+            UserType(
+                type_id="UT-001",
+                name="普通用户",
+                description="使用系统的普通用户",
+                goals=["快速完成任务"],
+                pain_points=["流程复杂"]
+            )
+        ],
+        visualization="[用户故事地图可视化]"
+    )
+
+    spec.story_map = story_map
+
+    print(f"地图 ID: {story_map.map_id}")
+    print(f"标题: {story_map.title}")
+    print(f"活动数: {len(story_map.activities)}")
+    print(f"总故事数: {story_map.total_stories}")
+    print(f"用户类型数: {len(story_map.user_types)}")
+
+    # 测试 5：完整摘要
+    print("\n\n测试 5：V3.0 规格文档摘要")
+    print("-" * 80)
+
+    summary = spec.to_summary()
+    for key, value in summary.items():
+        print(f"{key}: {value}")
+
+    # 测试 6：V3 配置
+    print("\n\n测试 6：V3.0 配置")
+    print("-" * 80)
+
+    config = V3Config()
+    print(f"AI 需求生成: {'启用' if config.enable_ai_requirements else '禁用'}")
+    print(f"Shift-Left 测试: {'启用' if config.enable_shift_left else '禁用'}")
+    print(f"多模态输入: {'启用' if config.enable_multimodal else '禁用'}")
+    print(f"用户故事地图: {'启用' if config.enable_story_mapping else '禁用'}")
+    print(f"冲突检测: {'启用' if config.enable_conflict_detection else '禁用'}")
+    print(f"V2 兼容模式: {'启用' if config.v2_compatibility_mode else '禁用'}")
+    print(f"支持的图像类型: {', '.join(t.value for t in config.supported_image_types)}")
+
+    print("\n" + "=" * 80)
+    print("测试完成")
+    print("=" * 80)
